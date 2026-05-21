@@ -123,33 +123,33 @@ export default function AISearch() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden">
-      <div className="w-full max-w-5xl mx-auto flex flex-col h-[85vh] relative">
+    <div className="min-h-[calc(100vh-80px)] pt-2 md:pt-8 pb-4 md:pb-8 px-2 md:px-4 relative overflow-hidden flex flex-col justify-start">
+      <div className="w-full max-w-5xl mx-auto flex flex-col h-[calc(100dvh-130px)] md:h-[80vh] relative">
         {/* Advanced Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 px-6 gap-6">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-row items-center justify-between mb-3 md:mb-6 px-2 md:px-6 gap-3 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             <div className="relative group">
-              <div className="absolute inset-[-4px] bg-neon-green opacity-20 blur-xl group-hover:opacity-40 transition-opacity rounded-2xl" />
-              <div className="relative w-16 h-16 bg-os-black/80 backdrop-blur-xl rounded-2xl flex items-center justify-center text-neon-green shadow-[0_0_30px_rgba(57,255,20,0.3)] border border-neon-green/30">
-                <Bot className="w-9 h-9" />
+              <div className="absolute inset-[-4px] bg-neon-green opacity-20 blur-xl group-hover:opacity-40 transition-opacity rounded-xl md:rounded-2xl" />
+              <div className="relative w-11 h-11 md:w-16 md:h-16 bg-os-black/80 backdrop-blur-xl rounded-xl md:rounded-2xl flex items-center justify-center text-neon-green shadow-[0_0_20px_rgba(57,255,20,0.2)] md:shadow-[0_0_30px_rgba(57,255,20,0.3)] border border-neon-green/30">
+                <Bot className="w-6 h-6 md:w-9 md:h-9" />
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[10px] bg-neon-green/20 text-neon-green px-2 py-0.5 rounded-sm font-black tracking-widest uppercase border border-neon-green/30 animate-pulse">Neural Active</span>
-                <span className="text-[10px] text-white/30 font-bold tracking-widest uppercase font-mono">ID: MANTRA-OS_v2.0</span>
+              <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1.5">
+                <span className="text-[8px] md:text-[10px] bg-neon-green/20 text-neon-green px-1.5 py-0.5 rounded-sm font-black tracking-widest uppercase border border-neon-green/20 animate-pulse">Neural Active</span>
+                <span className="text-[8px] md:text-[10px] text-white/30 font-bold tracking-widest uppercase font-mono">ID: MANTRA-OS_v2.0</span>
               </div>
-              <h1 className="text-4xl font-display font-black uppercase tracking-tighter leading-none group cursor-default">
+              <h1 className="text-xl md:text-4xl font-display font-black uppercase tracking-tighter leading-none group cursor-default">
                 MANTRA <span className="text-neon-green italic group-hover:drop-shadow-[0_0_20px_rgba(57,255,20,0.6)] transition-all">NEURAL</span>
               </h1>
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="w-3 h-3 text-neon-green animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-neon-green/80 font-mono">Sync Ratio: 1.00</span>
+            <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+              <Activity className="w-2.5 h-2.5 md:w-3 md:h-3 text-neon-green animate-pulse" />
+              <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-neon-green/80 font-mono">Sync Ratio: 1.00</span>
             </div>
-            <div className="w-32 h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-20 md:w-32 h-1 bg-white/5 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: "100%" }}
@@ -163,29 +163,29 @@ export default function AISearch() {
         {/* Enhanced OS Chat Area */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto mb-6 p-8 space-y-10 scrollbar-hide bg-os-black/40 backdrop-blur-[60px] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] rounded-[40px] border border-white/5 neon-border outline-offset-8"
+          className="flex-1 overflow-y-auto mb-3 md:mb-6 p-4 md:p-8 space-y-6 md:space-y-10 scrollbar-hide bg-os-black/40 backdrop-blur-[60px] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] rounded-2xl md:rounded-[40px] border border-white/5 neon-border outline-offset-8"
         >
           {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-10">
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 md:space-y-10 p-2">
               <div className="relative group">
                 <div className="absolute inset-0 bg-neon-green/20 blur-3xl animate-pulse rounded-full group-hover:bg-neon-green/40 transition-colors" />
-                <div className="relative w-28 h-28 bg-white/[0.02] rounded-full flex items-center justify-center border border-white/10 backdrop-blur-2xl">
-                  <ShieldCheck className="w-14 h-14 text-neon-green opacity-40 group-hover:opacity-100 transition-opacity" />
+                <div className="relative w-16 h-16 md:w-28 md:h-28 bg-white/[0.02] rounded-full flex items-center justify-center border border-white/10 backdrop-blur-2xl">
+                  <ShieldCheck className="w-8 h-8 md:w-14 md:h-14 text-neon-green opacity-40 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
-              <div className="max-w-md space-y-6">
-                <h2 className="text-3xl font-display font-black uppercase tracking-[0.3em] text-white">Initialize Link</h2>
-                <p className="text-[11px] text-white/40 uppercase font-black tracking-[0.4em] leading-relaxed max-w-xs mx-auto font-mono">
+              <div className="max-w-md space-y-3 md:space-y-6">
+                <h2 className="text-xl md:text-3xl font-display font-black uppercase tracking-[0.3em] text-white">Initialize Link</h2>
+                <p className="text-[10px] md:text-[11px] text-white/40 uppercase font-black tracking-[0.4em] leading-relaxed max-w-xs mx-auto font-mono">
                   Quantum encryption ready. Biological optimization engine online.
                 </p>
-                <div className="flex justify-center gap-12 pt-6">
-                  <div className="flex flex-col items-center gap-3">
-                    <Zap className="w-5 h-5 text-neon-green" />
-                    <span className="text-[8px] font-black uppercase text-white/20 tracking-widest">Low-Latency</span>
+                <div className="flex justify-center gap-6 md:gap-12 pt-2 md:pt-6">
+                  <div className="flex flex-col items-center gap-2 md:gap-3">
+                    <Zap className="w-4 h-4 md:w-5 md:h-5 text-neon-green" />
+                    <span className="text-[7px] md:text-[8px] font-black uppercase text-white/20 tracking-widest">Low-Latency</span>
                   </div>
-                  <div className="flex flex-col items-center gap-3">
-                    <Bot className="w-5 h-5 text-neon-green" />
-                    <span className="text-[8px] font-black uppercase text-white/20 tracking-widest">Transient Link</span>
+                  <div className="flex flex-col items-center gap-2 md:gap-3">
+                    <Bot className="w-4 h-4 md:w-5 md:h-5 text-neon-green" />
+                    <span className="text-[7px] md:text-[8px] font-black uppercase text-white/20 tracking-widest">Transient Link</span>
                   </div>
                 </div>
               </div>
@@ -246,27 +246,27 @@ export default function AISearch() {
         </div>
 
         {/* OS Input Bar */}
-        <div className="relative bottom-0 px-2 group">
+        <div className="relative bottom-0 px-1 md:px-2 group">
           <AnimatePresence>
             {selectedImage && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-full left-10 mb-4 p-2 bg-os-black/80 backdrop-blur-3xl border border-neon-green/30 rounded-2xl flex items-center gap-4 animate-glow"
+                className="absolute bottom-full left-4 md:left-10 mb-2 md:mb-4 p-1.5 md:p-2 bg-os-black/80 backdrop-blur-3xl border border-neon-green/30 rounded-xl md:rounded-2xl flex items-center gap-3 md:gap-4 animate-glow"
               >
-                <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden border border-white/10">
                   <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
-                <div className="flex flex-col pr-4">
-                  <span className="text-[8px] font-black uppercase text-neon-green tracking-widest">Image Loaded</span>
-                  <span className="text-[10px] text-white/50 font-mono tracking-tighter">PHYSICAL_SPECIMEN.JPG</span>
+                <div className="flex flex-col pr-2 md:pr-4">
+                  <span className="text-[7px] md:text-[8px] font-black uppercase text-neon-green tracking-widest font-mono">Image Loaded</span>
+                  <span className="text-[9px] md:text-[10px] text-white/50 font-mono tracking-tighter">SPECIMEN.JPG</span>
                 </div>
                 <button 
                   onClick={clearImage}
-                  className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+                  className="w-5 h-5 md:w-6 md:h-6 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <X className="w-3.5 h-3.5 text-white" />
                 </button>
               </motion.div>
             )}
@@ -275,7 +275,7 @@ export default function AISearch() {
           <div className="absolute inset-x-0 inset-y-0 bg-neon-green/5 blur-3xl group-focus-within:bg-neon-green/10 transition-all rounded-[30px]" />
           <form 
             onSubmit={handleSearch}
-            className="relative flex items-center gap-4"
+            className="relative flex items-center gap-3 md:gap-4"
           >
             <input 
               type="file"
@@ -289,29 +289,29 @@ export default function AISearch() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Query the Neural Interface or Upload Specimen..."
-                className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-10 py-7 pr-32 text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans"
+                placeholder="Query Interface or Upload Specimen..."
+                className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-5 md:px-10 py-4 md:py-6 pr-24 md:pr-32 text-xs md:text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans"
               />
               <button 
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`absolute right-20 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center transition-all ${selectedImage ? "text-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-white/30 hover:text-white hover:bg-white/5"}`}
+                className={`absolute right-14 md:right-20 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${selectedImage ? "text-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-white/30 hover:text-white hover:bg-white/5"}`}
               >
-                <ImageIcon className="w-6 h-6" />
+                <ImageIcon className="w-5 h-5 md:w-6 md:h-6" />
               </button>
               <button 
                 type="submit"
                 disabled={(!query.trim() && !selectedImage) || loading}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-14 h-14 bg-neon-green text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 shadow-[0_10px_30px_rgba(57,255,20,0.4)]"
+                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-neon-green text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 shadow-[0_10px_30px_rgba(57,255,20,0.4)]"
               >
-                <Send className="w-6 h-6" />
+                <Send className="w-5 h-5 md:w-6 md:h-6" />
               </button>
             </div>
           </form>
         </div>
 
         {/* Quick Suggests */}
-        <div className="flex flex-wrap gap-3 mt-8 justify-center">
+        <div className="flex flex-wrap gap-1.5 md:gap-3 mt-3 md:mt-6 justify-center">
           {["Metabolic Efficiency?", "Elite Stack?", "Hypertrophy Guide", "Neural Recovery"].map((hint) => (
             <button
               key={hint}
@@ -319,7 +319,7 @@ export default function AISearch() {
               className="group relative"
             >
               <div className="absolute inset-0 bg-neon-green/0 group-hover:bg-neon-green/10 blur-xl transition-all rounded-full" />
-              <div className="relative text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-neon-green transition-all bg-white/[0.03] px-6 py-3 rounded-full border border-white/5 backdrop-blur-md group-hover:border-neon-green/30 font-mono">
+              <div className="relative text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/30 hover:text-neon-green transition-all bg-white/[0.03] px-3 md:px-6 py-2 md:py-3 rounded-full border border-white/5 backdrop-blur-md group-hover:border-neon-green/30 font-mono">
                 {hint}
               </div>
             </button>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
@@ -26,37 +26,46 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const WorkoutDetail = lazy(() => import("./pages/WorkoutDetail"));
 const PerformancePortal = lazy(() => import("./pages/PerformancePortal"));
 
+function AppContent() {
+  const location = useLocation();
+  const hideFooter = location.pathname === "/ai-assistant";
+
+  return (
+    <div className="min-h-screen bg-deep-black text-white selection:bg-neon-green selection:text-black flex flex-col relative overflow-x-hidden">
+      <FloatingBackground />
+      <Navbar />
+      <main className="flex-grow pt-20">
+        <Suspense fallback={<div className="h-screen flex items-center justify-center">
+          <div className="w-12 h-12 border-2 border-neon-green border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(57,255,20,0.3)]"></div>
+        </div>}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/exercises/:id" element={<WorkoutDetail />} />
+            <Route path="/dashboard" element={<PerformancePortal />} />
+            <Route path="/diet" element={<Diet />} />
+            <Route path="/bmi-calculator" element={<BMICalculator />} />
+            <Route path="/calorie-calculator" element={<CalorieCalculator />} />
+            <Route path="/ai-assistant" element={<AISearch />} />
+            <Route path="/programs" element={<Programs />} />
+            <Route path="/subscription" element={<Subscription />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+          </Routes>
+        </Suspense>
+      </main>
+      {!hideFooter && <Footer />}
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <LanguageProvider>
       <Router>
-        <div className="min-h-screen bg-deep-black text-white selection:bg-neon-green selection:text-black flex flex-col relative overflow-x-hidden">
-          <FloatingBackground />
-          <Navbar />
-          <main className="flex-grow pt-20">
-            <Suspense fallback={<div className="h-screen flex items-center justify-center">
-              <div className="w-12 h-12 border-2 border-neon-green border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(57,255,20,0.3)]"></div>
-            </div>}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/exercises" element={<Exercises />} />
-                <Route path="/exercises/:id" element={<WorkoutDetail />} />
-                <Route path="/dashboard" element={<PerformancePortal />} />
-                <Route path="/diet" element={<Diet />} />
-                <Route path="/bmi-calculator" element={<BMICalculator />} />
-                <Route path="/calorie-calculator" element={<CalorieCalculator />} />
-                <Route path="/ai-assistant" element={<AISearch />} />
-                <Route path="/programs" element={<Programs />} />
-                <Route path="/subscription" element={<Subscription />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/faq" element={<FAQ />} />
-              </Routes>
-            </Suspense>
-          </main>
-          <Footer />
-        </div>
+        <AppContent />
       </Router>
     </LanguageProvider>
   );
