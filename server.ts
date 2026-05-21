@@ -39,6 +39,36 @@ async function startServer() {
     res.json({ status: "ok", owner: "Manish Bhagat", brand: "Fitness Mantra" });
   });
 
+  app.post("/api/ai/tts", async (req, res) => {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: "Text is required" });
+    }
+    try {
+      const ai = getAI();
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-tts-preview",
+        contents: [{ parts: [{ text: `Act as an elite AI fitness trainer. Give this short form correction or tip: ${text}` }] }],
+        config: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: "Zephyr" },
+            },
+          },
+        },
+      });
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!base64Audio) {
+        throw new Error("No audio returned from Gemini");
+      }
+      res.json({ audio: base64Audio });
+    } catch (error: any) {
+      console.error("TTS Endpoint Error:", error);
+      res.status(500).json({ error: error.message || "TTS generation failed" });
+    }
+  });
+
   app.post("/api/ai/chat", async (req, res) => {
     const { query, image } = req.body;
     

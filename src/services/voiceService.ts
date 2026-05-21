@@ -1,13 +1,9 @@
-import { GoogleGenAI, Modality } from "@google/genai";
-
 class VoiceService {
-  private ai: any;
   private audioContext: AudioContext | null = null;
   private isSpeaking = false;
 
   constructor() {
-    // API key is handled automatically by the platform environment
-    this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    // Client-side initialization only.
   }
 
   private async getAudioContext() {
@@ -16,7 +12,7 @@ class VoiceService {
         sampleRate: 24000,
       });
     }
-    if (this.audioContext.state === 'suspended') {
+    if (this.audioContext.state === "suspended") {
       await this.audioContext.resume();
     }
     return this.audioContext;
@@ -27,22 +23,19 @@ class VoiceService {
     this.isSpeaking = true;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3.1-flash-tts-preview",
-        contents: [{ parts: [{ text: `Act as an elite AI fitness trainer. Give this short form correction or tip: ${text}` }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Zephyr' }, // Zephyr fits the 'futuristic/elite' vibe
-            },
-          },
-        },
+      const response = await fetch("/api/ai/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
       });
 
-      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (base64Audio) {
-        await this.playBase64Audio(base64Audio);
+      if (!response.ok) {
+        throw new Error("Failed to generate TTS on server");
+      }
+
+      const { audio } = await response.json();
+      if (audio) {
+        await this.playBase64Audio(audio);
       }
     } catch (error) {
       console.error("AI Voice failed, falling back to browser TTS:", error);
