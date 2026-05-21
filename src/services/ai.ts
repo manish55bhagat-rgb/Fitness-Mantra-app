@@ -7,8 +7,23 @@ export async function generateContent(prompt: string, image?: string) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Neural link failed");
+      let errMsg = "Neural link failed";
+      try {
+        const text = await response.text();
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.error || errMsg;
+        } catch {
+          if (text.trim().startsWith("<")) {
+            errMsg = `Server encountered an internal error (${response.status}). Please verify that GEMINI_API_KEY is configured in Settings -> Secrets.`;
+          } else {
+            errMsg = text.slice(0, 300) || `HTTP Error ${response.status}: ${response.statusText}`;
+          }
+        }
+      } catch (e) {
+        errMsg = `HTTP Error ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errMsg);
     }
 
     return await response.text();
@@ -27,8 +42,23 @@ export async function* generateContentStream(prompt: string, image?: string) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Neural link failed");
+      let errMsg = "Neural link failed";
+      try {
+        const text = await response.text();
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.error || errMsg;
+        } catch {
+          if (text.trim().startsWith("<")) {
+            errMsg = `Server encountered an internal error (${response.status}). Please verify that GEMINI_API_KEY is configured in Settings -> Secrets.`;
+          } else {
+            errMsg = text.slice(0, 300) || `HTTP Error ${response.status}: ${response.statusText}`;
+          }
+        }
+      } catch (e) {
+        errMsg = `HTTP Error ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errMsg);
     }
 
     const reader = response.body?.getReader();

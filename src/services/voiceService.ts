@@ -33,9 +33,19 @@ class VoiceService {
         throw new Error("Failed to generate TTS on server");
       }
 
-      const { audio } = await response.json();
+      const textData = await response.text();
+      let audio: string | undefined;
+      try {
+        const json = JSON.parse(textData);
+        audio = json.audio;
+      } catch (err) {
+        console.warn("TTS response was not valid JSON, falling back to browser speak.");
+      }
+
       if (audio) {
         await this.playBase64Audio(audio);
+      } else {
+        this.fallbackSpeak(text);
       }
     } catch (error) {
       console.error("AI Voice failed, falling back to browser TTS:", error);
