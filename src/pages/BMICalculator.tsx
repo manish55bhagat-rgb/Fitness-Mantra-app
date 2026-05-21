@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Info, Calculator, TrendingUp, User, Weight, Ruler } from "lucide-react";
-
+import { Calculator, Activity, Shield, Droplets, Target, User, ArrowRight, Zap, TrendingUp } from "lucide-react";
 import { generateContent } from "../services/ai";
+import { useLanguage } from "../context/LanguageContext";
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, ReferenceLine 
+} from 'recharts';
+
+const mockProgressData = [
+  { month: 'JAN', val: 28.5 },
+  { month: 'FEB', val: 27.8 },
+  { month: 'MAR', val: 27.2 },
+  { month: 'APR', val: 26.5 },
+  { month: 'MAY', val: 25.8 },
+  { month: 'JUN', val: 24.5 },
+];
 
 export default function BMICalculator() {
-  const [weight, setWeight] = useState<string>("70");
-  const [height, setHeight] = useState<string>("175");
+  const { t, language } = useLanguage();
+  const [weight, setWeight] = useState<string>("75");
+  const [height, setHeight] = useState<string>("180");
   const [gender, setGender] = useState<"Male" | "Female">("Male");
   const [goal, setGoal] = useState<string>("General Fitness");
   const [bmi, setBmi] = useState<number | null>(null);
@@ -14,213 +28,251 @@ export default function BMICalculator() {
   const [loading, setLoading] = useState<boolean>(false);
   const [recommendation, setRecommendation] = useState<string>("");
 
-  const calculateBMI = async () => {
+  useEffect(() => {
     const w = parseFloat(weight);
     const h = parseFloat(height) / 100;
-    if (w > 0 && h > 0) {
+    if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
       const val = w / (h * h);
       setBmi(parseFloat(val.toFixed(1)));
       
-      if (val < 18.5) setCategory("Underweight");
-      else if (val < 25) setCategory("Normal");
-      else if (val < 30) setCategory("Overweight");
-      else setCategory("Obese");
+      if (val < 18.5) {
+        setCategory("Underweight");
+      } else if (val < 25) {
+        setCategory("Normal");
+      } else if (val < 30) {
+        setCategory("Overweight");
+      } else {
+        setCategory("Obese");
+      }
+    } else {
+      setBmi(null);
+      setCategory("");
+    }
+  }, [weight, height]);
 
-      // AI Recommendation
+  const calculateBMI = async () => {
+    if (bmi !== null && bmi > 0) {
       setLoading(true);
       try {
-        const prompt = `Act as an elite fitness coach for Fitness Mantra (Owner: Manish Bhagat). 
-        Suggest a short, motivational workout and diet tip for someone with:
-        Gender: ${gender}, Weight: ${weight}kg, Height: ${height}cm, Goal: ${goal}.
-        Keep it professional, futuristic, and concise (max 3 sentences).`;
-        
+        const langName = language === "hi" ? "Hindi (हिंदी)" : language === "mr" ? "Marathi (मराठी)" : "English";
+        const prompt = `Act as an elite AI fitness architect for Fitness Mantra. Give highly professional, luxury-toned advice for this profile: BMI ${bmi}, Category ${category}, Gender ${gender}, Goal ${goal}. Focus on bio-optimization. Keep it max 3 sentences. RESPOND ENTIRELY IN ${langName} LANGUAGE.`;
         const result = await generateContent(prompt);
         setRecommendation(result);
       } catch (e) {
-        console.error(e);
-        setRecommendation("Optimization advice unavailable. Check network link.");
+        setRecommendation(language === "hi" ? "एआई विश्लेषण प्रणाली बाधित। मैन्युअल रूप से कार्य करें।" : language === "mr" ? "एआय विश्लेषण प्रणाली व्यत्यय आणली. स्वहस्ते कार्य करा." : "AI Analysis link disrupted. Optimize manually.");
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const getCategoryColor = () => {
-    switch (category) {
-      case "Normal": return "text-neon-green";
-      case "Underweight": return "text-blue-400";
-      case "Overweight": return "text-orange-400";
-      case "Obese": return "text-red-500";
-      default: return "text-white";
-    }
-  };
-
   return (
-    <div className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-display font-black mb-4 tracking-tighter uppercase">
-            Body <span className="text-neon-green">Metrics</span>
+    <div className="py-40 bg-deep-black min-h-screen relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-neon-green/5 blur-[150px] rounded-full pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <header className="text-center mb-24">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-neon-green/20 mb-10">
+            <Calculator className="w-4 h-4 text-neon-green" />
+            <span className="text-[10px] font-black tracking-[0.5em] text-neon-green uppercase font-mono">Physiological Audit v2.0</span>
+          </div>
+          <h1 className="text-7xl md:text-9xl font-display font-black tracking-tighter uppercase leading-[0.85] mb-10 italic">
+            {t("Bmi.Title").split(" ")[0]}<br/><span className="premium-gradient-text uppercase italic">{t("Bmi.Title").split(" ").slice(1).join(" ") || "Metrics"}</span>
           </h1>
-          <p className="text-gray-500 max-w-lg mx-auto">
-            Analyze your physical architecture. Input your current data for instant 
-            scientific classification.
+          <p className="text-white/40 max-w-2xl mx-auto text-lg font-semibold uppercase tracking-tight leading-relaxed">
+            {t("Bmi.Sub")}
           </p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          {/* Calculator Card */}
-          <div className="glass-card p-10 relative overflow-hidden neon-border">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Calculator className="w-40 h-40" />
-            </div>
-
-            <div className="space-y-8 relative z-10">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-4 flex items-center gap-2">
-                  <Weight className="w-3 h-3" /> Body Weight (kg)
-                </label>
-                <input 
-                  type="number" 
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  className="w-full bg-white/5 border-b border-white/10 py-4 text-4xl font-display font-black focus:outline-none focus:border-neon-green/50 transition-colors text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-4 flex items-center gap-2">
-                  <Ruler className="w-3 h-3" /> Body Height (cm)
-                </label>
-                <input 
-                  type="number" 
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  className="w-full bg-white/5 border-b border-white/10 py-4 text-4xl font-display font-black focus:outline-none focus:border-neon-green/50 transition-colors text-white"
-                />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <div className="w-1/2">
-                  <label className="block text-[8px] font-black uppercase tracking-widest text-white/20 mb-2 ml-1">Gender</label>
-                  <div className="flex bg-os-black/80 rounded-xl p-1 border border-white/5">
-                    <button
-                      onClick={() => setGender("Male")}
-                      className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${gender === "Male" ? "bg-neon-green text-black shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-gray-500 hover:text-white"}`}
-                    >
-                      Male
-                    </button>
-                    <button
-                      onClick={() => setGender("Female")}
-                      className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${gender === "Female" ? "bg-neon-green text-black shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-gray-500 hover:text-white"}`}
-                    >
-                      Female
-                    </button>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          {/* Data Entry Console */}
+          <div className="lg:col-span-12 xl:col-span-5 space-y-12">
+            <div className="glass-panel p-12 border-white/5 relative overflow-hidden group">
+              <div className="absolute inset-0 os-grid opacity-10" />
+              
+              <div className="relative z-10 space-y-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase text-white/20 tracking-widest block font-mono">{t("Bmi.WeightLabel")}</label>
+                    <input 
+                      type="number" 
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      className="w-full bg-transparent border-b border-white/10 py-4 text-5xl font-display font-black focus:outline-none focus:border-neon-green/50 transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase text-white/20 tracking-widest block font-mono">{t("Bmi.HeightLabel")}</label>
+                    <input 
+                      type="number" 
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      className="w-full bg-transparent border-b border-white/10 py-4 text-5xl font-display font-black focus:outline-none focus:border-neon-green/50 transition-colors"
+                    />
                   </div>
                 </div>
-                <div className="w-1/2">
-                  <label className="block text-[8px] font-black uppercase tracking-widest text-white/20 mb-2 ml-1">Protocol Goal</label>
+
+                <div className="space-y-6">
+                  <label className="text-[10px] font-black uppercase text-white/20 tracking-widest block font-mono">{t("Bmi.GenderLabel")}</label>
+                  <div className="flex gap-4">
+                    {["Male", "Female"].map(g => (
+                      <button 
+                        key={g}
+                        onClick={() => setGender(g as any)}
+                        className={`flex-1 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all border ${gender === g ? "bg-neon-green text-black border-transparent shadow-[0_10px_30px_rgba(57,255,20,0.3)]" : "bg-white/5 border-white/5 text-white/40 hover:text-white"}`}
+                      >
+                        {g === "Male" ? t("Bmi.Male") : t("Bmi.Female")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <label className="text-[10px] font-black uppercase text-white/20 tracking-widest block font-mono">{t("Bmi.GoalLabel")}</label>
                   <select 
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
-                    className="w-full bg-os-black/80 border border-white/5 rounded-xl py-2 px-3 text-[10px] font-black uppercase focus:outline-none focus:border-neon-green/30 transition-colors appearance-none cursor-pointer text-white/70"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 px-8 font-black uppercase text-[10px] tracking-[0.2em] focus:outline-none focus:border-neon-green transition-all appearance-none cursor-pointer"
                   >
-                    <option value="General Fitness">General Fitness</option>
-                    <option value="Weight Loss">Weight Loss</option>
-                    <option value="Fat Loss & Toning">Fat Loss & Toning</option>
-                    <option value="Build Muscle">Build Muscle</option>
-                    <option value="Weight Gain">Weight Gain</option>
-                    <option value="Strength & Power">Strength & Power</option>
-                    <option value="Body Recomposition">Body Recomposition</option>
-                    <option value="Athletic Performance">Athletic Performance</option>
-                    <option value="Endurance & Stamina">Endurance & Stamina</option>
-                    <option value="Functional Training">Functional Training</option>
-                    <option value="Flexibility & Yoga">Flexibility & Yoga</option>
-                    <option value="Marathon Training">Marathon Training</option>
-                    <option value="High Intensity (HIIT)">High Intensity (HIIT)</option>
-                    <option value="Post-Pregnancy Fitness">Post-Pregnancy Fitness</option>
-                    <option value="Active Aging (Senior)">Active Aging (Senior)</option>
+                    <option value="General Fitness">{t("Bmi.Goal.Fit")}</option>
+                    <option value="Weight Loss">{t("Bmi.Goal.Loss")}</option>
+                    <option value="Build Muscle">{t("Bmi.Goal.Muscle")}</option>
+                    <option value="Endurance">{t("Bmi.Goal.Endu")}</option>
                   </select>
                 </div>
-              </div>
 
-              <button 
-                onClick={calculateBMI}
-                className="w-full neon-button py-6 text-base tracking-[0.2em] font-black"
-              >
-                GENERATE ANALYSIS
-              </button>
+                <button 
+                  onClick={calculateBMI}
+                  className="btn-premium w-full py-8 text-xs group"
+                >
+                  {t("Bmi.Btn")} <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Classification Legend */}
+            <div className="glass-panel p-10 border-white/5 grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { label: "Underweight", translationKey: "Bmi.Underweight", color: "text-blue-400", val: "< 18.5" },
+                { label: "Normal", translationKey: "Bmi.Normal", color: "text-neon-green", val: "18.5 - 24.9" },
+                { label: "Overweight", translationKey: "Bmi.Overweight", color: "text-orange-400", val: "25 - 29.9" },
+                { label: "Obese", translationKey: "Bmi.Obese", color: "text-red-500", val: "> 30" },
+              ].map(item => (
+                <div key={item.label} className="text-center group">
+                  <div className={`text-[10px] font-black uppercase tracking-widest mb-2 ${item.color}`}>{t(item.translationKey)}</div>
+                  <div className="text-lg font-black text-white/40 group-hover:text-white transition-colors">{item.val}</div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Result Section */}
-          <div className="space-y-8">
+          {/* Analysis Viewport */}
+          <div className="lg:col-span-12 xl:col-span-7">
             <AnimatePresence mode="wait">
               {bmi ? (
-                  <motion.div
-                    key="result"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="glass-card p-10 bg-neon-green/5 border-neon-green/20 text-center neon-border"
-                  >
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Neural Data Output</p>
-                    <h2 className="text-8xl font-display font-black text-white mb-2 tracking-tighter">{bmi}</h2>
-                    <div className={`text-xl font-black uppercase tracking-[0.3em] mb-6 ${getCategoryColor()}`}>{category}</div>
-                  
-                    {loading ? (
-                      <div className="flex justify-center py-4">
-                        <div className="w-8 h-8 border-2 border-neon-green border-t-transparent rounded-full animate-spin shadow-[0_0_10px_#39FF14]" />
-                      </div>
-                    ) : recommendation && (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-white/60 text-[13px] italic leading-relaxed mb-6 border-l-2 border-neon-green/40 pl-6 py-3 text-left bg-white/[0.02] rounded-r-xl"
-                      >
-                        <span className="text-neon-green font-black not-italic text-[10px] uppercase tracking-widest block mb-1">Neural Advice</span> "{recommendation}"
-                      </motion.div>
-                    )}
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-12"
+                >
+                  <div className="glass-panel p-16 border-neon-green/20 relative overflow-hidden text-center">
+                    <div className="absolute inset-0 bg-neon-green/[0.02] animate-pulse-soft" />
+                    <div className="relative z-10">
+                      <p className="text-[10px] font-black uppercase tracking-[0.6em] text-white/20 mb-8 font-mono">Neural Index Summary</p>
+                      <h2 className="text-[10rem] md:text-[14rem] font-display font-black leading-none tracking-tighter text-white mb-6 animate-glow">{bmi}</h2>
+                      <div className="text-4xl font-display font-black uppercase tracking-[0.4em] italic premium-gradient-text">{t("Bmi." + category)}</div>
+                    </div>
+                  </div>
 
-                    <div className="pt-8 border-t border-white/5 grid grid-cols-2 gap-6 text-left">
-                      <div className="p-5 bg-os-black/60 rounded-2xl border border-white/5 group hover:bg-os-black transition-colors">
-                        <p className="text-[9px] uppercase text-white/20 font-black mb-1.5 tracking-widest">Ideal Range</p>
-                        <p className="text-sm font-black group-hover:text-neon-green transition-colors">65 - 78 kg</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="glass-panel p-10 border-white/5">
+                      <div className="flex items-center gap-4 mb-8">
+                        <Zap className="text-neon-green w-5 h-5" />
+                        <h4 className="text-xl font-black uppercase tracking-widest">AI ARCHITECT ADVICE</h4>
                       </div>
-                      <div className="p-5 bg-os-black/60 rounded-2xl border border-white/5 group hover:bg-os-black transition-colors">
-                        <p className="text-[9px] uppercase text-white/20 font-black mb-1.5 tracking-widest">Efficiency</p>
-                        <p className="text-sm font-black text-neon-green group-hover:drop-shadow-[0_0_5px_#39FF14]">OPTIMAL</p>
+                      {loading ? (
+                        <div className="h-24 flex items-center justify-center">
+                          <div className="w-12 h-1 border-t-2 border-neon-green animate-pulse rounded-full" />
+                        </div>
+                      ) : (
+                        <p className="text-lg text-white/40 font-semibold uppercase tracking-tight leading-relaxed italic border-l border-white/10 pl-8">
+                          "{recommendation}"
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="glass-panel p-10 border-white/5 space-y-10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <TrendingUp className="text-blue-400 w-5 h-5" />
+                          <h4 className="text-xl font-black uppercase tracking-widest">PROGRESS ARCHIVE</h4>
+                        </div>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-white/20 font-mono">Simulated Delta</span>
+                      </div>
+                      
+                      <div className="h-[200px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={mockProgressData}>
+                            <defs>
+                              <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#39FF14" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#39FF14" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                            <XAxis 
+                              dataKey="month" 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: '#ffffff20', fontSize: 10, fontWeight: 900 }}
+                            />
+                            <YAxis hide domain={[20, 30]} />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#000', border: '1px solid #ffffff10', borderRadius: '12px', fontSize: '10px' }}
+                              itemStyle={{ color: '#39FF14', fontWeight: 900 }}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="val" 
+                              stroke="#39FF14" 
+                              fillOpacity={1} 
+                              fill="url(#colorVal)" 
+                              strokeWidth={3}
+                            />
+                            <ReferenceLine y={24.9} stroke="#ffffff10" strokeDasharray="3 3" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <div className="space-y-8">
+                        <div>
+                          <div className="flex justify-between mb-3">
+                            <span className="text-[9px] font-black text-white/20 tracking-widest uppercase italic">Target Accuracy Protocol</span>
+                            <span className="text-xs font-black text-neon-green">94.2%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <motion.div initial={{ width: 0 }} animate={{ width: "94.2%" }} className="h-full bg-neon-green shadow-glow" />
+                          </div>
+                        </div>
+                        <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                           <span className="text-[8px] font-black text-white/20 tracking-[0.3em] uppercase">Metrics Sync Status</span>
+                           <span className="text-[8px] font-black text-neon-green tracking-widest uppercase">SYD-ALPHA ACTIVE</span>
+                        </div>
                       </div>
                     </div>
+                  </div>
                 </motion.div>
               ) : (
-                <div className="glass-card p-10 h-full flex flex-col items-center justify-center text-center opacity-40">
-                  <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                    <Info className="w-10 h-10 text-gray-600" />
+                <div className="glass-panel h-[700px] flex flex-col items-center justify-center border-white/5 text-center px-12 group">
+                  <div className="w-32 h-32 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center mb-12 group-hover:border-neon-green/30 transition-all duration-1000 group-hover:rotate-45">
+                    <Activity className="w-12 h-12 text-white/10 group-hover:text-neon-green/40 transition-colors" />
                   </div>
-                  <p className="text-sm font-bold uppercase tracking-widest text-gray-500">Result will appear here</p>
+                  <h3 className="text-3xl font-display font-black uppercase tracking-tighter mb-6 text-white/20">Waiting for Data Link</h3>
+                  <p className="text-white/10 text-xs font-black uppercase tracking-[0.3em] font-mono">Initialize the physiological audit on the left console to generate bio-metrics.</p>
                 </div>
               )}
             </AnimatePresence>
-
-            <div className="glass-card p-8 border-white/5">
-              <h3 className="font-display font-bold text-sm uppercase tracking-[0.2em] mb-6">BMI Classification</h3>
-              <div className="space-y-4">
-                {[
-                  { label: "Underweight", range: "< 18.5", color: "bg-blue-400" },
-                  { label: "Normal", range: "18.5 - 24.9", color: "bg-neon-green" },
-                  { label: "Overweight", range: "25 - 29.9", color: "bg-orange-400" },
-                  { label: "Obese", range: "> 30", color: "bg-red-500" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${item.color} ${item.label === category ? "animate-ping" : ""}`} />
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">{item.label}</span>
-                    </div>
-                    <span className="text-xs font-mono text-gray-600">{item.range}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>

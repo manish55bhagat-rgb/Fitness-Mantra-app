@@ -1,8 +1,9 @@
 {
-  "name": "Remix: Fitness Mantra",
-  "description": "A premium, futuristic fitness platform by Manish Bhagat featuring AI-driven workouts, 3D exercises, and professional diet plans.",
+  "name": "FITNESS MANTRA",
+  "description": "An ultra-premium AI-powered fitness ecosystem featuring cinematic workouts, personalized Indian diet plans, and real-time biometric tracking.",
   "requestFramePermissions": [],
   "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API",
     "AI-driven coaching",
     "3D Workout Visualization",
     "Premium Diet Tracking"

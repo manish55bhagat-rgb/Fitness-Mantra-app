@@ -1,207 +1,175 @@
-import React, { useState, useEffect } from "react";
-import { motion, useScroll, useTransform, useSpring, useMotionValue, Variants } from "motion/react";
-import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight } from "lucide-react";
+import React, { useState } from "react";
+import { motion, useMotionValue, useSpring, useTransform, Variants } from "motion/react";
+import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight, ShieldCheck, Dumbbell, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import Model3D from "../components/ui/Model3D";
+import { useLanguage } from "../context/LanguageContext";
 
 const stats = [
-  { label: "Active Members", value: "10k+", icon: Users },
-  { label: "Workout Programs", value: "150+", icon: Target },
-  { label: "Expert Trainers", value: "25+", icon: Activity },
-  { label: "Success Rate", value: "98%", icon: TrendingUp },
+  { label: "Elite Members", value: "12k+", icon: Users },
+  { label: "Neural Protocols", value: "500+", icon: Target },
+  { label: "Pro Trainers", value: "30+", icon: Activity },
+  { label: "V-Max Success", value: "99.2%", icon: TrendingUp },
 ];
 
 const programs = [
-  { title: "Muscle Forge", desc: "Advanced hypertrophy training", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" },
-  { title: "Lean Burn", desc: "Intense metabollic conditioning", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" },
-  { title: "Zen Flow", desc: "Mind-body recovery & yoga", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop" },
+  { 
+    title: "Force Architecture", 
+    desc: "Elite hypertrophy and structural strength engineering.", 
+    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=2070&auto=format&fit=crop",
+    category: "STRENGTH"
+  },
+  { 
+    title: "Metabolic Shred", 
+    desc: "High-intensity oxidative conditioning sequences.", 
+    image: "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?q=80&w=2070&auto=format&fit=crop",
+    category: "CARDIO"
+  },
+  { 
+    title: "Neural Recovery", 
+    desc: "Bio-mechanical restoration and cognitive flow.", 
+    image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=2070&auto=format&fit=crop",
+    category: "MOBILITY"
+  },
 ];
 
+const CheckCircle2 = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="3" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M20 6 9 17l-5-5"/>
+  </svg>
+);
+
 export default function Home() {
+  const { t } = useLanguage();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-
-  // Parallax smooth values
-  const smoothX = useSpring(mouseX, { damping: 50, stiffness: 400 });
-  const smoothY = useSpring(mouseY, { damping: 50, stiffness: 400 });
-
-  const rotateX = useTransform(smoothY, [-300, 300], [10, -10]);
-  const rotateY = useTransform(smoothX, [-300, 300], [-10, 10]);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    mouseX.set(e.clientX - centerX);
-    mouseY.set(e.clientY - centerY);
-  };
-
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
+        staggerChildren: 0.1,
+        delayChildren: 0.3,
       },
     },
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 50, filter: "blur(10px)" },
+    hidden: { opacity: 0, y: 30, filter: "blur(10px)" },
     visible: {
       opacity: 1,
       y: 0,
       filter: "blur(0px)",
-      transition: { duration: 1, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
     },
   };
 
   return (
-    <div className="overflow-hidden bg-deep-black" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+    <div className="overflow-hidden bg-deep-black text-white font-sans selection:bg-neon-green selection:text-black">
       
       {/* Cinematic Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-24 overflow-hidden">
-        {/* Cinematic Background Overlay */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Visuals */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-black/60 z-10" />
-          <img 
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=2070" 
-            alt="Hero Background" 
-            className="w-full h-full object-cover scale-110 animate-pulse-soft opacity-40 grayscale"
+          <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/40 to-deep-black z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-deep-black via-transparent to-deep-black z-10" />
+          <motion.img 
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.5 }}
+            transition={{ duration: 2, ease: "easeOut" }}
+            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" 
+            alt="Elite Fitness Heritage" 
+            className="w-full h-full object-cover grayscale"
             referrerPolicy="no-referrer"
           />
-          <div className="cinematic-overlay z-20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-deep-black via-transparent to-deep-black/40 z-10" />
         </div>
 
-        {/* Ambient Lights */}
-        <div className="absolute top-1/4 -left-1/4 w-[600px] h-[600px] bg-neon-green/10 blur-[150px] rounded-full mix-blend-screen animate-float" />
-        <div className="absolute bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full mix-blend-screen animate-float" style={{ animationDelay: '-3s' }} />
+        {/* Neural Particles Overlay */}
+        <div className="absolute inset-0 os-grid opacity-10 pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30 w-full mt-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-24 relative z-20 w-full text-center">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div
+              variants={itemVariants}
+              className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-neon-green/20 mb-12"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse shadow-glow" />
+              <span className="text-[10px] font-black tracking-[0.5em] text-neon-green uppercase font-mono">Neural Performance v4.0.2</span>
+            </motion.div>
             
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="lg:col-span-7"
+            <motion.h1 
+              variants={itemVariants}
+              className="text-6xl md:text-8xl lg:text-[10rem] font-black leading-[0.82] tracking-tighter uppercase mb-12 italic"
             >
-              <motion.div
-                variants={itemVariants}
-                className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-neon-green/30 mb-10 shadow-[0_0_20px_rgba(57,255,20,0.1)]"
-              >
-                <div className="w-2.5 h-2.5 rounded-full bg-neon-green animate-glow" />
-                <span className="text-[10px] font-black tracking-[0.4em] text-neon-green uppercase font-mono">Neural Interface v4.2</span>
-              </motion.div>
-              
-              <motion.h1 
-                variants={itemVariants}
-                className="text-7xl md:text-[8rem] lg:text-[10rem] font-black leading-[0.8] tracking-tighter uppercase mb-10 italic"
-              >
-                <span className="block transform -skew-x-12">Transform</span>
-                <span className="premium-gradient-text block mt-4">Your Body</span>
-              </motion.h1>
-              
-              <motion.p 
-                variants={itemVariants}
-                className="text-white/50 text-base md:text-xl max-w-xl mb-14 leading-relaxed font-semibold uppercase tracking-tight"
-              >
-                AI-Powered Workouts, Precision Nutrition & Smart Kinetic Guidance. The future of elite human performance is here.
-              </motion.p>
-
-              <motion.div 
-                variants={itemVariants}
-                className="flex flex-wrap gap-8"
-              >
-                <Link to="/exercises" className="btn-premium px-14 py-7 text-sm group">
-                  START TRAINING <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                </Link>
-                <Link to="/diet" className="btn-outline px-14 py-7 text-sm">
-                  GET DIET PLAN
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              style={{ rotateX, rotateY, perspective: 1500 }}
-              initial={{ opacity: 0, scale: 0.8, rotateY: 30 }}
-              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:col-span-5 hidden lg:block relative h-[800px]"
+              <span className="block text-white/90">Evolve Your</span>
+              <span className="premium-gradient-text block">Physicality</span>
+            </motion.h1>
+            
+            <motion.p 
+              variants={itemVariants}
+              className="text-white/40 text-xl md:text-2xl max-w-3xl mx-auto mb-16 leading-relaxed font-semibold italic tracking-tight"
             >
-              <div className="absolute inset-0 bg-neon-green/5 blur-[120px] rounded-full animate-pulse-soft" />
-              
-              {/* 3D Trainer Model Container */}
-              <div className="w-full h-full relative cursor-grab active:cursor-grabbing group">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/[0.01] rounded-full border border-white/5 animate-[rotate-360_20s_linear_infinite]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-white/[0.01] rounded-full border border-white/5 animate-[rotate-360_15s_linear_infinite_reverse]" />
-                
-                <Model3D />
-                
-                {/* Floating Bio-Data Tags */}
-                <motion.div 
-                  animate={{ y: [0, -15, 0], x: [0, 5, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute top-20 -left-12 glass-panel p-6 neon-border backdrop-blur-3xl shadow-xl z-20 group-hover:border-neon-green/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <Activity className="w-4 h-4 text-neon-green" />
-                    <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">Metabolic Force</span>
-                  </div>
-                  <div className="text-3xl font-black text-white">2,840 <span className="text-xs text-white/30 font-mono italic">KCAL</span></div>
-                </motion.div>
+              The definitive high-performance ecosystem for the modern athlete. <br className="hidden md:block" /> 
+              Pro human form meets neural biometric intelligence.
+            </motion.p>
 
-                <motion.div 
-                  animate={{ y: [0, 15, 0], x: [0, -8, 0] }}
-                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute bottom-40 -right-8 glass-panel p-6 neon-border backdrop-blur-3xl shadow-xl z-20 group-hover:border-blue-500/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <Zap className="w-4 h-4 text-blue-400" />
-                    <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">Neural Sync</span>
-                  </div>
-                  <div className="text-3xl font-black text-white">98.2% <span className="text-xs text-white/30 font-mono italic">ACCURACY</span></div>
-                </motion.div>
-
-                {/* Trainer Highlight Pulse */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-20 w-32 h-8 bg-neon-green/20 blur-2xl rounded-full animate-pulse-soft" />
-              </div>
+            <motion.div 
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row items-center justify-center gap-8"
+            >
+              <Link to="/exercises" className="btn-premium px-16 py-7 text-xs group shadow-glow hover:shadow-[0_0_40px_rgba(57,255,20,0.4)] transition-all">
+                START YOUR PROTOCOL <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+              </Link>
+              <Link to="/dashboard" className="btn-outline px-16 py-7 text-xs border-white/10 hover:bg-white/5 transition-all">
+                VIEW ANALYTICS
+              </Link>
             </motion.div>
-
-          </div>
+          </motion.div>
         </div>
+
+        {/* Scroll Progress Indicator */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-20"
+        >
+          <span className="text-[8px] font-black uppercase tracking-[0.4em] font-mono">Downlink</span>
+          <div className="w-[1px] h-12 bg-gradient-to-b from-white to-transparent animate-bounce-slow" />
+        </motion.div>
       </section>
 
-      {/* Advanced Stats Section */}
-      <section className="py-24 border-y border-white/5 relative z-10 bg-deep-black group">
-        <div className="absolute inset-0 os-grid opacity-20" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative py-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
+      {/* Biometric Stats Bar */}
+      <section className="relative z-10 border-y border-white/5 bg-black/40 backdrop-blur-3xl overflow-hidden py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-24">
             {stats.map((stat, idx) => (
-              <motion.div
+              <motion.div 
                 key={idx}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1, duration: 0.8 }}
-                className="relative group/stat"
+                transition={{ delay: idx * 0.1 }}
+                className="flex flex-col items-center lg:items-start"
               >
-                <div className="flex flex-col items-center">
-                  <div className="w-20 h-20 bg-white/[0.03] border border-white/10 rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden transition-all duration-700 group-hover/stat:border-neon-green/50 group-hover/stat:rotate-[10deg] shadow-lg">
-                    <div className="absolute inset-0 bg-neon-green/5 opacity-0 group-hover/stat:opacity-100 transition-opacity" />
-                    <stat.icon className="w-8 h-8 text-white/40 group-hover/stat:text-neon-green group-hover/stat:-rotate-[10deg] transition-all duration-700" />
-                  </div>
-                  <div className="text-center">
-                    <div className="text-6xl font-black tracking-tighter mb-2 group-hover/stat:text-neon-green transition-colors duration-500">{stat.value}</div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 group-hover/stat:text-white/40 transition-colors font-mono">{stat.label}</div>
-                  </div>
+                <div className="text-4xl md:text-6xl font-black italic mb-2 tracking-tighter">
+                  {stat.value}
+                </div>
+                <div className="flex items-center gap-3 text-neon-green/40">
+                  <stat.icon className="w-3 h-3" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] font-mono">{stat.label}</span>
                 </div>
               </motion.div>
             ))}
@@ -209,65 +177,202 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Evolution / Programs Section */}
-      <section className="py-48 relative overflow-hidden bg-deep-black">
-        <div className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-neon-green/5 blur-[150px] rounded-full pointer-events-none" />
+      {/* Feature Showcase: AI Integration */}
+      <section className="py-48 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-neon-green/5 blur-[180px] rounded-full pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col lg:flex-row justify-between items-end gap-16 mb-24"
-          >
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col lg:flex-row items-center gap-32">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              className="lg:w-1/2"
+            >
+              <div className="flex items-center gap-4 mb-10">
+                <div className="w-10 h-[1.5px] bg-neon-green" />
+                <span className="text-neon-green font-black text-[10px] uppercase tracking-[0.6em] font-mono">NEURAL INTERFACE</span>
+              </div>
+              <h2 className="text-6xl md:text-8xl font-display font-black leading-[0.85] uppercase tracking-tighter mb-10 italic">
+                Visionary<br /><span className="premium-gradient-text">Intelligence</span>
+              </h2>
+              <p className="text-white/40 text-xl font-semibold uppercase italic tracking-tight leading-relaxed mb-12">
+                Our proprietary AI engine analyzes your biometric data and form markers to architect a protocol that evolves as fast as you do.
+              </p>
+              
+              <div className="space-y-6 mb-16">
+                {[
+                  "Real-time kinetic form analysis",
+                  "Biological metabolic tracking",
+                  "Predictive performance modeling"
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-6 group">
+                    <div className="w-6 h-6 rounded-full border border-neon-green/20 flex items-center justify-center group-hover:bg-neon-green transition-all">
+                       <CheckCircle2 className="w-3 h-3 text-neon-green group-hover:text-black" />
+                    </div>
+                    <span className="text-sm font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <Link to="/ai-assistant" className="btn-premium px-12 py-6 text-xs group inline-flex">
+                SYNC NEURAL LINK <Sparkles className="w-5 h-5 ml-4 group-hover:rotate-12 transition-transform" />
+              </Link>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              className="lg:w-1/2 relative"
+            >
+              <div className="glass-panel p-4 border-white/5 bg-white/[0.01] rounded-[48px] shadow-2xl relative z-10">
+                <img 
+                  src="https://images.unsplash.com/photo-1548690312-e3b507d17a47?q=80&w=2070&auto=format&fit=crop" 
+                  alt="High Performance" 
+                  className="w-full h-full object-cover rounded-[40px] grayscale brightness-75 hover:grayscale-0 transition-all duration-1000"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              
+              {/* UI Overlays for Depth */}
+              <motion.div 
+                animate={{ y: [0, -20, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-12 -right-12 glass-panel p-8 border-neon-green/20 z-20 backdrop-blur-3xl"
+              >
+                <div className="text-neon-green font-black text-4xl italic mb-1">98.4%</div>
+                <div className="text-[8px] font-black uppercase tracking-widest text-white/30">Force Accuracy</div>
+              </motion.div>
+
+              <motion.div 
+                animate={{ y: [0, 20, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute -bottom-10 -left-10 glass-panel p-8 border-blue-500/20 z-20 backdrop-blur-3xl"
+              >
+                <Activity className="text-blue-500 w-8 h-8 mb-4 animate-pulse" />
+                <div className="text-white font-black text-lg italic uppercase">Vitalized Sync</div>
+                <div className="text-[8px] font-black uppercase tracking-widest text-white/20">Protocol Online</div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Biometric Optimization Engines */}
+      <section className="py-48 relative border-t border-white/5 bg-gradient-to-b from-deep-black via-black/30 to-deep-black overflow-hidden">
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-neon-green/5 blur-[150px] rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6">
+          <header className="flex flex-col md:flex-row justify-between items-end gap-16 mb-24">
             <div className="max-w-3xl">
-              <span className="text-neon-green font-black text-[12px] uppercase tracking-[0.5em] mb-8 block bg-neon-green/10 w-fit px-4 py-1.5 rounded-lg border border-neon-green/20">The Evolution Core</span>
-              <h2 className="text-7xl md:text-9xl font-display font-black leading-[0.85] uppercase tracking-tighter">
-                Accelerate Your<br />
-                <span className="stroke-text font-black">Meta-Growth</span>
+              <span className="text-neon-green font-black text-[10px] uppercase tracking-[0.5em] mb-8 block bg-neon-green/5 w-fit px-5 py-2 rounded-full border border-neon-green/20">INTELLIGENT DIAGNOSTICS</span>
+              <h2 className="text-6xl md:text-8xl font-display font-black leading-[0.85] uppercase tracking-tighter italic">
+                {t("Bmi.Title").split(" ")[0]}<br /><span className="premium-gradient-text">{t("Bmi.Title").split(" ").slice(1).join(" ") || "Calculators"}</span>
               </h2>
             </div>
-            <Link to="/programs" className="group flex items-center gap-6 text-xs font-black uppercase tracking-[0.4em] text-white/30 hover:text-white transition-all">
-              Initialize Access Protocol
-              <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:border-neon-green transition-colors">
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 group-hover:text-neon-green transition-all" />
-              </div>
-            </Link>
-          </motion.div>
+            <p className="text-white/20 text-xs font-black uppercase tracking-[0.2em] max-w-sm mb-4 leading-relaxed font-mono">
+              {t("Home.Subtitle")}
+            </p>
+          </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+            {/* BMI Calculator Portal Block */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="group glass-panel p-16 border-white/5 hover:border-neon-green/20 transition-all duration-500 hover:shadow-[0_0_50px_rgba(57,255,20,0.05)] rounded-[48px] relative overflow-hidden flex flex-col justify-between h-[450px]"
+            >
+              <div className="absolute -right-20 -top-20 w-64 h-64 bg-neon-green/5 blur-3xl rounded-full group-hover:bg-neon-green/10 transition-colors pointer-events-none" />
+              <div>
+                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 mb-8 group-hover:border-neon-green/20 transition-colors">
+                  <Activity className="w-8 h-8 text-neon-green" />
+                </div>
+                <h3 className="text-3xl font-display font-black uppercase tracking-tight italic mb-4">{t("Home.BmiEngine")}</h3>
+                <p className="text-white/45 text-sm font-semibold tracking-tight uppercase leading-relaxed italic">
+                  {t("Home.BmiDesc")}
+                </p>
+              </div>
+              <div className="mt-8">
+                <Link to="/bmi-calculator" className="btn-premium px-10 py-5 w-full text-center text-[10px] tracking-[0.25em] font-black uppercase rounded-2xl flex items-center justify-center gap-4 group/btn">
+                  {t("Home.LaunchBmi")} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Calorie Calculator Portal Block */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="group glass-panel p-16 border-white/5 hover:border-blue-500/20 transition-all duration-500 hover:shadow-[0_0_50px_rgba(59,130,246,0.05)] rounded-[48px] relative overflow-hidden flex flex-col justify-between h-[450px]"
+            >
+              <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full group-hover:bg-blue-500/10 transition-colors pointer-events-none" />
+              <div>
+                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 mb-8 group-hover:border-blue-500/20 transition-colors">
+                  <span className="text-3xl font-black text-blue-400">🔥</span>
+                </div>
+                <h3 className="text-3xl font-display font-black uppercase tracking-tight italic mb-4">{t("Home.CalEngine")}</h3>
+                <p className="text-white/45 text-sm font-semibold tracking-tight uppercase leading-relaxed italic">
+                  {t("Home.CalDesc")}
+                </p>
+              </div>
+              <div className="mt-8">
+                <Link to="/calorie-calculator" className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/20 text-white w-full py-5 text-center text-[10px] tracking-[0.25em] font-black uppercase rounded-2xl flex items-center justify-center gap-4 group/btn transition-all">
+                  {t("Home.LaunchCal")} <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Program Matrix */}
+      <section className="py-48 bg-deep-black relative">
+        <div className="max-w-7xl mx-auto px-6">
+          <header className="flex flex-col md:flex-row justify-between items-end gap-16 mb-32">
+            <div className="max-w-3xl">
+              <span className="text-neon-green font-black text-[10px] uppercase tracking-[0.5em] mb-8 block bg-neon-green/5 w-fit px-5 py-2 rounded-full border border-neon-green/20">THE PROTOCOLS</span>
+              <h2 className="text-7xl md:text-9xl font-display font-black leading-[0.85] uppercase tracking-tighter italic">
+                Kinetic<br /><span className="stroke-text">Architecture</span>
+              </h2>
+            </div>
+            <p className="text-white/20 text-xs font-black uppercase tracking-[0.2em] max-w-sm mb-4 leading-relaxed font-mono">
+              Engineered sequences for anatomical optimization and force generation.
+            </p>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 xl:gap-20">
             {programs.map((program, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 60 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.15, duration: 1 }}
-                whileHover={{ y: -25 }}
-                className="group relative h-[650px] rounded-[48px] overflow-hidden bg-white/[0.02] border border-white/5 hover:border-neon-green/30 transition-all duration-700"
+                transition={{ delay: idx * 0.1, duration: 1 }}
+                className="group relative h-[700px] rounded-[56px] overflow-hidden bg-white/[0.02] border border-white/5 hover:border-neon-green/20 transition-all duration-700"
               >
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 z-0">
                   <img 
                     src={program.image} 
                     alt={program.title} 
-                    className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-115 group-hover:rotate-2 opacity-30 group-hover:opacity-60 grayscale group-hover:grayscale-0"
+                    className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-80 group-hover:scale-110 transition-all duration-1000"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-deep-black via-deep-black/50 to-transparent transition-all duration-700 group-hover:via-deep-black/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-deep-black via-deep-black/20 to-transparent" />
                 </div>
-                
-                <div className="absolute bottom-0 left-0 right-0 p-12">
-                  <div className="flex items-center gap-3 mb-6 opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-4 group-hover:translate-x-0">
-                    <div className="w-1.5 h-1.5 rounded-full bg-neon-green shadow-glow" />
-                    <span className="text-[10px] font-black text-neon-green uppercase tracking-[0.4em]">Optimized Module</span>
-                  </div>
-                  <h3 className="text-4xl md:text-5xl font-display font-black mb-6 uppercase tracking-tighter italic">{program.title}</h3>
-                  <p className="text-white/40 text-sm mb-12 opacity-0 group-hover:opacity-100 transition-all duration-700 delay-100 translate-y-6 group-hover:translate-y-0 leading-relaxed font-semibold uppercase tracking-tight">
+
+                <div className="absolute top-12 left-12 z-20">
+                   <div className="text-[10px] font-black text-white/40 tracking-[0.4em] uppercase font-mono">{program.category}</div>
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-12 z-20">
+                  <h3 className="text-5xl font-display font-black mb-6 uppercase tracking-tighter italic group-hover:text-neon-green transition-colors">{program.title}</h3>
+                  <p className="text-white/40 text-sm mb-12 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-6 group-hover:translate-y-0 leading-relaxed font-semibold uppercase tracking-tight italic">
                     {program.desc}
                   </p>
-                  <button className="w-full py-6 bg-white/5 border border-white/10 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-xl group-hover:bg-neon-green group-hover:text-black group-hover:border-transparent group-hover:shadow-[0_20px_40px_rgba(57,255,20,0.3)] transition-all duration-500">
-                    ACCESS INTERFACE
-                  </button>
+                  <Link to="/exercises" className="w-full h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-xl group-hover:bg-neon-green group-hover:text-black group-hover:shadow-glow transition-all duration-500">
+                    ACCESS MODULE
+                  </Link>
                 </div>
               </motion.div>
             ))}
@@ -275,51 +380,100 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Premium CTA Section */}
-      <section className="py-40 relative">
-        <div className="max-w-5xl mx-auto px-4 relative z-10">
-          <div className="glass-panel p-16 md:p-24 border-neon-green/20 relative overflow-hidden text-center group">
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-neon-green/10 blur-[100px] rounded-full animate-pulse-soft" />
-            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full animate-pulse-soft" style={{ animationDelay: '-2s' }} />
-            
-            <div className="relative z-10 flex flex-col items-center">
-              <p className="text-neon-green font-black text-[12px] uppercase tracking-[0.6em] mb-12 font-mono drop-shadow-glow">Elite Tier Access</p>
-              <h2 className="text-5xl md:text-8xl font-display font-black leading-[0.9] uppercase tracking-tighter mb-12">
-                Join the <br /> <span className="premium-gradient-text italic">Performance Elite</span>
-              </h2>
-              <div className="flex flex-wrap justify-center gap-8 w-full max-w-sm">
-                <Link to="/subscription" className="btn-premium w-full py-7 group">
-                  UPGRADE PROTOCOL <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                </Link>
-                <Link to="/register" className="btn-outline w-full py-7">
-                  FREE REGISTRATION
-                </Link>
-              </div>
-            </div>
+      {/* Elite Community / Social Proof */}
+      <section className="py-48 relative border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <div className="inline-block mb-16">
+             <div className="flex -space-x-4">
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className="w-16 h-16 rounded-full border-4 border-deep-black overflow-hidden bg-white/5 transition-transform hover:scale-110 hover:z-20 cursor-pointer">
+                     <img src={`https://i.pravatar.cc/150?u=fitness${i}`} className="w-full h-full object-cover grayscale block" />
+                  </div>
+                ))}
+             </div>
+          </div>
+          <h2 className="text-5xl md:text-8xl font-display font-black leading-none uppercase tracking-tighter mb-12 italic">
+            Joined by <span className="premium-gradient-text">100,000+</span> Athletes
+          </h2>
+          <p className="text-white/20 text-xs font-black uppercase tracking-[0.6em] mb-20 italic">Global High-Performance Network</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+             {[
+               { quote: "The neural form alignment changed my squat architecture entirely.", author: "Marcus R." },
+               { quote: "Cleanest fitness UI I've ever experienced. Pure performance.", author: "Sarah J." },
+               { quote: "Finally, a platform that respects natural bodybuilding limits.", author: "David K." }
+             ].map((t, idx) => (
+               <div key={idx} className="glass-panel p-10 border-white/5 bg-white/[0.01] text-left">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-white/40 leading-relaxed italic mb-8">"{t.quote}"</p>
+                  <div className="text-[9px] font-black text-neon-green uppercase tracking-[0.4em] font-mono">— {t.author}</div>
+               </div>
+             ))}
           </div>
         </div>
       </section>
 
-      {/* Architect Badge Footer */}
-      <footer className="py-32 border-t border-white/5 relative bg-black/40 backdrop-blur-3xl">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="inline-block"
-          >
-            <div className="w-px h-24 bg-gradient-to-b from-transparent via-white/20 to-transparent mx-auto mb-16" />
-            <p className="text-[10px] tracking-[0.8em] font-black text-white/20 uppercase mb-8 font-mono">Principal Systems Architect</p>
-            <h3 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white/90 group cursor-default">
-              MANISH <span className="text-neon-green italic drop-shadow-[0_0_15px_rgba(57,255,20,0.3)] transition-all duration-700 group-hover:drop-shadow-[0_0_30px_rgba(57,255,20,0.6)]">BHAGAT</span>
-            </h3>
-            <p className="mt-12 text-[9px] font-mono text-white/10 uppercase tracking-[0.3em]">Built for high-performance evolution // © 2024</p>
-          </motion.div>
+      {/* Premium CTA: The Final Ascent */}
+      <section className="py-60 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-neon-green/5 blur-[200px] rounded-full pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
+          <div className="glass-panel p-20 md:p-32 border-neon-green/20 relative overflow-hidden group rounded-[64px]">
+             <div className="absolute inset-0 bg-gradient-to-br from-neon-green/10 to-blue-500/10 opacity-30 group-hover:opacity-50 transition-opacity" />
+             
+             <div className="relative z-10 flex flex-col items-center text-center">
+                <ShieldCheck className="w-20 h-20 text-neon-green mb-12 animate-glow" />
+                <h2 className="text-6xl md:text-9xl font-display font-black leading-[0.85] uppercase tracking-tighter mb-16 italic">
+                  Ascend to <br /><span className="premium-gradient-text">Elite Tier</span>
+                </h2>
+                <p className="text-white/40 text-xl font-semibold uppercase italic tracking-tight mb-20 max-w-2xl">
+                  Unlock the full neural stack. Custom biological routing, 1-on-1 performance coaching, and zero-gravity training sequences.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-8 w-full max-w-lg">
+                   <Link to="/subscription" className="btn-premium w-full py-8 group !rounded-3xl shadow-glow">
+                      INITIALIZE ACCESS <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                   </Link>
+                </div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Luxury Footer */}
+      <footer className="py-40 bg-black/80 backdrop-blur-3xl relative border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-end">
+            <div>
+              <div className="flex items-center gap-4 mb-12">
+                <div className="w-12 h-12 bg-neon-green rounded-2xl flex items-center justify-center rotate-6 shadow-glow">
+                  <Activity className="text-black w-8 h-8" />
+                </div>
+                <h3 className="text-4xl font-display font-black tracking-tighter italic">FITNESS MANTRA</h3>
+              </div>
+              <p className="text-white/20 text-xs font-black uppercase tracking-[0.4em] leading-relaxed max-w-md italic mb-16">
+                Evolving human capability through neural biometric intelligence and high-fidelity kinetic architecture.
+              </p>
+              
+              <div className="flex gap-12">
+                 {["Instagram", "X Protocol", "Neural Link"].map(social => (
+                   <a key={social} href="#" className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-neon-green transition-all">{social}</a>
+                 ))}
+              </div>
+            </div>
+
+            <div className="text-center lg:text-right">
+              <div className="inline-block">
+                <span className="text-[10px] tracking-[0.8em] font-black text-white/20 uppercase mb-8 block font-mono">Principal Systems Architect</span>
+                <h3 className="text-5xl md:text-8xl font-display font-black tracking-tighter text-white/90 group cursor-default leading-none">
+                  MANISH <span className="text-neon-green italic drop-shadow-glow transition-all duration-700 uppercase">BHAGAT</span>
+                </h3>
+                <p className="mt-12 text-[9px] font-mono text-white/10 uppercase tracking-[0.4em]">Proprietary Performance OS // v4.0.2 // © 2024</p>
+              </div>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
+
 
 

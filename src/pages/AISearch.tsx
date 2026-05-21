@@ -3,6 +3,7 @@ import { Search, Send, Bot, Sparkles, MessageSquare, Activity, ShieldCheck, Zap,
 import { motion, AnimatePresence } from "motion/react";
 
 import { generateContentStream } from "../services/ai";
+import { compressImage } from "../lib/imageCompressor";
 
 interface Message {
   role: "user" | "ai";
@@ -16,6 +17,7 @@ export default function AISearch() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -28,9 +30,20 @@ export default function AISearch() {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsCompressing(true);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        try {
+          // Compress immediately on select
+          const compressed = await compressImage(base64);
+          setSelectedImage(compressed);
+        } catch (err) {
+          console.error("Compression failed", err);
+          setSelectedImage(base64);
+        } finally {
+          setIsCompressing(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -199,7 +212,7 @@ export default function AISearch() {
                   )}
                   {msg.image && (
                     <div className="mb-4 overflow-hidden rounded-2xl border border-black/10">
-                      <img src={msg.image} alt="Uplink Data" className="w-full max-h-60 object-cover" />
+                      <img src={msg.image} alt="Uplink Data" className="w-full max-h-60 object-cover" referrerPolicy="no-referrer" />
                     </div>
                   )}
                   <p className="text-[15px] leading-relaxed font-semibold tracking-tight">{msg.content}</p>
@@ -243,7 +256,7 @@ export default function AISearch() {
                 className="absolute bottom-full left-10 mb-4 p-2 bg-os-black/80 backdrop-blur-3xl border border-neon-green/30 rounded-2xl flex items-center gap-4 animate-glow"
               >
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10">
-                  <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex flex-col pr-4">
                   <span className="text-[8px] font-black uppercase text-neon-green tracking-widest">Image Loaded</span>

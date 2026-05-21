@@ -8,6 +8,8 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 
 import { generateContent } from "../services/ai";
+import { compressImage } from "../lib/imageCompressor";
+import { useLanguage } from "../context/LanguageContext";
 
 interface FoodItem {
   name: string;
@@ -30,6 +32,7 @@ interface LoggedFood extends FoodItem {
 }
 
 export default function CalorieCalculator() {
+  const { t, language } = useLanguage();
   // Biometric State
   const [weight, setWeight] = useState<string>("70");
   const [height, setHeight] = useState<string>("175");
@@ -38,7 +41,7 @@ export default function CalorieCalculator() {
   const [activity, setActivity] = useState<string>("1.375");
   const [targetWeight, setTargetWeight] = useState<string>("2");
   const [weeks, setWeeks] = useState<string>("4");
-  const [biometricResult, setBiometricResult] = useState<{ bmr: number; tdee: number; goalIntake: number } | null>(null);
+  const [biometricResult, setBiometricResult] = useState<{ bmr: number; tdee: number; maintenance: number; weightLoss: number; weightGain: number; goalIntake: number } | null>(null);
   const [isBioLoading, setIsBioLoading] = useState(false);
   const [dietPlan, setDietPlan] = useState<string | null>(null);
 
@@ -55,6 +58,7 @@ export default function CalorieCalculator() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageAnalysis, setImageAnalysis] = useState<string | null>(null);
   const [analyzingImage, setAnalyzingImage] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Animation variants
@@ -84,9 +88,17 @@ export default function CalorieCalculator() {
     const dailyDeficit = totalDeficitNeeded / (timeframeWeeks * 7);
     const goalIntake = Math.round(tdee - dailyDeficit);
 
-    setBiometricResult({ bmr: Math.round(bmr), tdee, goalIntake });
+    setBiometricResult({ 
+      bmr: Math.round(bmr), 
+      tdee, 
+      maintenance: tdee, 
+      weightLoss: Math.round(tdee - 500), 
+      weightGain: Math.round(tdee + 500), 
+      goalIntake: Math.round(tdee - dailyDeficit) 
+    });
 
     try {
+      const langName = language === "hi" ? "Hindi (हिंदी)" : language === "mr" ? "Marathi (मराठी)" : "English";
       const prompt = `Professional Nutritionist Analysis: 
       Profile: ${age}yo ${gender}, ${weight}kg, ${height}cm.
       Objective: Sub-cutaneous fat loss of ${targetWeight}kg in a ${weeks}-week macro-cycle.
@@ -97,11 +109,12 @@ export default function CalorieCalculator() {
       2. Metabolic Optimization Strategies.
       3. Adherence and Recovery Protocol.
       
-      Tone: authoritative, scientific, elite-level.`;
+      Tone: authoritative, scientific, elite-level.
+      RESPOND ENTIRELY IN ${langName} LANGUAGE organically without translating names of values or metrics.`;
       const response = await generateContent(prompt);
       setDietPlan(response);
     } catch (e) {
-      setDietPlan("Protocol uplink terminated by server security.");
+      setDietPlan(language === "hi" ? "एआई पोषण प्रणाली बाधित। कृपया पुनः प्रयास करें।" : language === "mr" ? "एआय पोषण प्रणाली व्यत्यय आणली. कृपया पुन्हा प्रयत्न करा." : "Protocol uplink terminated by server security.");
     } finally {
       setIsBioLoading(false);
     }
@@ -173,10 +186,19 @@ export default function CalorieCalculator() {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsCompressing(true);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
-        setImageAnalysis(null);
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        try {
+          const compressed = await compressImage(base64);
+          setSelectedImage(compressed);
+          setImageAnalysis(null);
+        } catch (err) {
+          setSelectedImage(base64);
+        } finally {
+          setIsCompressing(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -216,8 +238,8 @@ export default function CalorieCalculator() {
               <span className="text-neon-green font-mono text-xs tracking-[0.5em] uppercase font-black">Mantra Neural v4.0</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-display font-black uppercase tracking-tighter leading-[0.85] italic">
-              Metabolic <br />
-              <span className="text-neon-green text-stroke-white opacity-90">Protocol</span>
+              {t("Cal.Title").split(" ")[0]} <br />
+              <span className="text-neon-green text-stroke-white opacity-90">{t("Cal.Title").split(" ").slice(1).join(" ") || "Protocol"}</span>
             </h1>
           </motion.div>
           
@@ -233,7 +255,7 @@ export default function CalorieCalculator() {
               </div>
             </div>
             <p className="text-white/30 font-mono text-[10px] max-w-[280px] md:text-right leading-relaxed uppercase tracking-tighter">
-              Precision calculated biometric modeling. Macro-nutrient engineering based on cellular requirements.
+              {t("Cal.Sub")}
             </p>
           </motion.div>
         </div>
@@ -254,7 +276,7 @@ export default function CalorieCalculator() {
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-4">
                     <Dna className="w-6 h-6 text-neon-green" />
-                    <h2 className="text-xl font-display font-black uppercase tracking-widest">Biometric Uplink</h2>
+                    <h2 className="text-xl font-display font-black uppercase tracking-widest">{t("Bmi.Title")}</h2>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="hidden sm:flex items-center gap-2">
@@ -272,7 +294,7 @@ export default function CalorieCalculator() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1 flex items-center gap-2">
-                      Weight <span className="w-1 h-1 rounded-full bg-neon-green" />
+                      {t("Bmi.WeightLabel").split(" ")[0]} <span className="w-1 h-1 rounded-full bg-neon-green" />
                     </label>
                     <div className="relative">
                       <input 
@@ -284,7 +306,7 @@ export default function CalorieCalculator() {
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1 flex items-center gap-2">
-                      Height <span className="w-1 h-1 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                      {t("Bmi.HeightLabel").split(" ")[0]} <span className="w-1 h-1 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
                     </label>
                     <div className="relative">
                       <input 
@@ -296,7 +318,7 @@ export default function CalorieCalculator() {
                   </div>
                   <div className="space-y-3 col-span-2 md:col-span-1">
                     <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1 flex items-center gap-2">
-                      Years <span className="w-1 h-1 rounded-full bg-neon-yellow shadow-[0_0_10px_rgba(255,255,0,0.5)]" />
+                      {t("Cal.AgeLabel")} <span className="w-1 h-1 rounded-full bg-neon-yellow shadow-[0_0_10px_rgba(255,255,0,0.5)]" />
                     </label>
                     <div className="relative">
                       <input 
@@ -310,30 +332,30 @@ export default function CalorieCalculator() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">Biological Architecture</label>
+                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">{t("Bmi.GenderLabel")}</label>
                     <div className="flex bg-os-black/60 p-2 rounded-2xl border border-white/5 backdrop-blur-xl">
                       {(["Male", "Female"] as const).map(s => (
                         <button 
                           key={s} onClick={() => setGender(s)}
                           className={`flex-1 py-4 text-[10px] font-black uppercase tracking-[0.25em] rounded-xl transition-all ${gender === s ? "bg-neon-green text-black shadow-[0_10px_30px_rgba(57,255,20,0.3)]" : "text-white/20 hover:text-white/40"}`}
                         >
-                          {s}
+                          {s === "Male" ? t("Bmi.Male") : t("Bmi.Female")}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">Kinetic Load Frequency</label>
+                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">{t("Cal.ActivityLabel")}</label>
                     <div className="relative h-[66px]">
                       <select 
                         value={activity} onChange={(e) => setActivity(e.target.value)}
                         className="w-full h-full bg-os-black/60 border border-white/10 rounded-2xl px-6 text-[10px] font-black uppercase tracking-[0.1em] appearance-none focus:border-neon-green/50 outline-none text-white cursor-pointer"
                       >
-                        <option value="1.2">SEDENTARY [RESTRICTED]</option>
-                        <option value="1.375">LIGHT [OPTIMIZED]</option>
-                        <option value="1.55">MODERATE [PERFORMANCE]</option>
-                        <option value="1.725">INTENSE [OVERCLOCK]</option>
-                        <option value="1.9">ELITE [PEAK STATE]</option>
+                        <option value="1.2">{t("Cal.Activity.Sed")}</option>
+                        <option value="1.375">{t("Cal.Activity.Light")}</option>
+                        <option value="1.55">{t("Cal.Activity.Mod")}</option>
+                        <option value="1.725">{t("Cal.Activity.Very")}</option>
+                        <option value="1.9">{t("Cal.Activity.Ext")}</option>
                       </select>
                       <Zap className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-neon-green shadow-glow animate-pulse" />
                     </div>
@@ -342,7 +364,7 @@ export default function CalorieCalculator() {
 
                 <div className="grid grid-cols-2 gap-6 mb-10">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">Delta Target (KG)</label>
+                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">{t("Cal.TargetLabel")}</label>
                     <div className="relative">
                       <input 
                         type="number" value={targetWeight} onChange={(e) => setTargetWeight(e.target.value)}
@@ -352,7 +374,7 @@ export default function CalorieCalculator() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">Mission Window (Wks)</label>
+                    <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">{language === "hi" ? "सप्ताह सीमा" : language === "mr" ? "आठवडे सीमा" : "Mission Window (Wks)"}</label>
                     <div className="relative">
                       <input 
                         type="number" value={weeks} onChange={(e) => setWeeks(e.target.value)}
@@ -373,11 +395,11 @@ export default function CalorieCalculator() {
                   {isBioLoading ? (
                     <div className="flex items-center gap-3">
                       <Activity className="w-5 h-5 animate-spin" />
-                      SYNTHESIZING PROTOCOL...
+                      {language === "hi" ? "प्रोटोकॉल संश्लेषित कर रहा है..." : language === "mr" ? "प्रोटोकॉल तयार करत आहे..." : "SYNTHESIZING PROTOCOL..."}
                     </div>
                   ) : (
                     <>
-                      EXECUTE CALIBRATION
+                      {t("Cal.Btn")}
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform" />
                     </>
                   )}
@@ -547,7 +569,7 @@ export default function CalorieCalculator() {
                     ) : (
                       <div className="space-y-10">
                         <div className="relative rounded-[48px] overflow-hidden border border-white/5 aspect-video group/img shadow-2xl">
-                           <img src={selectedImage} alt="Specimen Preview" className="w-full h-full object-cover" />
+                           <img src={selectedImage} alt="Specimen Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                            <div className="absolute inset-0 bg-black/80 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-6 backdrop-blur-xl">
                               <motion.button 
                                 whileHover={{ scale: 1.05 }}
@@ -634,9 +656,9 @@ export default function CalorieCalculator() {
                        </div>
 
                        <div className="space-y-4 mb-12">
-                          <p className="text-[12px] font-black uppercase tracking-[0.5em] text-neon-green">Total Daily Burn</p>
+                          <p className="text-[12px] font-black uppercase tracking-[0.5em] text-neon-green">{t("Cal.Maintenance")}</p>
                           <div className="flex items-baseline gap-4">
-                             <h2 className="text-9xl font-display font-black text-white italic -ml-2">{biometricResult.tdee}</h2>
+                             <h2 className="text-9xl font-display font-black text-white italic -ml-2">{biometricResult.maintenance}</h2>
                              <span className="text-xl font-display font-black text-white/20 italic">KCAL</span>
                           </div>
                           <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest leading-relaxed">
@@ -644,11 +666,39 @@ export default function CalorieCalculator() {
                           </p>
                        </div>
 
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                           {/* Weight Loss Protocol */}
+                           <div className="bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 p-6 rounded-[24px] flex flex-col justify-between group cursor-pointer relative transition-all">
+                              <div className="absolute inset-0 bg-rose-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity rounded-[24px]" />
+                              <div className="relative z-10 mb-6 font-display font-black">
+                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500/80 mb-2 italic font-sans">{t("Cal.Loss")}</p>
+                                <div className="flex items-baseline gap-1 text-white">
+                                   <span className="text-4xl">{biometricResult.weightLoss}</span>
+                                   <span className="text-[9px] text-white/30 font-sans">KCAL</span>
+                                </div>
+                              </div>
+                              <p className="text-[8px] font-mono text-white/30 uppercase tracking-wide relative z-10">-500 KCAL {t("Cal.Deficit")}</p>
+                           </div>
+
+                           {/* Weight Gain Protocol */}
+                           <div className="bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 p-6 rounded-[24px] flex flex-col justify-between group cursor-pointer relative transition-all">
+                              <div className="absolute inset-0 bg-blue-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity rounded-[24px]" />
+                              <div className="relative z-10 mb-6 font-display font-black">
+                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-400/80 mb-2 italic font-sans">{t("Cal.Gain")}</p>
+                                <div className="flex items-baseline gap-1 text-white">
+                                   <span className="text-4xl">{biometricResult.weightGain}</span>
+                                   <span className="text-[9px] text-white/30 font-sans">KCAL</span>
+                                </div>
+                              </div>
+                              <p className="text-[8px] font-mono text-white/30 uppercase tracking-wide relative z-10">+500 KCAL {t("Cal.Surplus")}</p>
+                           </div>
+                        </div>
+
                        <div className="grid grid-cols-1 gap-6">
                           <div className="bg-neon-green p-8 rounded-[40px] flex items-center justify-between group cursor-help overflow-hidden relative">
                              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                              <div className="relative z-10">
-                               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60 mb-2 italic">Protocol Target</p>
+                               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60 mb-2 italic">{t("Cal.TargetLabel")}</p>
                                <div className="flex items-baseline gap-2 text-black">
                                   <span className="text-6xl font-display font-black">{biometricResult.goalIntake}</span>
                                   <span className="text-xs font-black">KCAL/DAY</span>

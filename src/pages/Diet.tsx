@@ -4,40 +4,40 @@ import { Coffee, Sun, Moon, Droplets, PieChart, Info, ChevronRight, Zap, Target,
 import { Link } from "react-router-dom";
 
 const foodDatabase = [
-  { id: 1, name: "Grilled Chicken Breast", cal: 165, protein: "31g", carbs: "0g", fat: "3.6g", vit: ["B6", "Niacin", "Selenium"], weight: "100g", category: "Protein" },
-  { id: 2, name: "Brown Rice (Cooked)", cal: 111, protein: "2.6g", carbs: "23g", fat: "0.9g", vit: ["Magnesium", "B6", "Fiber"], weight: "100g", category: "Carbs" },
-  { id: 3, name: "Avocado", cal: 160, protein: "2g", carbs: "8.5g", fat: "14.7g", vit: ["K", "C", "B5", "B6", "E"], weight: "100g", category: "Fats" },
-  { id: 4, name: "Spinach", cal: 23, protein: "2.9g", carbs: "3.6g", fat: "0.4g", vit: ["A", "C", "K1", "Folic Acid", "Iron", "Calcium"], weight: "100g", category: "Veggies" },
-  { id: 5, name: "Salmon", cal: 182, protein: "20g", carbs: "0g", fat: "11g", vit: ["B12", "D", "Omega-3"], weight: "100g", category: "Protein" },
-  { id: 6, name: "Almonds", cal: 579, protein: "21g", carbs: "22g", fat: "49g", vit: ["E", "Manganese", "Magnesium"], weight: "100g", category: "Snacks" },
-  { id: 7, name: "Quinoa", cal: 120, protein: "4.4g", carbs: "21g", fat: "1.9g", vit: ["B1", "B2", "B6", "Iron"], weight: "100g", category: "Carbs" },
-  { id: 8, name: "Greek Yogurt", cal: 59, protein: "10g", carbs: "3.6g", fat: "0.4g", vit: ["B12", "Riboflavin", "Calcium"], weight: "100g", category: "Protein" },
+  { id: 1, name: "Paneer (Indian Cottage Cheese)", cal: 265, protein: "18g", carbs: "1.2g", fat: "20g", vit: ["Calcium", "Vitamin D"], weight: "100g", category: "Protein" },
+  { id: 2, name: "Yellow Moong Dal (Cooked)", cal: 105, protein: "7g", carbs: "19g", fat: "0.2g", vit: ["Iron", "Fiber", "Folate"], weight: "100g", category: "Protein" },
+  { id: 3, name: "Whey Protein Isolate", cal: 120, protein: "25g", carbs: "1g", fat: "0.5g", vit: ["Amino Acids", "BCAA"], weight: "30g", category: "Supplements" },
+  { id: 4, name: "Bajra Roti (Pearl Millet)", cal: 110, protein: "3g", carbs: "22g", fat: "1g", vit: ["Magnesium", "Fiber"], weight: "40g", category: "Carbs" },
+  { id: 5, name: "Desi Eggs (Boiled)", cal: 155, protein: "13g", carbs: "1.1g", fat: "11g", vit: ["B12", "D3", "Choline"], weight: "100g", category: "Protein" },
+  { id: 6, name: "Almond & Cashew Mix", cal: 610, protein: "19g", carbs: "21g", fat: "52g", vit: ["E", "Healthy Fats"], weight: "100g", category: "Snacks" },
+  { id: 7, name: "Quinoa Pulao", cal: 130, protein: "5g", carbs: "24g", fat: "2g", vit: ["B1", "Antioxidants"], weight: "100g", category: "Carbs" },
+  { id: 8, name: "Curd (Homemade Dahi)", cal: 61, protein: "3.5g", carbs: "4.7g", fat: "3.3g", vit: ["Probiotics", "Calcium"], weight: "100g", category: "Dairy" },
 ];
 
 const plans = [
   { 
-    name: "Elite Shred", 
+    name: "Vedic Shred", 
     type: "Fat Loss", 
-    macros: { p: "45%", c: "25%", f: "30%" }, 
-    cal: "1600-2000", 
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=2080&auto=format&fit=crop",
-    desc: "Aggressive fat oxidation while preserving peak lean tissue."
+    macros: { p: "40%", c: "30%", f: "30%" }, 
+    cal: "1800-2200", 
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
+    desc: "Luxury weight loss module utilizing high-protein plant and dairy substrates common in Indian cuisine."
   },
   { 
-    name: "Engineered Bulk", 
+    name: "Apex Bulk", 
     type: "Muscle Gain", 
-    macros: { p: "30%", c: "50%", f: "20%" }, 
-    cal: "3000-3500", 
+    macros: { p: "35%", c: "45%", f: "20%" }, 
+    cal: "3200-3800", 
     image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=2071&auto=format&fit=crop",
-    desc: "Caloric surplus substrate for maximal hypertrophic growth."
+    desc: "Precision hypertrophy module for explosive mass accumulation and metabolic efficiency."
   },
   { 
     name: "Keto Protocol", 
     type: "Metabolic Shift", 
     macros: { p: "25%", c: "5%", f: "70%" }, 
-    cal: "2200-2500", 
-    image: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2070&auto=format&fit=crop",
-    desc: "Shift cellular energy substrate to lipid-based performance."
+    cal: "2400-2600", 
+    image: "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=1964&auto=format&fit=crop",
+    desc: "Advanced fat-burning protocol shifting cellular energy to high-quality lipid oxidation."
   },
 ];
 
