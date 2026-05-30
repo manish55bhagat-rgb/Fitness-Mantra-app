@@ -150,9 +150,11 @@ export default function AdminDashboard() {
   // Filtered lists
   const filteredUsers = users.filter((u) => {
     // Search matching
+    const fullNameLower = (u.fullName || "").toLowerCase();
+    const emailLower = (u.email || "").toLowerCase();
     const searchMatch = 
-      u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+      fullNameLower.includes(searchTerm.toLowerCase()) ||
+      emailLower.includes(searchTerm.toLowerCase());
     
     // Role filter
     const roleMatch = 
@@ -396,12 +398,12 @@ export default function AdminDashboard() {
                                 />
                               ) : (
                                 <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center font-bold text-white tracking-widest text-[10px]">
-                                  {userItem.fullName.substring(0, 2).toUpperCase()}
+                                  {(userItem.fullName || userItem.email || "US").substring(0, 2).toUpperCase()}
                                 </div>
                               )}
                               <div className="flex flex-col">
                                 <span className="font-sans font-bold text-white text-[11px] uppercase group-hover:text-neon-green transition-colors">
-                                  {userItem.fullName}
+                                  {userItem.fullName || "No Name"}
                                 </span>
                                 <span className="text-[7px] text-white/30 uppercase tracking-widest mt-0.5">
                                   UID: {userItem.uid.substring(0, 8)}...
@@ -525,12 +527,12 @@ export default function AdminDashboard() {
                   />
                 ) : (
                   <div className="w-16 h-16 bg-neon-green text-black rounded-2xl flex items-center justify-center font-black tracking-widest text-lg">
-                    {selectedUser.fullName.substring(0, 2).toUpperCase()}
+                    {(selectedUser.fullName || selectedUser.email || "US").substring(0, 2).toUpperCase()}
                   </div>
                 )}
                 <div className="flex flex-col gap-1.5">
                   <h3 className="text-lg font-display font-black uppercase tracking-tight text-white mb-0.5">
-                    {selectedUser.fullName}
+                    {selectedUser.fullName || "No Name"}
                   </h3>
                   <div className="flex items-center gap-2 text-white/40 hover:text-white/60 transition-colors text-[9px] font-mono">
                     <Mail className="w-3 h-3 text-white/30" />

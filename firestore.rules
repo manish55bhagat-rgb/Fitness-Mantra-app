@@ -40,12 +40,26 @@ service cloud.firestore {
     }
 
     // Validation helpers
-    function isValidUserProfile(data) {
-      return data.keys().hasAll(['fullName', 'email', 'uid'])
-          && data.keys().size() <= 16
-          && data.fullName is string && data.fullName.size() <= 100
-          && data.email is string && data.email.size() <= 100
-          && data.uid is string && data.uid.size() <= 128;
+    function isValidUserProfile(data, isCreate) {
+      return (
+        (!isCreate || (data.keys().hasAll(['fullName', 'email', 'uid', 'role', 'registrationDate', 'lastLogin']))) &&
+        data.keys().size() <= 20 &&
+        (!('fullName' in data) || (data.fullName is string && data.fullName.size() <= 100)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 100)) &&
+        (!('uid' in data) || (data.uid is string && data.uid.size() <= 128)) &&
+        (!('role' in data) || (data.role is string && (data.role == 'admin' || data.role == 'user'))) &&
+        (!('registrationDate' in data) || (data.registrationDate is string)) &&
+        (!('lastLogin' in data) || (data.lastLogin is string)) &&
+        (!('profilePhotoUrl' in data) || (data.profilePhotoUrl is string)) &&
+        (!('photoUrl' in data) || (data.photoUrl is string)) &&
+        (!('isOnline' in data) || (data.isOnline is bool)) &&
+        (!('age' in data) || (data.age is number)) &&
+        (!('gender' in data) || (data.gender is string)) &&
+        (!('height' in data) || (data.height is number)) &&
+        (!('weight' in data) || (data.weight is number)) &&
+        (!('subscriptionStatus' in data) || (data.subscriptionStatus is string)) &&
+        (!('subscriptionExpiry' in data) || (data.subscriptionExpiry is string))
+      );
     }
 
     function isValidWorkout(data) {
@@ -93,12 +107,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && isValidUserProfile(incoming())
+      allow create: if isOwner(userId) && isValidUserProfile(incoming(), true)
                      && incoming().role == (incoming().email == 'manish55bhagat@gmail.com' ? 'admin' : 'user');
-      allow update: if isOwner(userId) && isValidUserProfile(incoming()) 
-                     && incoming().uid == existing().uid
-                     && incoming().email == existing().email
-                     && incoming().role == (incoming().email == 'manish55bhagat@gmail.com' ? 'admin' : 'user');
+      allow update: if isOwner(userId) && isValidUserProfile(incoming(), false) 
+                     && (!('uid' in incoming()) || incoming().uid == existing().uid)
+                     && (!('email' in incoming()) || incoming().email == existing().email)
+                     && (!('role' in incoming()) || incoming().role == existing().role || isAdmin());
       allow delete: if false; // Profiles cannot be deleted or pruned via client directly
       
       // Subcollections
