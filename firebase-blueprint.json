@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with personal details and subscription status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" },
+        "registrationDate": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" },
+        "profilePhotoUrl": { "type": "string" },
+        "age": { "type": "integer" },
+        "gender": { "type": "string" },
+        "height": { "type": "number" },
+        "weight": { "type": "number" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "subscriptionStatus": { "type": "string" },
+        "subscriptionExpiry": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "email"]
+    },
+    "Workout": {
+      "title": "Workout",
+      "description": "Log of user workout completion and duration.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "workoutName": { "type": "string" },
+        "duration": { "type": "integer" },
+        "caloriesBurned": { "type": "integer" },
+        "completed": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "workoutName", "duration", "caloriesBurned", "completed", "timestamp"]
+    },
+    "DietLog": {
+      "title": "DietLog",
+      "description": "User logged food intake tracking macros and calories.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "mealName": { "type": "string" },
+        "calories": { "type": "integer" },
+        "protein": { "type": "integer" },
+        "carbohydrates": { "type": "integer" },
+        "fat": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "mealName", "calories", "protein", "carbohydrates", "fat", "timestamp"]
+    },
+    "ProgressReport": {
+      "title": "ProgressReport",
+      "description": "Tracking user progress over time including weight and BMI history.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "weight": { "type": "number" },
+        "bmi": { "type": "number" },
+        "bodyFat": { "type": "number" },
+        "goalProgress": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "weight", "bmi", "timestamp"]
+    },
+    "SubscriptionPlan": {
+      "title": "SubscriptionPlan",
+      "description": "User purchased or tracking active subscription plan.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "planName": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "purchaseDate": { "type": "string", "format": "date-time" },
+        "expiryDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "planName", "transactionId", "paymentStatus", "purchaseDate", "expiryDate"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles store profile details."
+    },
+    "/users/{userId}/workouts/{workoutId}": {
+      "schema": "Workout",
+      "description": "Workout subcollection of logged training exercises."
+    },
+    "/users/{userId}/diets/{dietId}": {
+      "schema": "DietLog",
+      "description": "Diet and meal logs showing exact calorie and macronutrient breakdown."
+    },
+    "/users/{userId}/progress/{progressId}": {
+      "schema": "ProgressReport",
+      "description": "Progress reports tracking biometrics over time."
+    },
+    "/users/{userId}/subscriptions/{subId}": {
+      "schema": "SubscriptionPlan",
+      "description": "Logged subscriptions showing billing, transactional IDs, and expiry dates."
+    }
+  }
+}

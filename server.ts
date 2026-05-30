@@ -45,19 +45,39 @@ app.post("/api/ai/tts", async (req, res) => {
   }
   try {
     const ai = getAI();
-    const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-tts-preview",
-      contents: [{ parts: [{ text: `Act as an elite AI fitness trainer. Give this short form correction or tip: ${text}` }] }],
-      config: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: "Zephyr" },
+    let response;
+    let retries = 3;
+    let delay = 1000;
+    
+    while (retries > 0) {
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-3.1-flash-tts-preview",
+          contents: [{ parts: [{ text: `Act as an elite AI fitness trainer. Give this short form correction or tip: ${text}` }] }],
+          config: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: "Zephyr" },
+              },
+            },
           },
-        },
-      },
-    });
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        });
+        break;
+      } catch (err: any) {
+        retries--;
+        const isTransient = err.message?.includes("503") || err.message?.includes("Service Unavailable") || err.message?.includes("UNAVAILABLE") || err.message?.includes("high demand");
+        if (isTransient && retries > 0) {
+          console.warn(`TTS 503 error, retrying in ${delay}ms... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    const base64Audio = response?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) {
       throw new Error("No audio returned from Gemini");
     }
@@ -107,15 +127,33 @@ ${isDataRequest ? "- CRITICAL: Follow formatting instructions EXACTLY. Output on
       });
     }
 
-    const response = await ai.models.generateContentStream({
-      model: "gemini-flash-latest",
-      contents: { parts },
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.9,
-        topP: 0.95,
+    let response;
+    let retries = 3;
+    let delay = 1000;
+    while (retries > 0) {
+      try {
+        response = await ai.models.generateContentStream({
+          model: "gemini-3.5-flash",
+          contents: { parts },
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.9,
+            topP: 0.95,
+          }
+        });
+        break;
+      } catch (err: any) {
+        retries--;
+        const isTransient = err.message?.includes("503") || err.message?.includes("Service Unavailable") || err.message?.includes("UNAVAILABLE") || err.message?.includes("high demand");
+        if (isTransient && retries > 0) {
+          console.warn(`[CHAT] 503 Service Unavailable, retrying in ${delay}ms... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2;
+        } else {
+          throw err;
+        }
       }
-    });
+    }
 
     // Set headers for streaming
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -123,10 +161,12 @@ ${isDataRequest ? "- CRITICAL: Follow formatting instructions EXACTLY. Output on
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    for await (const chunk of response) {
-      const chunkText = chunk.text;
-      if (chunkText) {
-        res.write(chunkText);
+    if (response) {
+      for await (const chunk of response) {
+        const chunkText = chunk.text;
+        if (chunkText) {
+          res.write(chunkText);
+        }
       }
     }
 
@@ -141,7 +181,7 @@ ${isDataRequest ? "- CRITICAL: Follow formatting instructions EXACTLY. Output on
       });
     } else if (errorMessage.includes("404") || errorMessage.includes("not found")) {
       res.status(404).json({ 
-        error: `MODEL NOT FOUND: The requested model 'gemini-flash-latest' was not found or is not supported. ${errorMessage}` 
+        error: `MODEL NOT FOUND: The requested model 'gemini-3.5-flash' was not found or is not supported. ${errorMessage}` 
       });
     } else if (errorMessage.includes("429") || errorMessage.includes("Quota exceeded") || errorMessage.includes("limit")) {
       res.status(429).json({ 

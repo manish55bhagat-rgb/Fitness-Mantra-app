@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Globally accessible helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Auth-owned validation
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Validation helpers
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['fullName', 'email', 'uid'])
+          && data.keys().size() <= 16
+          && data.fullName is string && data.fullName.size() <= 100
+          && data.email is string && data.email.size() <= 100
+          && data.uid is string && data.uid.size() <= 128;
+    }
+
+    function isValidWorkout(data) {
+      return data.keys().hasAll(['workoutName', 'duration', 'caloriesBurned', 'completed', 'userId', 'timestamp'])
+          && data.keys().size() == 6
+          && data.workoutName is string && data.workoutName.size() <= 100
+          && data.duration is int
+          && data.caloriesBurned is int
+          && data.completed is bool
+          && data.userId is string
+          && (data.timestamp is string || data.timestamp is timestamp);
+    }
+
+    function isValidDiet(data) {
+      return data.keys().hasAll(['mealName', 'calories', 'protein', 'carbohydrates', 'fat', 'userId', 'timestamp'])
+          && data.keys().size() == 7
+          && data.mealName is string && data.mealName.size() <= 100
+          && data.calories is int
+          && data.protein is int
+          && data.carbohydrates is int
+          && data.fat is int
+          && data.userId is string
+          && (data.timestamp is string || data.timestamp is timestamp);
+    }
+
+    function isValidProgress(data) {
+      return data.keys().hasAll(['weight', 'bmi', 'userId', 'timestamp'])
+          && data.keys().size() <= 6
+          && data.weight is number
+          && data.bmi is number
+          && data.userId is string
+          && (data.timestamp is string || data.timestamp is timestamp);
+    }
+
+    function isValidSubscription(data) {
+      return data.keys().hasAll(['planName', 'transactionId', 'paymentStatus', 'purchaseDate', 'expiryDate', 'userId'])
+          && data.keys().size() == 6
+          && data.planName is string
+          && data.transactionId is string
+          && data.paymentStatus is string
+          && data.userId is string;
+    }
+
+    // Collection Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming()) 
+                     && incoming().uid == existing().uid
+                     && incoming().email == existing().email
+                     && (!incoming().keys().hasAll(['role']) || !existing().keys().hasAll(['role']) || incoming().role == existing().role);
+      allow delete: if false; // Profiles cannot be deleted or pruned via client directly
+      
+      // Subcollections
+      match /workouts/{workoutId} {
+        allow list, get: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidId(workoutId) && isValidWorkout(incoming()) && incoming().userId == userId;
+        allow update: if isOwner(userId) && isValidId(workoutId) && isValidWorkout(incoming()) && incoming().userId == userId;
+        allow delete: if isOwner(userId) && isValidId(workoutId);
+      }
+
+      match /diets/{dietId} {
+        allow list, get: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidId(dietId) && isValidDiet(incoming()) && incoming().userId == userId;
+        allow update: if isOwner(userId) && isValidId(dietId) && isValidDiet(incoming()) && incoming().userId == userId;
+        allow delete: if isOwner(userId) && isValidId(dietId);
+      }
+
+      match /progress/{progressId} {
+        allow list, get: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidId(progressId) && isValidProgress(incoming()) && incoming().userId == userId;
+        allow update: if isOwner(userId) && isValidId(progressId) && isValidProgress(incoming()) && incoming().userId == userId;
+        allow delete: if isOwner(userId) && isValidId(progressId);
+      }
+
+      match /subscriptions/{subId} {
+        allow list, get: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidId(subId) && isValidSubscription(incoming()) && incoming().userId == userId;
+        allow update: if isOwner(userId) && isValidId(subId) && isValidSubscription(incoming()) && incoming().userId == userId;
+        allow delete: if false; // Subscriptions are permanent transaction receipts
+      }
+    }
+  }
+}

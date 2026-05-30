@@ -10,6 +10,8 @@ import Footer from "./components/layout/Footer";
 import FloatingBackground from "./components/layout/FloatingBackground";
 import Programs from "./pages/Programs";
 import { LanguageProvider } from "./context/LanguageContext";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Lazy load pages for performance
 const Home = lazy(() => import("./pages/Home"));
@@ -25,6 +27,8 @@ const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const WorkoutDetail = lazy(() => import("./pages/WorkoutDetail"));
 const PerformancePortal = lazy(() => import("./pages/PerformancePortal"));
+const AuthPage = lazy(() => import("./pages/Auth"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 function AppContent() {
   const location = useLocation();
@@ -40,19 +44,41 @@ function AppContent() {
         </div>}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<AuthPage />} />
             <Route path="/exercises" element={<Exercises />} />
-            <Route path="/exercises/:id" element={<WorkoutDetail />} />
-            <Route path="/dashboard" element={<PerformancePortal />} />
-            <Route path="/diet" element={<Diet />} />
+            <Route path="/exercises/:id" element={
+              <ProtectedRoute>
+                <WorkoutDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <PerformancePortal />
+              </ProtectedRoute>
+            } />
+            <Route path="/diet" element={
+              <ProtectedRoute>
+                <Diet />
+              </ProtectedRoute>
+            } />
             <Route path="/bmi-calculator" element={<BMICalculator />} />
             <Route path="/calorie-calculator" element={<CalorieCalculator />} />
-            <Route path="/ai-assistant" element={<AISearch />} />
+            <Route path="/ai-assistant" element={
+              <ProtectedRoute>
+                <AISearch />
+              </ProtectedRoute>
+            } />
             <Route path="/programs" element={<Programs />} />
             <Route path="/subscription" element={<Subscription />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
           </Routes>
         </Suspense>
       </main>
@@ -64,9 +90,11 @@ function AppContent() {
 export default function App() {
   return (
     <LanguageProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
     </LanguageProvider>
   );
 }
