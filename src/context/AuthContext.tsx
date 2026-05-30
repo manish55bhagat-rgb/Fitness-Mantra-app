@@ -40,6 +40,7 @@ export interface UserProfile {
   createdAt: string;
   subscriptionStatus: "Free" | "Standard" | "Architect Elite" | "Performance Pro";
   subscriptionExpiry: string;
+  isOnline?: boolean;
 }
 
 export interface WorkoutLog {
@@ -187,7 +188,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscriptionStatus: "Free",
           subscriptionExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
         };
-        setDoc(profileRef, newProfile).catch(e => console.error("Error creating default profile", e));
+        setDoc(profileRef, newProfile)
+          .then(() => {
+            console.log(`[AuthContext] Fallback profile created successfully in Firestore for UID: ${user.uid} (Email: ${userEmail}, Role: ${role})`);
+          })
+          .catch(e => console.error("[AuthContext] Error creating fallback profile:", e));
       }
       setLoading(false);
     }, (error) => {
@@ -259,13 +264,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const uid = cred.user.uid;
       const userEmail = email.toLowerCase().trim();
       const role = userEmail === "manish55bhagat@gmail.com" ? "admin" : "user";
+      const lastLoginTime = new Date().toISOString();
       
       const pRef = doc(db, "users", uid);
       await setDoc(pRef, { 
-        lastLogin: new Date().toISOString(),
-        role: role
+        lastLogin: lastLoginTime,
+        role: role,
+        isOnline: true
       }, { merge: true });
+      console.log(`[AuthContext] Successfully logged in and updated lastLogin & isOnline=true for user UID: ${uid} (Email: ${userEmail}, Time: ${lastLoginTime}, Role: ${role})`);
     } catch (e) {
+      console.error(`[AuthContext] Error in signInWithEmail for ${email}:`, e);
       throw e;
     }
   }
@@ -295,10 +304,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         photoUrl: "",
         createdAt: now,
         subscriptionStatus: "Free",
-        subscriptionExpiry: new Date().toISOString() // expired or not set yet
+        subscriptionExpiry: new Date().toISOString(), // expired or not set yet
+        isOnline: true
       };
       await setDoc(pRef, initialProfile);
+      console.log(`[AuthContext] Successfully registered and created Firestore profile with isOnline=true for user UID: ${uid} (Name: ${fullName}, Email: ${userEmail}, Role: ${role}, Time: ${now})`);
     } catch (e) {
+      console.error(`[AuthContext] Error in signUpWithEmail for ${email}:`, e);
       throw e;
     }
   }
@@ -331,17 +343,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoUrl: userObj.photoURL || "",
           createdAt: now,
           subscriptionStatus: "Free",
-          subscriptionExpiry: new Date().toISOString()
+          subscriptionExpiry: new Date().toISOString(),
+          isOnline: true
         };
         await setDoc(pRef, initialProfile);
+        console.log(`[AuthContext] Successfully registered new user via Google Sign-In with isOnline=true for UID: ${userObj.uid} (Email: ${userEmail}, Role: ${role}, Time: ${now})`);
       } else {
-        // Automatically sync role and lastLogin on Google login success
+        // Automatically sync role, lastLogin, and isOnline=true on Google login success
         await setDoc(pRef, { 
           role,
-          lastLogin: now 
+          lastLogin: now,
+          isOnline: true
         }, { merge: true });
+        console.log(`[AuthContext] Successfully logged in and updated lastLogin & isOnline=true via Google Sign-In for UID: ${userObj.uid} (Email: ${userEmail}, Role: ${role}, Time: ${now})`);
       }
     } catch (e) {
+      console.error("[AuthContext] Error in signInWithGoogle:", e);
       throw e;
     }
   }
@@ -356,6 +373,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function logOut() {
     try {
+      if (auth.currentUser) {
+        const pRef = doc(db, "users", auth.currentUser.uid);
+        await setDoc(pRef, { isOnline: false }, { merge: true }).catch(err => {
+          console.warn("[AuthContext] Ignored error setting isOnline to false during logout:", err);
+        });
+      }
       await signOut(auth);
     } catch (e) {
       throw e;

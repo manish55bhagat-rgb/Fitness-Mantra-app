@@ -1,19 +1,11 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDOakRWnU1ouEakLoB1wt_wkbP9QzmPKUs",
-  authDomain: "fitness-mantra-6161d.firebaseapp.com",
-  projectId: "fitness-mantra-6161d",
-  storageBucket: "fitness-mantra-6161d.firebasestorage.app",
-  messagingSenderId: "662846405291",
-  appId: "1:662846405291:web:7806c857fc846ff32cd5ee"
-};
+import firebaseConfig from "../../firebase-applet-config.json";
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
 export enum OperationType {
   CREATE = "create",

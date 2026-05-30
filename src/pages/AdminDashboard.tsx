@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, onSnapshot } from "firebase/firestore";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -25,6 +25,7 @@ interface ExtendedUserProfile {
   createdAt?: string;
   subscriptionStatus?: string;
   subscriptionExpiry?: string;
+  isOnline?: boolean;
 }
 
 interface SelectedUserStats {
@@ -51,36 +52,56 @@ export default function AdminDashboard() {
   const [selectedUserStats, setSelectedUserStats] = useState<SelectedUserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
-  // Authorization Check
+  // Authorization Check & Real-time users subscription
   useEffect(() => {
     if (!authLoading) {
       if (!profile || profile.role !== "admin") {
-        setError("ACCESS RESTRICTED: SECURITY CLEARANCE LEVEL 'ADMIN' IS REQUIRED.");
+        setError("ACCESS RESTRICTED: SECURITY CLEARANCE LEVEL 'ADMIN' IS REQUIRED. Admin email must be manish55bhagat@gmail.com.");
         setLoading(false);
       } else {
-        fetchUsers();
+        setLoading(true);
+        setError(null);
+        console.log("[AdminDashboard] Subscribing to users collection in real-time...");
+        
+        const usersCollectionRef = collection(db, "users");
+        const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
+          const userList: ExtendedUserProfile[] = [];
+          snapshot.forEach((doc) => {
+            userList.push({ uid: doc.id, ...doc.data() } as ExtendedUserProfile);
+          });
+          
+          // Sort alphabetically by full name in-memory to prevent missing 'fullName' field exclusion
+          userList.sort((a, b) => {
+            const nameA = a.fullName || a.email || "";
+            const nameB = b.fullName || b.email || "";
+            return nameA.localeCompare(nameB);
+          });
+          
+          console.log(`[AdminDashboard] Query Success! Total users fetched: ${userList.length}`);
+          console.log("[AdminDashboard] Firestore query result payload details:", userList.map(u => ({
+            uid: u.uid,
+            fullName: u.fullName,
+            email: u.email,
+            isOnline: u.isOnline,
+            lastLogin: u.lastLogin,
+            registrationDate: u.registrationDate || u.createdAt
+          })));
+
+          setUsers(userList);
+          setLoading(false);
+        }, (err: any) => {
+          console.error("[AdminDashboard] Firestore fetch error fetching user directory records in real-time:", err);
+          setError(`Failed to fetch user directory records in real-time. error: ${err.message || err}`);
+          setLoading(false);
+        });
+
+        return () => {
+          console.log("[AdminDashboard] Unsubscribing from users collection...");
+          unsubscribe();
+        };
       }
     }
   }, [profile, authLoading]);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const q = query(collection(db, "users"), orderBy("fullName", "asc"));
-      const snapshot = await getDocs(q);
-      const userList: ExtendedUserProfile[] = [];
-      snapshot.forEach((doc) => {
-        userList.push({ uid: doc.id, ...doc.data() } as ExtendedUserProfile);
-      });
-      setUsers(userList);
-    } catch (err: any) {
-      console.error("Error fetching users:", err);
-      setError("Failed to fetch user directory records. Ensure you are connected.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchSelectedUserStats = async (targetUser: ExtendedUserProfile) => {
     setLoadingStats(true);
@@ -153,6 +174,8 @@ export default function AdminDashboard() {
   const totalCount = users.length;
   const activeCount = users.filter(u => isActive(u.lastLogin)).length;
   const adminCount = users.filter(u => u.role === "admin").length;
+
+  console.log(`[AdminDashboard] Dashboard rendering debug log: Rendering admin display with ${filteredUsers.length} of ${totalCount} users. adminCount=${adminCount}, activeCount=${activeCount}.`);
 
   if (error && (!profile || profile.role !== "admin")) {
     return (
@@ -354,7 +377,9 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-white/5 text-[9px] font-mono font-medium text-white/70">
                       {filteredUsers.map((userItem) => {
-                        const active = isActive(userItem.lastLogin);
+                        const isOnline = userItem.isOnline === true || (
+                          userItem.lastLogin ? (Date.now() - new Date(userItem.lastLogin).getTime() < 1000 * 60 * 5) : false
+                        );
                         return (
                           <tr 
                             key={userItem.uid} 
@@ -410,13 +435,16 @@ export default function AdminDashboard() {
                             <td className="py-4 px-6">
                               <div className="flex flex-col">
                                 <div className="flex items-center gap-1.5">
-                                  <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-neon-green shadow-glow' : 'bg-white/10'}`} />
-                                  <span className={active ? 'text-neon-green' : 'text-white/40'}>
-                                    {userItem.lastLogin 
-                                      ? new Date(userItem.lastLogin).toLocaleString() 
-                                      : "No Record Yet"}
+                                  <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-neon-green shadow-glow animate-pulse' : 'bg-red-500'}`} />
+                                  <span className={isOnline ? 'text-neon-green font-bold' : 'text-white/40'}>
+                                    {isOnline ? 'ONLINE' : 'OFFLINE'}
                                   </span>
                                 </div>
+                                <span className="text-[7.5px] text-white/30 font-mono mt-0.5 block">
+                                  {userItem.lastLogin 
+                                    ? new Date(userItem.lastLogin).toLocaleString() 
+                                    : "No Record Yet"}
+                                </span>
                               </div>
                             </td>
                             <td className="py-4 px-6 text-center">
