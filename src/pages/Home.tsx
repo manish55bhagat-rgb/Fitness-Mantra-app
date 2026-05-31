@@ -152,24 +152,31 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Biometric Stats Bar */}
-      <section className="relative z-10 border-y border-white/5 bg-black/40 backdrop-blur-3xl overflow-hidden py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-24">
-            {stats.map((stat, idx) => (
+      {/* Section 1: Interactive Stats Bar */}
+      <section className="relative z-10 border-y border-white/10 bg-black/60 backdrop-blur-3xl overflow-hidden py-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-white/10 gap-8 sm:gap-12 lg:gap-0 lg:-mx-6">
+            {[
+              { label: "Active Trainees", value: "15,400+", tracker: "LIVE ATHLETES" },
+              { label: "Workouts Completed", value: "1.2M+", tracker: "DYNAMIC SYNCS" },
+              { label: "Success Rate", value: "98.6%", tracker: "OPTIMIZATION" },
+              { label: "Certified Coaches", value: "50+", tracker: "HUMAN EXPERTS" }
+            ].map((stat, idx) => (
               <motion.div 
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex flex-col items-center lg:items-start"
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                className="flex flex-col items-center lg:items-start lg:px-12 py-6 sm:py-0"
               >
-                <div className="text-4xl md:text-6xl font-black italic mb-2 tracking-tighter">
+                <div className="text-[9px] font-black uppercase text-neon-green tracking-[0.3em] font-mono mb-2">
+                  {stat.tracker}
+                </div>
+                <div className="text-5xl md:text-6xl font-display font-black tracking-tighter uppercase italic text-white mb-2 leading-none">
                   {stat.value}
                 </div>
-                <div className="flex items-center gap-3 text-neon-green/40">
-                  <stat.icon className="w-3 h-3" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.3em] font-mono">{stat.label}</span>
+                <div className="text-xs font-black uppercase tracking-widest text-white/40 italic">
+                  {stat.label}
                 </div>
               </motion.div>
             ))}
@@ -397,22 +404,34 @@ export default function Home() {
           </h2>
           <p className="text-white/20 text-xs font-black uppercase tracking-[0.6em] mb-20 italic">Global High-Performance Network</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
              {[
-               { quote: "The neural form alignment changed my squat architecture entirely.", author: "Marcus R." },
-               { quote: "Cleanest fitness UI I've ever experienced. Pure performance.", author: "Sarah J." },
-               { quote: "Finally, a platform that respects natural bodybuilding limits.", author: "David K." }
+               { 
+                 quote: "Manish's protocol transformed my biomechanics in just 12 weeks. The AI suggestions are unbelievably precise.", 
+                 author: "Amit K.", 
+                 meta: "Muscle Gain seeker" 
+               },
+               { 
+                 quote: "Vedic Diet algorithm sorted my chronic gut issues while shredding fat. Highly recommended!", 
+                 author: "Deepa S.", 
+                 meta: "Endurance Athlete" 
+               }
              ].map((t, idx) => (
-               <div key={idx} className="glass-panel p-10 border-white/5 bg-white/[0.01] text-left">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-white/40 leading-relaxed italic mb-8">"{t.quote}"</p>
-                  <div className="text-[9px] font-black text-neon-green uppercase tracking-[0.4em] font-mono">— {t.author}</div>
+               <div key={idx} className="glass-panel p-12 border-white/5 bg-white/[0.01] text-left hover:border-neon-green/35 hover:bg-neon-green/[0.01] transition-all duration-500 rounded-[32px] flex flex-col justify-between">
+                  <p className="text-sm md:text-md font-bold uppercase tracking-wide text-white/80 leading-relaxed italic mb-10">
+                    "{t.quote}"
+                  </p>
+                  <div>
+                    <div className="text-[10px] font-black text-neon-green uppercase tracking-[0.4em] font-mono mb-1">— {t.author}</div>
+                    <div className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] font-mono">{t.meta}</div>
+                  </div>
                </div>
              ))}
           </div>
         </div>
       </section>
 
-      {/* Premium CTA: The Final Ascent */}
+      {/* Section 3: Bottom Call-to-Action (CTA) */}
       <section className="py-60 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-neon-green/5 blur-[200px] rounded-full pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
@@ -420,16 +439,16 @@ export default function Home() {
              <div className="absolute inset-0 bg-gradient-to-br from-neon-green/10 to-blue-500/10 opacity-30 group-hover:opacity-50 transition-opacity" />
              
              <div className="relative z-10 flex flex-col items-center text-center">
-                <ShieldCheck className="w-20 h-20 text-neon-green mb-12 animate-glow" />
-                <h2 className="text-6xl md:text-9xl font-display font-black leading-[0.85] uppercase tracking-tighter mb-16 italic">
-                  Ascend to <br /><span className="premium-gradient-text">Elite Tier</span>
+                <Dumbbell className="w-20 h-20 text-neon-green mb-12 animate-pulse shadow-[0_0_15px_rgba(57,255,20,0.5)]" />
+                <h2 className="text-4xl md:text-7xl lg:text-8xl font-display font-black leading-[0.9] uppercase tracking-tighter mb-16 italic text-white">
+                  START YOUR NATURAL<br /><span className="premium-gradient-text uppercase">TRANSFORMATION TODAY</span>
                 </h2>
-                <p className="text-white/40 text-xl font-semibold uppercase italic tracking-tight mb-20 max-w-2xl">
-                  Unlock the full neural stack. Custom biological routing, 1-on-1 performance coaching, and zero-gravity training sequences.
+                <p className="text-white/40 text-lg md:text-xl font-semibold uppercase italic tracking-tight mb-20 max-w-2xl">
+                  Initiate your customized somatic roadmap & claim your peak physique naturally.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-8 w-full max-w-lg">
-                   <Link to="/subscription" className="btn-premium w-full py-8 group !rounded-3xl shadow-glow">
-                      INITIALIZE ACCESS <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                   <Link to="/login" className="btn-premium w-full py-8 group !rounded-3xl shadow-glow text-center flex items-center justify-center gap-4">
+                      JOIN FITNESS MANTRA <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                    </Link>
                 </div>
              </div>

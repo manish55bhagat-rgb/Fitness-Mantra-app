@@ -28,6 +28,12 @@ export default function PerformancePortal() {
   // Selected logging tab: "workout" | "diet" | "progress"
   const [activeLogTab, setActiveLogTab] = useState<"workout" | "diet" | "progress">("workout");
 
+  const logFormRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToLogForm = () => {
+    logFormRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   // Form State - Workout
   const [workoutName, setWorkoutName] = useState("");
   const [workoutDuration, setWorkoutDuration] = useState("");
@@ -227,7 +233,7 @@ export default function PerformancePortal() {
         {/* Dynamic Logging Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Form Interactive Console */}
-          <div className="glass-panel p-10 border-white/5 bg-white/[0.01]">
+          <div ref={logFormRef} className="glass-panel p-10 border-white/5 bg-white/[0.01]">
             <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/5">
               <h3 className="text-lg font-black uppercase tracking-tighter text-white">Log Biometrics</h3>
               <Sparkles className="w-4 h-4 text-neon-green" />
@@ -452,7 +458,13 @@ export default function PerformancePortal() {
                <div>
                   <div className="text-[8px] font-black uppercase text-white/20 tracking-widest mb-2">Bio Target Status</div>
                   <div className="text-2xl font-black italic uppercase">
-                    {profile?.subscriptionStatus || "Free"}
+                    {
+                      profile?.subscriptionStatus === "Architect Elite" || profile?.subscriptionStatus === "Premium Plan" 
+                        ? "Premium" 
+                        : profile?.subscriptionStatus === "Performance Pro" || profile?.subscriptionStatus === "Pro Plan"
+                          ? "Pro"
+                          : "Free"
+                    }
                   </div>
                </div>
             </div>
@@ -469,7 +481,18 @@ export default function PerformancePortal() {
 
              <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                 {workouts.length === 0 ? (
-                  fallbackWorkoutsList.map((w) => (
+                  [{ id: "empty" }].map((w: any) => (
+                    <div key={w.id} className="flex flex-col items-center justify-center py-12 text-center p-6 border border-white/5 bg-white/[0.01] rounded-3xl w-full">
+                      <Activity className="w-12 h-12 text-neon-green/30 mb-4 animate-pulse" />
+                      <h4 className="text-lg font-black uppercase tracking-tight italic text-white mb-2">No workouts yet today. Ready to crush it?</h4>
+                      <button 
+                        onClick={() => { setActiveLogTab("workout"); setTimeout(scrollToLogForm, 50); }}
+                        className="mt-4 bg-neon-green text-black font-black uppercase text-[10px] px-6 py-3 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(57,255,20,0.4)] cursor-pointer"
+                      >
+                        Start Workout
+                      </button>
+                    </div>
+                  )) as any || [].map((w: any) => (
                     <div key={w.id} className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-3xl hover:border-neon-green/30 transition-all cursor-pointer group">
                       <div className="flex items-center gap-6">
                          <div className="w-14 h-14 rounded-2xl bg-black border border-white/10 flex items-center justify-center group-hover:bg-neon-green transition-all">
@@ -557,11 +580,25 @@ export default function PerformancePortal() {
                   </div>
                 </div>
                 
-                <div className="p-4 bg-white/[0.01] border border-white/5 rounded-xl">
-                  <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-1 font-mono">Synced Meals Count</div>
-                  <div className="text-3xl font-display font-black text-white italic">
-                    {diets.length > 0 ? `${diets.length} Meals` : "0 logged"}
-                  </div>
+                <div className="p-5 bg-white/[0.01] border border-white/5 rounded-xl">
+                  <div className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1 font-mono">Synced Meals Count</div>
+                  {diets.length > 0 ? (
+                    <div className="text-3xl font-display font-black text-neon-green italic">
+                      {diets.length} Meals
+                    </div>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      <div className="text-xs font-semibold text-white/60">
+                        No meals logged today. Start tracking!
+                      </div>
+                      <button
+                        onClick={() => { setActiveLogTab("diet"); setTimeout(scrollToLogForm, 50); }}
+                        className="bg-neon-green text-black font-black uppercase text-[9px] px-4 py-2.5 rounded-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_10px_rgba(57,255,20,0.3)] cursor-pointer"
+                      >
+                        Log Meal
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -12,6 +12,7 @@ import Programs from "./pages/Programs";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import OnboardingModal from "./components/auth/OnboardingModal";
 
 // Lazy load pages for performance
 const Home = lazy(() => import("./pages/Home"));
@@ -38,6 +39,7 @@ function AppContent() {
     <div className="min-h-screen bg-deep-black text-white selection:bg-neon-green selection:text-black flex flex-col relative overflow-x-hidden">
       <FloatingBackground />
       <Navbar />
+      <OnboardingModal />
       <main className="flex-grow pt-20">
         <Suspense fallback={<div className="h-screen flex items-center justify-center">
           <div className="w-12 h-12 border-2 border-neon-green border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(57,255,20,0.3)]"></div>

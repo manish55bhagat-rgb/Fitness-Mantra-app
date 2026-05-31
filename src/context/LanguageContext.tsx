@@ -56,9 +56,9 @@ export const translations: Translations = {
     mr: "वारंवार विचारले जाणारे प्रश्न"
   },
   "Nav.EliteAccess": {
-    en: "ELITE ACCESS",
-    hi: "एलीट एक्सेस",
-    mr: "एलिट ॲक्सेस"
+    en: "PRICING",
+    hi: "मूल्य निर्धारण",
+    mr: "किंमत योजना"
   },
   "Nav.SignIn": {
     en: "SIGN IN",

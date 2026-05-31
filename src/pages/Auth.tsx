@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Activity, Mail, Lock, User, KeyRound, AlertCircle, ArrowRight, ShieldCheck, Dumbbell } from "lucide-react";
+import { Activity, Mail, Lock, User, KeyRound, AlertCircle, ArrowRight, ShieldCheck, Dumbbell, Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { cn } from "../lib/utils";
 
 export default function AuthPage() {
   const { signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword, user } = useAuth();
@@ -21,10 +22,35 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Eye toggle states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // States
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Helper validators
+  const isValidEmail = (emailStr: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailStr);
+  };
+
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return "";
+    if (pass.length < 8) return "Weak";
+    const hasLetters = /[a-zA-Z]/.test(pass);
+    const hasNumbers = /[0-9]/.test(pass);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    if (hasLetters && hasNumbers && hasSpecial) return "Strong";
+    if (hasLetters && hasNumbers) return "Medium";
+    return "Weak";
+  };
+
+  const emailInvalid = email.length > 0 && !isValidEmail(email);
+  const passwordInvalid = password.length > 0 && password.length < 8;
+  const confirmPasswordInvalid = tab === "signup" && confirmPassword.length > 0 && confirmPassword !== password;
 
   // If already logged in, redirect directly
   React.useEffect(() => {
@@ -37,10 +63,20 @@ export default function AuthPage() {
     e.preventDefault();
     setError(null);
     setMessage(null);
-    if (!email || !password) {
-      setError("Please fill in all credentials.");
+    
+    if (!email) {
+      setError("Please enter a valid email address");
       return;
     }
+    if (!password) {
+      setError("Password cannot be empty");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address (e.g. name@gmail.com)");
+      return;
+    }
+
     setLoading(true);
     try {
       await signInWithEmail(email, password);
@@ -57,21 +93,28 @@ export default function AuthPage() {
     setError(null);
     setMessage(null);
     
-    if (!fullName || !email || !password || !confirmPassword) {
-      setError("All fields are strictly required.");
+    if (!fullName) {
+      setError("Please enter your full biological name.");
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Please specify a valid email address (e.g., name@domain.com).");
+    if (!email) {
+      setError("Please enter your email address.");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must consist of at least 6 characters.");
+    if (!password) {
+      setError("Password cannot be empty");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address (e.g. name@gmail.com)");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Passwords do not match");
       return;
     }
 
@@ -108,13 +151,17 @@ export default function AuthPage() {
     setError(null);
     setMessage(null);
     if (!email) {
-      setError("Please specify email address.");
+      setError("Please enter a registered email address");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address");
       return;
     }
     setLoading(true);
     try {
       await resetPassword(email);
-      setMessage("A password reset transmission has been sent to your inbox.");
+      setMessage("Password reset link sent to your email. Check your inbox.");
     } catch (err: any) {
       setError(err?.message || "Error processing password reset.");
     } finally {
@@ -142,12 +189,12 @@ export default function AuthPage() {
             </div>
             
             <h1 className="text-4xl font-display font-black uppercase tracking-tighter italic mb-2">
-              {tab === "signin" && "System Ingress"}
+              {tab === "signin" && "Welcome Back"}
               {tab === "signup" && "Initiate Profile"}
               {tab === "forgot" && "Reset Protocol"}
             </h1>
             <p className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase font-mono">
-              {tab === "signin" && "Authenticate your core parameters"}
+              {tab === "signin" && "Sign in to your account"}
               {tab === "signup" && "Join the biological optimization collective"}
               {tab === "forgot" && "Recover system credentials"}
             </p>
@@ -184,27 +231,43 @@ export default function AuthPage() {
           {tab === "signin" && (
             <form onSubmit={handleSignIn} className="space-y-6">
               <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4" />
+                <Mail className={cn("absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4", emailInvalid && "text-red-500")} />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="EMAIL MODULE"
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-5 focus:outline-none focus:border-neon-green/30 font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
+                  placeholder="Email address"
+                  className={cn(
+                    "w-full bg-white/[0.02] border rounded-2xl py-5 pl-14 pr-5 focus:outline-none font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white",
+                    emailInvalid 
+                      ? "border-red-500/80 focus:border-red-500 bg-red-500/[0.02]" 
+                      : "border-white/5 focus:border-neon-green/30"
+                  )}
                   required
                 />
+                {emailInvalid && (
+                  <p className="text-[9px] font-black uppercase text-red-400 mt-2 tracking-wider">
+                    Please enter a valid email address (e.g. name@gmail.com)
+                  </p>
+                )}
               </div>
 
               <div className="relative group">
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4" />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="SECURITY PASS"
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-5 focus:outline-none focus:border-neon-green/30 font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
-                  required
+                  placeholder="Password"
+                  className="w-full bg-white/[0.02] border border-white/5 focus:border-neon-green/30 rounded-2xl py-5 pl-14 pr-12 focus:outline-none font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
 
               <div className="text-right">
@@ -219,11 +282,13 @@ export default function AuthPage() {
 
               <button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer"
+                disabled={loading || !isValidEmail(email)}
+                className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
-                {loading ? "Authenticating..." : "Establish Interface"}
-                <ArrowRight className="w-4 h-4" />
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                ) : "Sign In"}
+                {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
             </form>
           )}
@@ -243,48 +308,107 @@ export default function AuthPage() {
               </div>
 
               <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4" />
+                <Mail className={cn("absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4", emailInvalid && "text-red-500")} />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="EMAIL DESIGNATION"
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-5 focus:outline-none focus:border-neon-green/30 font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
+                  className={cn(
+                    "w-full bg-white/[0.02] border rounded-2xl py-5 pl-14 pr-5 focus:outline-none font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white",
+                    emailInvalid 
+                      ? "border-red-500/80 focus:border-red-500 bg-red-500/[0.02]" 
+                      : "border-white/5 focus:border-neon-green/30"
+                  )}
                   required
                 />
+                {emailInvalid && (
+                  <p className="text-[9px] font-black uppercase text-red-400 mt-2 tracking-wider">
+                    Please enter a valid email address (e.g. name@gmail.com)
+                  </p>
+                )}
               </div>
 
               <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4" />
+                <Lock className={cn("absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4", passwordInvalid && "text-red-400")} />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="CHOOSE SECURITY PASS (6+ CHR)"
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-5 focus:outline-none focus:border-neon-green/30 font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
+                  placeholder="CHOOSE SECURITY PASS (8+ CHR)"
+                  className={cn(
+                    "w-full bg-white/[0.02] border rounded-2xl py-5 pl-14 pr-12 focus:outline-none font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white",
+                    passwordInvalid 
+                      ? "border-red-500/55 focus:border-red-400 bg-red-500/[0.01]" 
+                      : "border-white/5 focus:border-neon-green/30"
+                  )}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+                {passwordInvalid && (
+                  <p className="text-[9px] font-black uppercase text-red-400 mt-2 tracking-wider">
+                    Password must be at least 8 characters
+                  </p>
+                )}
+                {password.length > 0 && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <span className="text-[8px] font-black uppercase text-white/40 tracking-wider font-mono">STRENGTH:</span>
+                    <span className={cn(
+                      "text-[9px] font-black uppercase tracking-widest font-mono",
+                      getPasswordStrength(password) === "Weak" && "text-red-400",
+                      getPasswordStrength(password) === "Medium" && "text-amber-400",
+                      getPasswordStrength(password) === "Strong" && "text-neon-green"
+                    )}>
+                      {getPasswordStrength(password)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-[#confirm]:focus-within:text-neon-green transition-colors w-4 h-4" />
+                <Lock className={cn("absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4", confirmPasswordInvalid && "text-red-400")} />
                 <input 
-                  type="password" 
+                  type={showConfirmPassword ? "text" : "password"} 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="CONFIRM DATA PASS"
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-5 focus:outline-none focus:border-neon-green/30 font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
+                  className={cn(
+                    "w-full bg-white/[0.02] border rounded-2xl py-5 pl-14 pr-12 focus:outline-none font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white",
+                    confirmPasswordInvalid 
+                      ? "border-red-500/55 focus:border-red-400 bg-red-500/[0.01]" 
+                      : "border-white/5 focus:border-neon-green/30"
+                  )}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+                {confirmPasswordInvalid && (
+                  <p className="text-[9px] font-black uppercase text-red-100 bg-red-950/40 p-2.5 rounded-lg border border-red-500/20 mt-2 tracking-wider">
+                    Passwords do not match
+                  </p>
+                )}
               </div>
 
               <button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer"
+                disabled={loading || !isValidEmail(email)}
+                className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
-                {loading ? "Generating Module..." : "Synthesize Account"}
-                <ArrowRight className="w-4 h-4" />
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                ) : "Synthesize Account"}
+                {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
             </form>
           )}
@@ -292,33 +416,45 @@ export default function AuthPage() {
           {tab === "forgot" && (
             <form onSubmit={handleForgotPassword} className="space-y-6">
               <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4" />
+                <Mail className={cn("absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-neon-green transition-colors w-4 h-4", emailInvalid && "text-red-500")} />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="REGISTERED EMAIL ADDRESS"
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-5 focus:outline-none focus:border-neon-green/30 font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white"
+                  placeholder="Enter your registered email address"
+                  className={cn(
+                    "w-full bg-white/[0.02] border rounded-2xl py-5 pl-14 pr-5 focus:outline-none font-black text-[10px] uppercase tracking-[0.25em] transition-all text-white",
+                    emailInvalid 
+                      ? "border-red-500/80 focus:border-red-500 bg-red-500/[0.02]" 
+                      : "border-white/5 focus:border-neon-green/30"
+                  )}
                   required
                 />
+                {emailInvalid && (
+                  <p className="text-[9px] font-black uppercase text-red-500 mt-2 tracking-wider">
+                    Please enter a valid email address
+                  </p>
+                )}
               </div>
 
               <button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer"
+                disabled={loading || !isValidEmail(email)}
+                className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
-                {loading ? "Sending Protocol..." : "Transmit Reset Signal"}
-                <KeyRound className="w-4 h-4" />
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                ) : "Send Reset Link"}
+                {!loading && <KeyRound className="w-4 h-4" />}
               </button>
 
               <div className="text-center">
                 <button 
                   type="button" 
                   onClick={() => setTab("signin")}
-                  className="text-[9px] font-black uppercase text-neon-green hover:underline tracking-widest font-mono"
+                  className="text-[9px] font-black uppercase text-neon-green hover:underline tracking-widest font-mono cursor-pointer"
                 >
-                  Return to ingress port
+                  Back to Login
                 </button>
               </div>
             </form>
@@ -329,7 +465,7 @@ export default function AuthPage() {
             <>
               <div className="flex items-center gap-4 my-8">
                 <div className="h-px bg-white/5 flex-grow" />
-                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">or integrate</span>
+                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Or continue with</span>
                 <div className="h-px bg-white/5 flex-grow" />
               </div>
 
@@ -341,7 +477,7 @@ export default function AuthPage() {
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.24 10.285V14.4h6.887c-0.275 1.562-1.882 4.582-6.887 4.582-4.321 0-7.85-3.578-7.85-8s3.529-8 7.85-8c2.46 0 4.103 1.025 5.044 1.926l3.227-3.103c-2.073-1.933-4.757-3.103-8.271-3.103-6.633 0-12 5.367-12 12s5.367 12 12 12c6.933 0 11.52-4.875 11.52-11.727 0-0.783-0.082-1.391-0.18-1.996h-11.343z" />
                 </svg>
-                Google Protocol-In
+                Continue with Google
               </button>
             </>
           )}
@@ -350,12 +486,12 @@ export default function AuthPage() {
           <div className="text-center mt-10 p-5 bg-white/[0.01] rounded-2xl border border-white/[0.03]">
             {tab === "signin" ? (
               <span className="text-[10px] font-black uppercase text-white/30 tracking-wider">
-                Unregistered bio-entity?{" "}
+                Don't have an account?{" "}
                 <button 
                   onClick={() => setTab("signup")} 
                   className="text-neon-green hover:underline cursor-pointer"
                 >
-                  Create Identity
+                  Sign Up
                 </button>
               </span>
             ) : tab === "signup" ? (
@@ -365,7 +501,7 @@ export default function AuthPage() {
                   onClick={() => setTab("signin")} 
                   className="text-neon-green hover:underline cursor-pointer"
                 >
-                  Gate Ingress
+                  Sign In
                 </button>
               </span>
             ) : null}

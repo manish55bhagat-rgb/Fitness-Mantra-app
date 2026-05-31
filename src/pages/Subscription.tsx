@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
-    name: "Standard",
+    name: "Free Plan",
     icon: Star,
     price: "0",
     period: "Forever",
@@ -17,11 +17,11 @@ const plans = [
       "BMI Analytics",
       "Community Access",
     ],
-    buttonText: "INITIALIZE ACCESS",
+    buttonText: "GET STARTED FREE",
     highlight: false
   },
   {
-    name: "Architect Elite",
+    name: "Premium Plan",
     icon: Crown,
     price: "2,999",
     period: "Yearly",
@@ -34,11 +34,11 @@ const plans = [
       "Priority Neural Assistant",
       "Exclusive High-Fidelity Modules"
     ],
-    buttonText: "UNLEASH THE ELITE",
+    buttonText: "START PREMIUM PLAN",
     highlight: true
   },
   {
-    name: "Performance Pro",
+    name: "Pro Plan",
     icon: Zap,
     price: "499",
     period: "Monthly",
@@ -49,13 +49,13 @@ const plans = [
       "Weekly Progress Audits",
       "Ad-Free Bio-Interface",
     ],
-    buttonText: "ACCELERATE GROWTH",
+    buttonText: "START PRO PLAN",
     highlight: false
   }
 ];
 
 export default function Subscription() {
-  const { user, profile, purchasePlan, setModalOpen, setModalTab } = useAuth();
+  const { user, profile, purchasePlan } = useAuth();
   const navigate = useNavigate();
 
   // Checkout overlay state
@@ -66,54 +66,189 @@ export default function Subscription() {
   
   const [checkoutStep, setCheckoutStep] = useState<"form" | "loading" | "success" | "error">("form");
   const [transactionId, setTransactionId] = useState("");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [customPaymentError, setCustomPaymentError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const handleOpenCheckout = (plan: typeof plans[0]) => {
     if (!user) {
-      // Redirect to Ingress Port
       navigate("/login?redirect=/subscription");
       return;
     }
     if (plan.price === "0") {
-      // Free plan directly updates
       purchasePlan(plan.name, "0", true);
-      alert("Baseline Standard protocol initiated.");
+      setToast("Payment Successful! Welcome to Free Plan 🎉");
+      setTimeout(() => setToast(null), 4000);
       navigate("/dashboard");
       return;
     }
-    // Open Checkout module for premium plans
     setSelectedPlan(plan);
     setCheckoutStep("form");
     setCardNumber("");
     setCardExpiry("");
     setCardCvv("");
+    setPaymentError(null);
+    setCustomPaymentError(null);
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
   const processMockPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlan) return;
+    setPaymentError(null);
+    setCustomPaymentError(null);
+
+    const cleanCard = cardNumber.replace(/\s/g, "");
+    if (!cardNumber || !cardExpiry || !cardCvv) {
+      setPaymentError("Please fill all payment details");
+      return;
+    }
+    if (!/^\d{16}$/.test(cleanCard)) {
+      setPaymentError("Please enter a valid 16-digit card number");
+      return;
+    }
+    if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+      setPaymentError("Please enter a valid expiry date");
+      return;
+    }
+    const [mm, yy] = cardExpiry.split("/");
+    const monthNum = parseInt(mm, 10);
+    if (monthNum < 1 || monthNum > 12) {
+      setPaymentError("Please enter a valid expiry date");
+      return;
+    }
+    if (!/^\d{3}$/.test(cardCvv)) {
+      setPaymentError("Please enter a valid CVV");
+      return;
+    }
 
     setCheckoutStep("loading");
     
-    // Simulate premium clearing network delay
-    setTimeout(async () => {
-      try {
-        const success = await purchasePlan(selectedPlan.name, selectedPlan.price, true);
-        if (success) {
-          const mockTxn = "TXN-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-          setTransactionId(mockTxn);
-          setCheckoutStep("success");
-        } else {
-          setCheckoutStep("error");
-        }
-      } catch (err) {
+    // Simulate failed payment logic based on trigger suffix keys
+    if (cleanCard.endsWith("0000")) {
+      setTimeout(() => {
+        setCustomPaymentError("Insufficient funds. Please try another card.");
         setCheckoutStep("error");
+      }, 1500);
+      return;
+    }
+    if (cleanCard.endsWith("1111")) {
+      setTimeout(() => {
+        setCustomPaymentError("Card declined. Please contact your bank.");
+        setCheckoutStep("error");
+      }, 1500);
+      return;
+    }
+    if (cleanCard.endsWith("2222")) {
+      setTimeout(() => {
+        setCustomPaymentError("Network error. Please check your connection and try again.");
+        setCheckoutStep("error");
+      }, 1500);
+      return;
+    }
+
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        setCustomPaymentError("Network error. Please check your connection and try again.");
+        setCheckoutStep("error");
+        return;
       }
-    }, 2500);
+
+      const cleanPrice = selectedPlan.price.replace(/[^\d]/g, "");
+      const amountPaise = Number(cleanPrice) * 100;
+
+      const options = {
+        key: "rzp_test_mockkey",
+        amount: amountPaise,
+        currency: "INR",
+        name: "Fitness Mantra",
+        description: `${selectedPlan.name} Activation`,
+        image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>",
+        prefill: {
+          name: profile?.fullName || "Aesthetic Athlete",
+          email: user?.email || "athlete@fitnessmantra.com",
+          contact: "9999999999"
+        },
+        theme: {
+          color: "#39ff14"
+        },
+        handler: async function (response: any) {
+          try {
+            setCheckoutStep("loading");
+            const success = await purchasePlan(selectedPlan.name, selectedPlan.price, true);
+            if (success) {
+              const txnId = response.razorpay_payment_id || "TXN-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+              setTransactionId(txnId);
+              setCheckoutStep("success");
+              setToast(`Payment Successful! Welcome to ${selectedPlan.name} 🎉`);
+              setTimeout(() => setToast(null), 4500);
+            } else {
+              setCustomPaymentError("Card declined. Please contact your bank.");
+              setCheckoutStep("error");
+            }
+          } catch (upgradeErr) {
+            console.error("Upgrade error:", upgradeErr);
+            setCustomPaymentError("Card declined. Please contact your bank.");
+            setCheckoutStep("error");
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            setCheckoutStep("form");
+          }
+        }
+      };
+
+      const rzpObj = new (window as any).Razorpay(options);
+      rzpObj.open();
+    } catch (err) {
+      console.error("Razorpay initiation error:", err);
+      setCustomPaymentError("Network error. Please check your connection and try again.");
+      setCheckoutStep("error");
+    }
+  };
+
+  const isCurrent = (onPlan: typeof plans[0]) => {
+    if (!profile?.subscriptionStatus) return onPlan.name === "Free Plan";
+    const status = profile.subscriptionStatus;
+    if (status === "Architect Elite" && onPlan.name === "Premium Plan") return true;
+    if (status === "Performance Pro" && onPlan.name === "Pro Plan") return true;
+    if (status === "Standard" && onPlan.name === "Free Plan") return true;
+    if (status === "Free" && onPlan.name === "Free Plan") return true;
+    return status === onPlan.name;
   };
 
   return (
     <div className="py-40 bg-deep-black min-h-screen relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-neon-green/5 blur-[150px] rounded-full pointer-events-none" />
+
+      {/* Instant Notification Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="fixed top-24 right-8 z-[300] bg-neon-green text-black px-6 py-4 rounded-xl font-black uppercase tracking-wider text-xs shadow-[0_15px_40px_rgba(57,255,20,0.45)] border border-neon-green/30"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <header className="text-center mb-24">
@@ -121,23 +256,29 @@ export default function Subscription() {
             <Shield className="w-4 h-4 text-neon-green" />
             <span className="text-[10px] font-black tracking-[0.5em] text-neon-green uppercase font-mono">Subscription Protocol v4.0</span>
           </div>
-          <h1 className="text-7xl md:text-9xl font-display font-black tracking-tighter uppercase leading-[0.85] mb-10 italic">
-            Elite<br/><span className="premium-gradient-text uppercase italic">Access</span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-black tracking-tighter uppercase leading-none mb-10 italic">
+            CHOOSE YOUR<br/><span className="premium-gradient-text uppercase italic">PLAN</span>
           </h1>
           <p className="text-white/40 max-w-2xl mx-auto text-lg font-semibold uppercase tracking-tight leading-relaxed">
             Choose your level of evolution. Precision-engineered plans for high-performance humans.
           </p>
 
-          {profile?.subscriptionStatus && profile.subscriptionStatus !== "Free" && (
+          {profile?.subscriptionStatus && (
             <div className="mt-8 inline-block px-10 py-4 bg-neon-green/10 border border-neon-green/30 text-neon-green rounded-2xl text-xs uppercase font-black tracking-widest animate-pulse">
-              Active Status: {profile.subscriptionStatus} Member
+              Active Status: {
+                profile.subscriptionStatus === "Architect Elite" || profile.subscriptionStatus === "Premium Plan" 
+                  ? "Premium" 
+                  : profile.subscriptionStatus === "Performance Pro" || profile.subscriptionStatus === "Pro Plan"
+                    ? "Pro"
+                    : "Free"
+              } Member
             </div>
           )}
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-end">
           {plans.map((onPlan, idx) => {
-            const isCurrent = profile?.subscriptionStatus === onPlan.name;
+            const hasThisPlan = isCurrent(onPlan);
             return (
               <motion.div
                 key={idx}
@@ -182,16 +323,16 @@ export default function Subscription() {
 
                 <button 
                   onClick={() => handleOpenCheckout(onPlan)}
-                  disabled={isCurrent}
+                  disabled={hasThisPlan}
                   className={`w-full py-6 font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl transition-all duration-500 absolute bottom-12 left-1/2 -translate-x-1/2 px-12 cursor-pointer ${
-                    isCurrent 
+                    hasThisPlan 
                       ? "bg-white/10 text-white/30 border-dashed border-white/5 cursor-not-allowed"
                       : onPlan.highlight 
                         ? "bg-neon-green text-black hover:shadow-[0_20px_40px_rgba(57,255,20,0.3)] hover:scale-[1.02]" 
                         : "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20"
                   }`}
                 >
-                  {isCurrent ? "CURRENT REQUISITION" : onPlan.buttonText}
+                  {hasThisPlan ? "Current Plan" : onPlan.buttonText}
                 </button>
               </motion.div>
             );
@@ -219,7 +360,7 @@ export default function Subscription() {
             >
               <button 
                 onClick={() => setSelectedPlan(null)}
-                className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors"
+                className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -232,13 +373,23 @@ export default function Subscription() {
                     </div>
                     <div>
                       <h4 className="text-lg font-black uppercase tracking-tighter text-white">Biometric Clearing Node</h4>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/30 font-mono mt-1">Order Summary: {selectedPlan.name} Plan</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/30 font-mono mt-1 font-semibold">Order Summary: {selectedPlan.name}</p>
                     </div>
                   </div>
 
+                  {paymentError && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs uppercase font-bold tracking-wide"
+                    >
+                      {paymentError}
+                    </motion.div>
+                  )}
+
                   <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex justify-between items-center text-xs font-black uppercase">
                     <span className="text-white/40">Amount Due:</span>
-                    <span className="text-neon-green tracking-wider">INR {selectedPlan.price} / {selectedPlan.period}</span>
+                    <span className="text-neon-green tracking-wider font-bold">INR {selectedPlan.price} / {selectedPlan.period}</span>
                   </div>
 
                   <div className="space-y-4">
@@ -246,8 +397,6 @@ export default function Subscription() {
                       <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Secure Card Module</label>
                       <input 
                         type="text"
-                        pattern="[0-9\s]{13,19}"
-                        maxLength={19}
                         placeholder="4111 2222 3333 4444"
                         value={cardNumber}
                         onChange={(e) => setCardNumber(e.target.value.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim())}
@@ -312,7 +461,7 @@ export default function Subscription() {
                     <Check className="w-8 h-8 text-neon-green" />
                   </div>
                   <h4 className="text-3xl font-display font-black uppercase tracking-tighter text-white italic">CLEARANCE APPROVED</h4>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-neon-green mt-3">Vault Upgraded. Welcome to {selectedPlan.name} Plan!</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-neon-green mt-3 font-semibold">Vault Upgraded. Welcome to {selectedPlan.name}!</p>
                   
                   <div className="mt-8 p-4 bg-white/[0.01] border border-white/5 rounded-2xl w-full text-left font-mono space-y-2">
                     <div className="flex justify-between text-[8px] uppercase text-white/20">
@@ -327,7 +476,7 @@ export default function Subscription() {
 
                   <button 
                     onClick={() => { setSelectedPlan(null); navigate("/dashboard"); }}
-                    className="w-full py-4 bg-white/5 border border-white/10 hover:bg-neon-green hover:text-black hover:border-transparent text-white font-black uppercase tracking-widest text-[9px] rounded-xl mt-8 cursor-pointer transition-all"
+                    className="w-full py-4 bg-white/5 border border-white/10 hover:bg-neon-green hover:text-black hover:border-transparent text-white font-black uppercase tracking-widest text-[9px] rounded-xl mt-8 cursor-pointer transition-all font-semibold"
                   >
                     Enter Live Member Grid
                   </button>
@@ -338,11 +487,13 @@ export default function Subscription() {
                 <div className="py-12 flex flex-col items-center justify-center text-center">
                   <ShieldAlert className="w-12 h-12 text-red-400 mb-6" />
                   <h4 className="text-2xl font-black uppercase tracking-tighter text-white">SIGN-OFF REJECTED</h4>
-                  <p className="text-xs text-red-400/60 uppercase font-black tracking-wide mt-2">Transaction declined by core clearance rules.</p>
+                  <p className="text-xs text-red-400 uppercase font-black tracking-wide mt-2 px-6">
+                    {customPaymentError || "Transaction declined by core clearance rules."}
+                  </p>
                   
                   <button 
                     onClick={() => setCheckoutStep("form")}
-                    className="w-full py-4 bg-white/10 hover:bg-white text-black font-black uppercase tracking-widest text-[9px] rounded-xl mt-8 cursor-pointer transition-all"
+                    className="w-full py-4 bg-white/[0.07] border border-white/10 hover:bg-neon-green hover:text-black hover:border-transparent text-white font-black uppercase tracking-widest text-[9px] rounded-xl mt-8 cursor-pointer transition-all"
                   >
                     Retry Clearance
                   </button>

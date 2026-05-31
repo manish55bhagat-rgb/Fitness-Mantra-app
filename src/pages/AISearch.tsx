@@ -16,10 +16,25 @@ export default function AISearch() {
   const [query, setQuery] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isCompressing, setIsCompressing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Auto-welcome message after 3 seconds on mount
+    const timer = setTimeout(() => {
+      setMessages([
+        {
+          role: "ai",
+          content: "Hello! I'm Mantra Neural, your personal AI fitness coach. Ask me anything about workouts, nutrition, or your fitness goals.",
+          timestamp: new Date(),
+        }
+      ]);
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -165,7 +180,7 @@ export default function AISearch() {
           ref={scrollRef}
           className="flex-1 overflow-y-auto mb-3 md:mb-6 p-4 md:p-8 space-y-6 md:space-y-10 scrollbar-hide bg-os-black/40 backdrop-blur-[60px] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] rounded-2xl md:rounded-[40px] border border-white/5 neon-border outline-offset-8"
         >
-          {messages.length === 0 && (
+          {messages.length === 0 && !loading && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 md:space-y-10 p-2">
               <div className="relative group">
                 <div className="absolute inset-0 bg-neon-green/20 blur-3xl animate-pulse rounded-full group-hover:bg-neon-green/40 transition-colors" />

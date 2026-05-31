@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "CAN I SYNC MY BIOMETRIC WEARABLES?",
-    a: "Fitness Mantra supports seamless integration with WHOOP, Apple Health, and Oura Ring to provide a unified physiological overview. (Feature available for Architect Elite subscribers)."
+    a: "Fitness Mantra supports seamless integration with WHOOP, Apple Health, and Oura Ring to provide a unified physiological overview. (Feature available for Premium Plan subscribers)."
   },
   {
     q: "IS THE DIET PLAN COMPATIBLE WITH VEGETARIAN PROTOCOLS?",

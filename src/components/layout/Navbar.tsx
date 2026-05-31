@@ -51,10 +51,10 @@ export default function Navbar() {
   const getSubBadgeStyles = () => {
     if (!profile) return "bg-white/10 text-white/40 border-white/5";
     const status = profile.subscriptionStatus;
-    if (status === "Architect Elite") {
+    if (status === "Architect Elite" || status === "Premium Plan") {
       return "bg-neon-green/10 text-neon-green border-neon-green/20 shadow-[0_0_10px_rgba(57,255,20,0.15)]";
     }
-    if (status === "Performance Pro") {
+    if (status === "Performance Pro" || status === "Pro Plan") {
       return "bg-blue-500/10 text-blue-400 border-blue-500/20";
     }
     return "bg-white/5 text-white/40 border-white/10";
@@ -161,7 +161,13 @@ export default function Navbar() {
                           "mt-2 text-[7px] font-black uppercase tracking-wider text-center py-1 px-2 border rounded-md inline-block",
                           getSubBadgeStyles()
                         )}>
-                          {profile?.subscriptionStatus || "Free"} Member
+                          {
+                            profile?.subscriptionStatus === "Architect Elite" || profile?.subscriptionStatus === "Premium Plan" 
+                              ? "Premium" 
+                              : profile?.subscriptionStatus === "Performance Pro" || profile?.subscriptionStatus === "Pro Plan"
+                                ? "Pro"
+                                : "Free"
+                          } Member
                         </div>
                       </div>
 

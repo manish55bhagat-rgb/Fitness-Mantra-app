@@ -540,7 +540,13 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="px-2 py-0.5 bg-neon-green/15 text-neon-green text-[7px] font-black uppercase tracking-widest border border-neon-green/30 rounded">
-                      {selectedUser.subscriptionStatus || "Free Member"}
+                      {
+                        selectedUser.subscriptionStatus === "Architect Elite" || selectedUser.subscriptionStatus === "Premium Plan"
+                          ? "Premium Member"
+                          : selectedUser.subscriptionStatus === "Performance Pro" || selectedUser.subscriptionStatus === "Pro Plan"
+                            ? "Pro Member"
+                            : "Free Member"
+                      }
                     </span>
                     <span className="text-[7px] font-mono text-white/30">
                       UID: {selectedUser.uid}

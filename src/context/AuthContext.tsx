@@ -38,9 +38,13 @@ export interface UserProfile {
   weight: number;
   photoUrl: string;
   createdAt: string;
-  subscriptionStatus: "Free" | "Standard" | "Architect Elite" | "Performance Pro";
+  subscriptionStatus: "Free" | "Standard" | "Architect Elite" | "Performance Pro" | "Free Plan" | "Pro Plan" | "Premium Plan";
   subscriptionExpiry: string;
   isOnline?: boolean;
+  goal?: string;
+  dietPreference?: string;
+  medicalConditions?: string;
+  isOnboarded?: boolean;
 }
 
 export interface WorkoutLog {
@@ -503,11 +507,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await addDoc(collection(db, "users", user.uid, "subscriptions"), newSub);
 
       // 2. Set plan values in UserProfile
-      const mappedStatus: UserProfile["subscriptionStatus"] = planName.includes("Elite") 
-        ? "Architect Elite" 
+      const mappedStatus: UserProfile["subscriptionStatus"] = planName.includes("Elite") || planName.includes("Premium") 
+        ? "Premium Plan" 
         : planName.includes("Pro") 
-          ? "Performance Pro" 
-          : "Standard";
+          ? "Pro Plan" 
+          : "Free Plan";
 
       await setDoc(doc(db, "users", user.uid), {
         subscriptionStatus: mappedStatus,
