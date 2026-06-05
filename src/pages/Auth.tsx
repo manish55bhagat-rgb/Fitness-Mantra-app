@@ -21,6 +21,9 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [gender, setGender] = useState<"Male" | "Female">("Male");
+  const [age, setAge] = useState("");
+  const [height, setHeight] = useState("");
 
   // Eye toggle states
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +38,37 @@ export default function AuthPage() {
   const isValidEmail = (emailStr: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(emailStr);
+  };
+
+  const translateFirebaseAuthError = (err: any): string => {
+    const code = err?.code || "";
+    const msg = err?.message || "";
+    
+    if (
+      code.includes("wrong-password") || 
+      code.includes("user-not-found") || 
+      code.includes("invalid-credential") ||
+      msg.includes("wrong-password") ||
+      msg.includes("user-not-found") ||
+      msg.includes("invalid-credential") ||
+      msg.toLowerCase().includes("invalid email or password")
+    ) {
+      return "Invalid email or password. Please try again.";
+    }
+    
+    if (code.includes("email-already-in-use") || msg.includes("email-already-in-use")) {
+      return "This email is already registered. Please sign in instead.";
+    }
+    
+    if (code.includes("weak-password") || msg.includes("weak-password")) {
+      return "The password is too weak. Please use at least 8 characters.";
+    }
+
+    if (code.includes("too-many-requests") || msg.includes("too-many-requests")) {
+      return "Too many failed attempts. Access has been temporarily restricted. Please try again later.";
+    }
+
+    return "Invalid email or password. Please try again.";
   };
 
   const getPasswordStrength = (pass: string) => {
@@ -59,13 +93,21 @@ export default function AuthPage() {
     }
   }, [user, navigate, redirectPath]);
 
+  // Show "Please login to access this page." message
+  React.useEffect(() => {
+    const hasRedirect = searchParams.get("redirect");
+    if (hasRedirect && !user) {
+      setError("Please login to access this page.");
+    }
+  }, [searchParams, user]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
     
     if (!email) {
-      setError("Please enter a valid email address");
+      setError("Please enter your email address.");
       return;
     }
     if (!password) {
@@ -82,7 +124,7 @@ export default function AuthPage() {
       await signInWithEmail(email, password);
       // Success will trigger redirect via the useEffect
     } catch (err: any) {
-      setError(err?.message || "Invalid email or password.");
+      setError(translateFirebaseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -93,20 +135,16 @@ export default function AuthPage() {
     setError(null);
     setMessage(null);
     
-    if (!fullName) {
-      setError("Please enter your full biological name.");
+    if (!fullName.trim()) {
+      setError("Please enter your Full Name.");
       return;
     }
-    if (!email) {
-      setError("Please enter your email address.");
+    if (!email.trim() || !isValidEmail(email)) {
+      setError("Please enter a valid email address (e.g. name@gmail.com)");
       return;
     }
     if (!password) {
-      setError("Password cannot be empty");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email address (e.g. name@gmail.com)");
+      setError("Password cannot be blank.");
       return;
     }
     if (password.length < 8) {
@@ -117,16 +155,30 @@ export default function AuthPage() {
       setError("Passwords do not match");
       return;
     }
+    if (!gender) {
+      setError("Please select a Gender.");
+      return;
+    }
+    const ageVal = parseInt(age);
+    if (isNaN(ageVal) || ageVal <= 0 || ageVal > 120) {
+      setError("Please enter a valid age.");
+      return;
+    }
+    const heightVal = parseFloat(height);
+    if (isNaN(heightVal) || heightVal <= 30 || heightVal > 300) {
+      setError("Please enter a valid height (e.g. 175).");
+      return;
+    }
 
     setLoading(true);
     try {
-      await signUpWithEmail(fullName, email, password);
-      setMessage("Account generated successfully!");
+      await signUpWithEmail(fullName, email, password, gender, ageVal, heightVal);
+      setMessage("Account created successfully. Welcome to Fitness Mantra!");
       setTimeout(() => {
         navigate(redirectPath);
-      }, 1000);
+      }, 1500);
     } catch (err: any) {
-      setError(err?.message || "An error occurred during registration.");
+      setError(translateFirebaseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -286,7 +338,10 @@ export default function AuthPage() {
                 className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
                 {loading ? (
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    <span>Logging in...</span>
+                  </div>
                 ) : "Sign In"}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
@@ -395,9 +450,48 @@ export default function AuthPage() {
                 </button>
                 {confirmPasswordInvalid && (
                   <p className="text-[9px] font-black uppercase text-red-100 bg-red-950/40 p-2.5 rounded-lg border border-red-500/20 mt-2 tracking-wider">
-                    Passwords do not match
+                     Passwords do not match
                   </p>
                 )}
+              </div>
+
+              {/* Added Biological Parameters */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/[0.01] p-4 rounded-2xl border border-white/5">
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black uppercase text-white/40 tracking-wider">GENDER</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value as any)}
+                    className="w-full bg-black/40 border border-white/5 rounded-xl h-[50px] px-3 font-semibold text-[10px] uppercase tracking-widest text-white focus:outline-none focus:border-neon-green/30 cursor-pointer appearance-none"
+                  >
+                    <option value="Male" className="bg-deep-black text-white">MALE</option>
+                    <option value="Female" className="bg-deep-black text-white">FEMALE</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black uppercase text-white/40 tracking-wider font-mono">AGE</label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="AGE"
+                    className="w-full bg-black/40 border border-white/5 rounded-xl h-[50px] px-3 font-semibold text-[10px] uppercase tracking-widest text-white focus:outline-none focus:border-neon-green/30"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black uppercase text-white/40 tracking-wider font-mono">HEIGHT (CM)</label>
+                  <input
+                    type="number"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    placeholder="HEIGHT"
+                    className="w-full bg-black/40 border border-white/5 rounded-xl h-[50px] px-3 font-semibold text-[10px] uppercase tracking-widest text-white focus:outline-none focus:border-neon-green/30"
+                    required
+                  />
+                </div>
               </div>
 
               <button 
@@ -406,7 +500,10 @@ export default function AuthPage() {
                 className="w-full bg-neon-green text-black font-black uppercase tracking-[0.3em] text-[10px] py-5 rounded-2xl transition-all duration-500 hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
                 {loading ? (
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    <span>Synthesizing Account...</span>
+                  </div>
                 ) : "Synthesize Account"}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
-import { collection, getDocs, orderBy, query, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { 
   Users, Activity, Search, Calendar, Clock, ArrowLeft, Mail, 
-  X, Dumbbell, Apple, LineChart, Shield, ShieldAlert, Filter, Eye
+  X, Dumbbell, Apple, LineChart, Shield, ShieldAlert, Filter, Eye,
+  Sparkles, ShieldCheck, Check, Trash2, Phone, MessageSquare
 } from "lucide-react";
 
 interface ExtendedUserProfile {
@@ -39,6 +40,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   
   const [users, setUsers] = useState<ExtendedUserProfile[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [tab, setTab] = useState<"users" | "leads">("users");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -52,7 +55,7 @@ export default function AdminDashboard() {
   const [selectedUserStats, setSelectedUserStats] = useState<SelectedUserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
-  // Authorization Check & Real-time users subscription
+  // Authorization Check & Real-time users and leads subscription
   useEffect(() => {
     if (!authLoading) {
       if (!profile || profile.role !== "admin") {
@@ -64,7 +67,7 @@ export default function AdminDashboard() {
         console.log("[AdminDashboard] Subscribing to users collection in real-time...");
         
         const usersCollectionRef = collection(db, "users");
-        const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
+        const unsubscribeUsers = onSnapshot(usersCollectionRef, (snapshot) => {
           const userList: ExtendedUserProfile[] = [];
           snapshot.forEach((doc) => {
             userList.push({ uid: doc.id, ...doc.data() } as ExtendedUserProfile);
@@ -77,16 +80,6 @@ export default function AdminDashboard() {
             return nameA.localeCompare(nameB);
           });
           
-          console.log(`[AdminDashboard] Query Success! Total users fetched: ${userList.length}`);
-          console.log("[AdminDashboard] Firestore query result payload details:", userList.map(u => ({
-            uid: u.uid,
-            fullName: u.fullName,
-            email: u.email,
-            isOnline: u.isOnline,
-            lastLogin: u.lastLogin,
-            registrationDate: u.registrationDate || u.createdAt
-          })));
-
           setUsers(userList);
           setLoading(false);
         }, (err: any) => {
@@ -95,9 +88,30 @@ export default function AdminDashboard() {
           setLoading(false);
         });
 
+        console.log("[AdminDashboard] Subscribing to leads collection in real-time...");
+        const leadsCollectionRef = collection(db, "leads");
+        const unsubscribeLeads = onSnapshot(leadsCollectionRef, (snapshot) => {
+          const leadsList: any[] = [];
+          snapshot.forEach((doc) => {
+            leadsList.push({ id: doc.id, ...doc.data() });
+          });
+          
+          // Sort by createdAt descending
+          leadsList.sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+          });
+          
+          setLeads(leadsList);
+        }, (err: any) => {
+          console.error("[AdminDashboard] Firestore fetch error fetching leads records in real-time:", err);
+        });
+
         return () => {
-          console.log("[AdminDashboard] Unsubscribing from users collection...");
-          unsubscribe();
+          console.log("[AdminDashboard] Unsubscribing from collections...");
+          unsubscribeUsers();
+          unsubscribeLeads();
         };
       }
     }
@@ -138,6 +152,29 @@ export default function AdminDashboard() {
     fetchSelectedUserStats(userItem);
   };
 
+  const handleUpdateLeadField = async (leadId: string, field: string, value: any) => {
+    try {
+      const leadDocRef = doc(db, "leads", leadId);
+      await updateDoc(leadDocRef, { [field]: value });
+      console.log(`Lead ${leadId} updated successfully: ${field} = ${value}`);
+    } catch (err: any) {
+      console.error("Error updating lead field:", err);
+      alert("Failed to update lead: " + err.message);
+    }
+  };
+
+  const handleDeleteLead = async (leadId: string) => {
+    if (window.confirm("Are you sure you want to delete this lead permanently?")) {
+      try {
+        await deleteDoc(doc(db, "leads", leadId));
+        console.log(`Lead ${leadId} deleted successfully.`);
+      } catch (err: any) {
+        console.error("Error deleting lead:", err);
+        alert("Failed to delete lead: " + err.message);
+      }
+    }
+  };
+
   // Helper: Checks if a date string is within the last 7 days
   const isActive = (lastLoginStr?: string) => {
     if (!lastLoginStr) return false;
@@ -176,6 +213,30 @@ export default function AdminDashboard() {
   const totalCount = users.length;
   const activeCount = users.filter(u => isActive(u.lastLogin)).length;
   const adminCount = users.filter(u => u.role === "admin").length;
+
+  // Leads KPI Calculations & Filters
+  const filteredLeads = leads.filter((l) => {
+    const fullNameLower = (l.fullName || "").toLowerCase();
+    const emailLower = (l.email || "").toLowerCase();
+    const whatsappLower = (l.whatsappNumber || "").toLowerCase();
+    const fitnessGoalLower = (l.fitnessGoal || "").toLowerCase();
+    const selectedPlanLower = (l.selectedPlan || "").toLowerCase();
+    
+    return fullNameLower.includes(searchTerm.toLowerCase()) ||
+           emailLower.includes(searchTerm.toLowerCase()) ||
+           whatsappLower.includes(searchTerm.toLowerCase()) ||
+           fitnessGoalLower.includes(searchTerm.toLowerCase()) ||
+           selectedPlanLower.includes(searchTerm.toLowerCase());
+  });
+
+  const totalLeads = leads.length;
+  const pendingLeadsCount = leads.filter(l => l.paymentStatus === "Pending").length;
+  const paidLeadsCount = leads.filter(l => l.paymentStatus === "Paid" || l.paymentStatus === "Completed").length;
+  const activeLeadsCount = leads.filter(l => l.accessStatus === "Active").length;
+
+  const starterCount = leads.filter(l => l.selectedPlan === "30 Days Starter Plan").length;
+  const transCount = leads.filter(l => l.selectedPlan === "90 Days Transformation Plan").length;
+  const premiumCount = leads.filter(l => l.selectedPlan === "6 Months Premium Coaching Plan").length;
 
   console.log(`[AdminDashboard] Dashboard rendering debug log: Rendering admin display with ${filteredUsers.length} of ${totalCount} users. adminCount=${adminCount}, activeCount=${activeCount}.`);
 
@@ -243,65 +304,146 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* KPI STATS CARDS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1 */}
-              <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-neon-green/5 blur-[60px] rounded-full" />
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
-                      CORE USERS REGISTERED
-                    </p>
-                    <h3 className="text-4xl font-display font-black tracking-tight">{totalCount}</h3>
-                  </div>
-                  <div className="w-10 h-10 bg-neon-green/10 text-neon-green rounded-xl flex items-center justify-center">
-                    <Users className="w-5 h-5" />
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-white/30">
-                  REAL-TIME SYNCED DATABASE
-                </div>
-              </div>
-
-              {/* Card 2 */}
-              <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full" />
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
-                      ACTIVE BIOMETRICS (LAST 7D)
-                    </p>
-                    <h3 className="text-4xl font-display font-black tracking-tight text-blue-400">{activeCount}</h3>
-                  </div>
-                  <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center">
-                    <Activity className="w-5 h-5 animate-pulse" />
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-white/30">
-                  {totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0}% PARTICIPATION RATE
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full" />
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
-                      SYSTEM CLEARANCE ADMINS
-                    </p>
-                    <h3 className="text-4xl font-display font-black tracking-tight text-amber-500">{adminCount}</h3>
-                  </div>
-                  <div className="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
-                    <Shield className="w-5 h-5" />
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-amber-500">
-                  ROOT ADMIN CONFIGURED
-                </div>
-              </div>
+            {/* SUB-TABS SELECTOR */}
+            <div className="flex border-b border-white/5 pb-0.5">
+              <button 
+                onClick={() => { setTab("users"); setSearchTerm(""); }}
+                className={`px-8 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "users" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
+              >
+                Registered Users ({users.length})
+              </button>
+              <button 
+                onClick={() => { setTab("leads"); setSearchTerm(""); }}
+                className={`px-8 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "leads" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
+              >
+                Consultation Leads ({leads.length})
+              </button>
             </div>
+
+            {tab === "users" ? (
+              /* KPI STATS CARDS FOR USERS */
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Card 1 */}
+                <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-neon-green/5 blur-[60px] rounded-full" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
+                        CORE USERS REGISTERED
+                      </p>
+                      <h3 className="text-4xl font-display font-black tracking-tight">{totalCount}</h3>
+                    </div>
+                    <div className="w-10 h-10 bg-neon-green/10 text-neon-green rounded-xl flex items-center justify-center">
+                      <Users className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-white/30">
+                    REAL-TIME SYNCED DATABASE
+                  </div>
+                </div>
+
+                {/* Card 2 */}
+                <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
+                        ACTIVE BIOMETRICS (LAST 7D)
+                      </p>
+                      <h3 className="text-4xl font-display font-black tracking-tight text-blue-400">{activeCount}</h3>
+                    </div>
+                    <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center">
+                      <Activity className="w-5 h-5 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-white/30">
+                    {totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0}% PARTICIPATION RATE
+                  </div>
+                </div>
+
+                {/* Card 3 */}
+                <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
+                        SYSTEM CLEARANCE ADMINS
+                      </p>
+                      <h3 className="text-4xl font-display font-black tracking-tight text-amber-500">{adminCount}</h3>
+                    </div>
+                    <div className="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
+                      <Shield className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-amber-500">
+                    ROOT ADMIN CONFIGURED
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* KPI STATS CARDS FOR LEADS */
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Card 1 */}
+                <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-neon-green/5 blur-[60px] rounded-full" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
+                        TOTAL LEADS REGISTERED
+                      </p>
+                      <h3 className="text-4xl font-display font-black tracking-tight text-neon-green">{totalLeads}</h3>
+                    </div>
+                    <div className="w-10 h-10 bg-neon-green/10 text-neon-green rounded-xl flex items-center justify-center">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-white/5 text-[9px] font-mono text-white/30 flex justify-between">
+                    <span>30D: {starterCount}</span>
+                    <span>90D: {transCount}</span>
+                    <span>6M: {premiumCount}</span>
+                  </div>
+                </div>
+
+                {/* Card 2 */}
+                <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
+                        PAYMENT METADATA
+                      </p>
+                      <div className="flex gap-4 items-baseline mt-2">
+                        <h3 className="text-2xl font-display font-black tracking-tight text-amber-500">{pendingLeadsCount} Pending</h3>
+                        <span className="text-xs text-white/30">/</span>
+                        <h3 className="text-2xl font-display font-black tracking-tight text-neon-green">{paidLeadsCount} Paid</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-white/30">
+                    REAL-TIME TRANSACTIONS
+                  </div>
+                </div>
+
+                {/* Card 3 */}
+                <div className="glass-panel p-6 border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[9px] font-mono font-black tracking-widest text-white/40 uppercase mb-2">
+                        ACTIVE SERVICE CUSTOMERS
+                      </p>
+                      <h3 className="text-4xl font-display font-black tracking-tight text-blue-400">{activeLeadsCount} Active</h3>
+                    </div>
+                    <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/5 text-[9px] font-mono text-white/30">
+                    ACCESS STATUS MONITOR
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* SEARCH AND FILTERS */}
             <div className="glass-panel p-6 border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -310,7 +452,7 @@ export default function AdminDashboard() {
                 <Search className="w-4 h-4 text-white/30 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input 
                   type="text" 
-                  placeholder="SEARCH USERS BY NAME, IDENTIFICATION EMAIL..."
+                  placeholder={tab === "users" ? "SEARCH USERS BY NAME, IDENTIFICATION EMAIL..." : "SEARCH LEADS BY NAME, EMAIL, PHONE, PLAN, GOAL..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[10px] uppercase font-bold tracking-widest text-white focus:outline-none focus:border-neon-green transition-all"
@@ -318,154 +460,283 @@ export default function AdminDashboard() {
               </div>
 
               {/* Filter controls */}
-              <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-                  <Filter className="w-3.5 h-3.5 text-white/40" />
-                  <span className="text-[8px] font-black uppercase text-white/40 font-mono">ROLE:</span>
-                  <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value as any)}
-                    className="bg-transparent text-white text-[8px] font-black tracking-widest uppercase cursor-pointer outline-none border-none py-1 pr-4 appearance-none"
-                  >
-                    <option value="all" className="bg-deep-black text-white">ALL</option>
-                    <option value="admin" className="bg-deep-black text-white">ADMINS</option>
-                    <option value="user" className="bg-deep-black text-white">STANDARD USERS</option>
-                  </select>
-                </div>
+              {tab === "users" && (
+                <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
+                    <Filter className="w-3.5 h-3.5 text-white/40" />
+                    <span className="text-[8px] font-black uppercase text-white/40 font-mono">ROLE:</span>
+                    <select
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value as any)}
+                      className="bg-transparent text-white text-[8px] font-black tracking-widest uppercase cursor-pointer outline-none border-none py-1 pr-4 appearance-none"
+                    >
+                      <option value="all" className="bg-deep-black text-white">ALL</option>
+                      <option value="admin" className="bg-deep-black text-white">ADMINS</option>
+                      <option value="user" className="bg-deep-black text-white">STANDARD USERS</option>
+                    </select>
+                  </div>
 
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-                  <Clock className="w-3.5 h-3.5 text-white/40" />
-                  <span className="text-[8px] font-black uppercase text-white/40 font-mono">STATUS:</span>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="bg-transparent text-white text-[8px] font-black tracking-widest uppercase cursor-pointer outline-none border-none py-1 pr-4 appearance-none"
-                  >
-                    <option value="all" className="bg-deep-black text-white">ALL</option>
-                    <option value="active" className="bg-deep-black text-white">ACTIVE (7D)</option>
-                    <option value="idle" className="bg-deep-black text-white">INACTIVE (IDLE)</option>
-                  </select>
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
+                    <Clock className="w-3.5 h-3.5 text-white/40" />
+                    <span className="text-[8px] font-black uppercase text-white/40 font-mono">STATUS:</span>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as any)}
+                      className="bg-transparent text-white text-[8px] font-black tracking-widest uppercase cursor-pointer outline-none border-none py-1 pr-4 appearance-none"
+                    >
+                      <option value="all" className="bg-deep-black text-white">ALL</option>
+                      <option value="active" className="bg-deep-black text-white">ACTIVE (7D)</option>
+                      <option value="idle" className="bg-deep-black text-white">INACTIVE (IDLE)</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* DIRECTORY TABLE OR GRID */}
             <div className="glass-panel border-white/5 overflow-hidden">
               <div className="p-6 border-b border-white/5 flex items-center justify-between">
                 <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/80 font-mono">
-                  Registry Dossier ({filteredUsers.length} listed)
+                  {tab === "users" ? `Registry Dossier (${filteredUsers.length} listed)` : `Consultation Leads Registry (${filteredLeads.length} listed)`}
                 </h2>
                 <span className="h-2 w-2 rounded-full bg-neon-green animate-ping inline-block" />
               </div>
 
-              {filteredUsers.length === 0 ? (
-                <div className="p-16 text-center border-t border-white/5">
-                  <p className="text-[10px] font-mono tracking-widest text-white/30 uppercase">
-                    NO USER RECORDS MATCHING THE FILTERS ARE CURRENTLY INDEXED.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-white/[0.02] border-b border-white/5 text-[8px] font-black uppercase tracking-[0.3em] font-mono text-white/40">
-                        <th className="py-5 px-6">System User / Avatar</th>
-                        <th className="py-5 px-6">Digital Address</th>
-                        <th className="py-5 px-6">Access Role</th>
-                        <th className="py-5 px-6">Registration Date</th>
-                        <th className="py-5 px-6">Last Ingress Protocol</th>
-                        <th className="py-5 px-6 text-center">Inspect</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-[9px] font-mono font-medium text-white/70">
-                      {filteredUsers.map((userItem) => {
-                        const isOnline = userItem.isOnline === true || (
-                          userItem.lastLogin ? (Date.now() - new Date(userItem.lastLogin).getTime() < 1000 * 60 * 5) : false
-                        );
-                        return (
-                          <tr 
-                            key={userItem.uid} 
-                            className="hover:bg-white/[0.02] transition-colors cursor-pointer group"
-                            onClick={() => handleSelectUser(userItem)}
-                          >
-                            <td className="py-4 px-6 flex items-center gap-3">
-                              {userItem.profilePhotoUrl || userItem.photoUrl ? (
-                                <img 
-                                  src={userItem.profilePhotoUrl || userItem.photoUrl} 
-                                  alt="avatar" 
-                                  className="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-neon-green/50 transition-colors"
-                                  referrerPolicy="no-referrer"
-                                />
-                              ) : (
-                                <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center font-bold text-white tracking-widest text-[10px]">
-                                  {(userItem.fullName || userItem.email || "US").substring(0, 2).toUpperCase()}
-                                </div>
-                              )}
-                              <div className="flex flex-col">
-                                <span className="font-sans font-bold text-white text-[11px] uppercase group-hover:text-neon-green transition-colors">
-                                  {userItem.fullName || "No Name"}
-                                </span>
-                                <span className="text-[7px] text-white/30 uppercase tracking-widest mt-0.5">
-                                  UID: {userItem.uid.substring(0, 8)}...
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6 text-white/50 lowercase">
-                              {userItem.email}
-                            </td>
-                            <td className="py-4 px-6">
-                              {userItem.role === "admin" ? (
-                                <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded text-[7px] font-black uppercase tracking-widest">
-                                  ADMIN
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 bg-white/5 text-white/50 border border-white/10 rounded text-[7px] font-black uppercase tracking-widest">
-                                  USER
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-4 px-6 text-white/40">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="w-3 h-3" />
-                                {userItem.registrationDate 
-                                  ? new Date(userItem.registrationDate).toLocaleDateString()
-                                  : userItem.createdAt 
-                                    ? new Date(userItem.createdAt).toLocaleDateString()
-                                    : "Legacy / N/A"}
-                              </div>
-                            </td>
-                            <td className="py-4 px-6">
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-neon-green shadow-glow animate-pulse' : 'bg-red-500'}`} />
-                                  <span className={isOnline ? 'text-neon-green font-bold' : 'text-white/40'}>
-                                    {isOnline ? 'ONLINE' : 'OFFLINE'}
+              {tab === "users" ? (
+                /* REGISTERED USERS DIRECTORY */
+                filteredUsers.length === 0 ? (
+                  <div className="p-16 text-center border-t border-white/5">
+                    <p className="text-[10px] font-mono tracking-widest text-white/30 uppercase">
+                      NO USER RECORDS MATCHING THE FILTERS ARE CURRENTLY INDEXED.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-white/[0.02] border-b border-white/5 text-[8px] font-black uppercase tracking-[0.3em] font-mono text-white/40">
+                          <th className="py-5 px-6">System User / Avatar</th>
+                          <th className="py-5 px-6">Digital Address</th>
+                          <th className="py-5 px-6">Access Role</th>
+                          <th className="py-5 px-6">Registration Date</th>
+                          <th className="py-5 px-6">Last Ingress Protocol</th>
+                          <th className="py-5 px-6 text-center">Inspect</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-[9px] font-mono font-medium text-white/70">
+                        {filteredUsers.map((userItem) => {
+                          const isOnline = userItem.isOnline === true || (
+                            userItem.lastLogin ? (Date.now() - new Date(userItem.lastLogin).getTime() < 1000 * 60 * 5) : false
+                          );
+                          return (
+                            <tr 
+                              key={userItem.uid} 
+                              className="hover:bg-white/[0.02] transition-colors cursor-pointer group"
+                              onClick={() => handleSelectUser(userItem)}
+                            >
+                              <td className="py-4 px-6 flex items-center gap-3">
+                                {userItem.profilePhotoUrl || userItem.photoUrl ? (
+                                  <img 
+                                    src={userItem.profilePhotoUrl || userItem.photoUrl} 
+                                    alt="avatar" 
+                                    className="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-neon-green/50 transition-colors"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center font-bold text-white tracking-widest text-[10px]">
+                                    {(userItem.fullName || userItem.email || "US").substring(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="flex flex-col">
+                                  <span className="font-sans font-bold text-white text-[11px] uppercase group-hover:text-neon-green transition-colors">
+                                    {userItem.fullName || "No Name"}
+                                  </span>
+                                  <span className="text-[7px] text-white/30 uppercase tracking-widest mt-0.5">
+                                    UID: {userItem.uid.substring(0, 8)}...
                                   </span>
                                 </div>
-                                <span className="text-[7.5px] text-white/30 font-mono mt-0.5 block">
-                                  {userItem.lastLogin 
-                                    ? new Date(userItem.lastLogin).toLocaleString() 
-                                    : "No Record Yet"}
+                              </td>
+                              <td className="py-4 px-6 text-white/50 lowercase">
+                                {userItem.email}
+                              </td>
+                              <td className="py-4 px-6">
+                                {userItem.role === "admin" ? (
+                                  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded text-[7px] font-black uppercase tracking-widest">
+                                    ADMIN
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-white/5 text-white/50 border border-white/10 rounded text-[7px] font-black uppercase tracking-widest">
+                                    USER
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-4 px-6 text-white/40">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="w-3 h-3" />
+                                  {userItem.registrationDate 
+                                    ? new Date(userItem.registrationDate).toLocaleDateString()
+                                    : userItem.createdAt 
+                                      ? new Date(userItem.createdAt).toLocaleDateString()
+                                      : "Legacy / N/A"}
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-neon-green shadow-glow animate-pulse' : 'bg-red-500'}`} />
+                                    <span className={isOnline ? 'text-neon-green font-bold' : 'text-white/40'}>
+                                      {isOnline ? 'ONLINE' : 'OFFLINE'}
+                                    </span>
+                                  </div>
+                                  <span className="text-[7.5px] text-white/30 font-mono mt-0.5 block">
+                                    {userItem.lastLogin 
+                                      ? new Date(userItem.lastLogin).toLocaleString() 
+                                      : "No Record Yet"}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6 text-center">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectUser(userItem);
+                                  }}
+                                  className="p-2 hover:bg-neon-green hover:text-black rounded-lg transition-all text-white/40 flex items-center justify-center mx-auto"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              ) : (
+                /* CONSULTATION LEADS DIRECTORY */
+                filteredLeads.length === 0 ? (
+                  <div className="p-16 text-center border-t border-white/5">
+                    <p className="text-[10px] font-mono tracking-widest text-white/30 uppercase">
+                      NO CONSULTATION LEADS MATCHING THE FILTERS ARE CURRENTLY INDEXED.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-white/[0.02] border-b border-white/5 text-[8px] font-black uppercase tracking-[0.3em] font-mono text-white/40">
+                          <th className="py-5 px-6">Lead / Basic Details</th>
+                          <th className="py-5 px-6">Contact / Address</th>
+                          <th className="py-5 px-6">Goal / Biometrics</th>
+                          <th className="py-5 px-6">Selected Coaching Plan</th>
+                          <th className="py-5 px-6">Payment Status</th>
+                          <th className="py-5 px-6">Access Status</th>
+                          <th className="py-5 px-6">Created Date</th>
+                          <th className="py-5 px-6 text-center">Remove</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-[9px] font-mono font-medium text-white/70">
+                        {filteredLeads.map((leadItem) => (
+                          <tr 
+                            key={leadItem.id} 
+                            className="hover:bg-white/[0.02] transition-colors border-b border-white/5"
+                          >
+                            <td className="py-4 px-6">
+                              <div className="flex flex-col">
+                                <span className="font-sans font-bold text-white text-[11px] uppercase">
+                                  {leadItem.fullName || "No Name"}
+                                </span>
+                                <span className="text-[7.5px] text-white/30 font-mono mt-0.5">
+                                  Age: {leadItem.age || "N/A"} | {leadItem.gender || "Other"}
                                 </span>
                               </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex flex-col gap-1">
+                                <a href={`mailto:${leadItem.email}`} className="text-white/50 hover:text-neon-green flex items-center gap-1">
+                                  <Mail className="w-3 h-3 text-white/30" />
+                                  {leadItem.email}
+                                </a>
+                                <a 
+                                  href={`https://wa.me/91${leadItem.whatsappNumber}`} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="text-neon-green hover:underline flex items-center gap-1 font-bold"
+                                >
+                                  <Phone className="w-3 h-3 text-neon-green/60" />
+                                  +91 {leadItem.whatsappNumber}
+                                </a>
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex flex-col">
+                                <span className="text-white/80 font-bold">{leadItem.fitnessGoal || "General"}</span>
+                                <span className="text-[7px] text-white/40 mt-1 max-w-xs truncate" title={leadItem.medicalIssue}>
+                                  Med: {leadItem.medicalIssue || "None"}
+                                </span>
+                                <span className="text-[7px] text-white/40">
+                                  {leadItem.height ? `${leadItem.height} cm` : "N/A"} / {leadItem.weight ? `${leadItem.weight} kg` : "N/A"} | {leadItem.foodPreference || "Veg"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <select
+                                value={leadItem.selectedPlan}
+                                onChange={(e) => handleUpdateLeadField(leadItem.id, "selectedPlan", e.target.value)}
+                                className="bg-deep-black border border-white/10 rounded px-2 py-1 text-white text-[8px] font-black uppercase tracking-wider outline-none focus:border-neon-green cursor-pointer"
+                              >
+                                <option value="30 Days Starter Plan">30 Days Starter (₹299)</option>
+                                <option value="90 Days Transformation Plan">90 Days Trans (₹999)</option>
+                                <option value="6 Months Premium Coaching Plan">6 Months Premium (₹2499)</option>
+                              </select>
+                            </td>
+                            <td className="py-4 px-6">
+                              <select
+                                value={leadItem.paymentStatus || "Pending"}
+                                onChange={(e) => handleUpdateLeadField(leadItem.id, "paymentStatus", e.target.value)}
+                                className={`bg-deep-black border rounded px-2 py-1 text-[8px] font-black uppercase tracking-wider outline-none cursor-pointer ${
+                                  leadItem.paymentStatus === "Paid" || leadItem.paymentStatus === "Completed"
+                                    ? "border-neon-green text-neon-green"
+                                    : "border-amber-500/50 text-amber-500"
+                                }`}
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Paid">Paid</option>
+                              </select>
+                            </td>
+                            <td className="py-4 px-6">
+                              <select
+                                value={leadItem.accessStatus || "Inactive"}
+                                onChange={(e) => handleUpdateLeadField(leadItem.id, "accessStatus", e.target.value)}
+                                className={`bg-deep-black border rounded px-2 py-1 text-[8px] font-black uppercase tracking-wider outline-none cursor-pointer ${
+                                  leadItem.accessStatus === "Active"
+                                    ? "border-blue-500 text-blue-400"
+                                    : "border-white/15 text-white/40"
+                                }`}
+                              >
+                                <option value="Inactive">Inactive</option>
+                                <option value="Active">Active</option>
+                              </select>
+                            </td>
+                            <td className="py-4 px-6 text-white/40 text-[8px]">
+                              {leadItem.createdAt ? new Date(leadItem.createdAt).toLocaleString() : "N/A"}
                             </td>
                             <td className="py-4 px-6 text-center">
                               <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSelectUser(userItem);
-                                }}
-                                className="p-2 hover:bg-neon-green hover:text-black rounded-lg transition-all text-white/40 flex items-center justify-center mx-auto"
+                                onClick={() => handleDeleteLead(leadItem.id)}
+                                className="p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all flex items-center justify-center mx-auto"
+                                title="Delete Lead Permanently"
                               >
-                                <Eye className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
               )}
             </div>
           </div>

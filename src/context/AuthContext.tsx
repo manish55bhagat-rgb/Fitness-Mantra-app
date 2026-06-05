@@ -45,6 +45,11 @@ export interface UserProfile {
   dietPreference?: string;
   medicalConditions?: string;
   isOnboarded?: boolean;
+  selectedPlan?: string;
+  paymentStatus?: string;
+  accessStatus?: string;
+  accessStartDate?: string;
+  accessEndDate?: string;
 }
 
 export interface WorkoutLog {
@@ -101,7 +106,7 @@ interface AuthContextType {
   setModalOpen: (open: boolean) => void;
   setModalTab: (tab: "signin" | "signup" | "forgot") => void;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
-  signUpWithEmail: (fullName: string, email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (fullName: string, email: string, pass: string, gender?: string, age?: number, height?: number) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   logOut: () => Promise<void>;
@@ -283,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function signUpWithEmail(fullName: string, email: string, pass: string) {
+  async function signUpWithEmail(fullName: string, email: string, pass: string, gender: string = "Male", age: number = 25, height: number = 172) {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const uid = cred.user.uid;
@@ -301,9 +306,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         registrationDate: now,
         lastLogin: now,
         profilePhotoUrl: "",
-        age: 25,
-        gender: "Male",
-        height: 172,
+        age,
+        gender,
+        height,
         weight: 68,
         photoUrl: "",
         createdAt: now,

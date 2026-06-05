@@ -65,16 +65,16 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="glass-panel !rounded-[24px] border-white/10 px-8 h-20 flex items-center justify-between backdrop-blur-2xl bg-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           
-          <Link to="/" className="flex items-center gap-4 group">
+          <Link to="/" className="flex items-center gap-4 group" id="navbar-brand-logo">
             <div className="w-10 h-10 bg-neon-green rounded-xl flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_20px_rgba(57,255,20,0.4)]">
-              <Activity className="text-black w-6 h-6" />
+              <span className="text-black font-black text-sm tracking-tighter">MB</span>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
                 FITNESS MANTRA
               </span>
-              <span className="text-[7px] uppercase tracking-[0.4em] text-white/20 font-black mt-1 leading-none italic font-mono">
-                {t("Home.HeroSub")}
+              <span className="text-[7px] uppercase tracking-[0.4em] text-neon-green font-black mt-1 leading-none italic font-mono">
+                Manish Bhagat
               </span>
             </div>
           </Link>
@@ -123,84 +123,96 @@ export default function Navbar() {
             </Link>
             
             {user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer"
-                >
-                  {profile?.photoUrl ? (
-                    <img 
-                      src={profile.photoUrl} 
-                      alt="avatar" 
-                      className="w-5 h-5 rounded-full object-cover border border-neon-green/30"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-5 h-5 bg-neon-green text-black rounded-full flex items-center justify-center font-black text-[10px]">
-                      {profile?.fullName?.substring(0, 1).toUpperCase() || "M"}
-                    </div>
-                  )}
-                  <span className="text-[8px] font-black uppercase text-white/80 tracking-widest truncate max-w-[80px]">
-                    {profile?.fullName?.split(" ")[0]}
-                  </span>
-                </button>
-
-                <AnimatePresence>
-                  {dropdownOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 15 }}
-                      className="absolute right-0 mt-3 w-56 glass-panel border-white/10 bg-deep-black/95 p-4 rounded-2xl shadow-[0_20px_35px_rgba(0,0,0,0.7)] flex flex-col gap-3"
-                    >
-                      <div className="pb-3 border-b border-white/5">
-                        <div className="text-[10px] font-black truncate text-white">{profile?.fullName}</div>
-                        <div className="text-[8px] font-black truncate text-white/30 lowercase mt-1 font-mono">{profile?.email}</div>
-                        
-                        <div className={cn(
-                          "mt-2 text-[7px] font-black uppercase tracking-wider text-center py-1 px-2 border rounded-md inline-block",
-                          getSubBadgeStyles()
-                        )}>
-                          {
-                            profile?.subscriptionStatus === "Architect Elite" || profile?.subscriptionStatus === "Premium Plan" 
-                              ? "Premium" 
-                              : profile?.subscriptionStatus === "Performance Pro" || profile?.subscriptionStatus === "Pro Plan"
-                                ? "Pro"
-                                : "Free"
-                          } Member
-                        </div>
+              <div className="flex items-center gap-3">
+                <div className="relative" ref={dropdownRef}>
+                  <button 
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer animate-fade-in"
+                  >
+                    {profile?.photoUrl ? (
+                      <img 
+                        src={profile.photoUrl} 
+                        alt="avatar" 
+                        className="w-5 h-5 rounded-full object-cover border border-neon-green/30"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 bg-neon-green text-black rounded-full flex items-center justify-center font-black text-[10px]">
+                        {profile?.fullName?.substring(0, 1).toUpperCase() || "M"}
                       </div>
+                    )}
+                    <span className="text-[8px] font-black uppercase text-white/80 tracking-widest truncate max-w-[80px]">
+                      {profile?.fullName?.split(" ")[0]}
+                    </span>
+                  </button>
 
-                      <Link 
-                        to="/dashboard"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/60 hover:text-white transition-all"
+                  <AnimatePresence>
+                    {dropdownOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 15 }}
+                        className="absolute right-0 mt-3 w-56 glass-panel border-white/10 bg-deep-black/95 p-4 rounded-2xl shadow-[0_20px_35px_rgba(0,0,0,0.7)] flex flex-col gap-3"
                       >
-                        <UserCheck className="w-3.5 h-3.5 text-neon-green" />
-                        Bio Dashboard
-                      </Link>
+                        <div className="pb-3 border-b border-white/5">
+                          <div className="text-[10px] font-black truncate text-white">{profile?.fullName}</div>
+                          <div className="text-[8px] font-black truncate text-white/30 lowercase mt-1 font-mono">{profile?.email}</div>
+                          
+                          <div className={cn(
+                            "mt-2 text-[7px] font-black uppercase tracking-wider text-center py-1 px-2 border rounded-md inline-block",
+                            getSubBadgeStyles()
+                          )}>
+                            {
+                              profile?.subscriptionStatus === "Architect Elite" || profile?.subscriptionStatus === "Premium Plan" 
+                                ? "Premium" 
+                                : profile?.subscriptionStatus === "Performance Pro" || profile?.subscriptionStatus === "Pro Plan"
+                                  ? "Pro"
+                                  : "Free"
+                            } Member
+                          </div>
+                        </div>
 
-                      {profile?.role === "admin" && (
                         <Link 
-                          to="/admin"
+                          to="/dashboard"
                           onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-amber-400 hover:text-amber-300 transition-all font-mono"
+                          className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/60 hover:text-white transition-all"
                         >
-                          <Shield className="w-3.5 h-3.5 text-amber-500" />
-                          Admin Panel
+                          <UserCheck className="w-3.5 h-3.5 text-neon-green" />
+                          Bio Dashboard
                         </Link>
-                      )}
 
-                      <button 
-                        onClick={handleLogActive}
-                        className="flex items-center gap-3 py-2 px-3 hover:bg-red-500/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-300 transition-all text-left w-full cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        Gate Logoff
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        {profile?.role === "admin" && (
+                          <Link 
+                            to="/admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-amber-400 hover:text-amber-300 transition-all font-mono"
+                          >
+                            <Shield className="w-3.5 h-3.5 text-amber-500" />
+                            Admin Panel
+                          </Link>
+                        )}
+
+                        <button 
+                          onClick={handleLogActive}
+                          className="flex items-center gap-3 py-2 px-3 hover:bg-red-500/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-300 transition-all text-left w-full cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          Gate Logoff
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLogActive}
+                  className="flex items-center justify-center p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 rounded-xl transition-all text-red-400 group cursor-pointer"
+                  title="Log Out / Gate Logoff"
+                >
+                  <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                </motion.button>
               </div>
             ) : (
               <Link to="/login" className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-[8px] font-black uppercase tracking-widest text-white/60">

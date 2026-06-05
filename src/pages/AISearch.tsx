@@ -119,12 +119,7 @@ export default function AISearch() {
       console.error("Neural Error:", error);
       setLoading(false);
       
-      let errorMsg = error.message || "Sorry, AI Coach is temporarily unavailable.";
-      
-      // If it's a generic network error or doesn't have our instructional text, keep it safe
-      if (!error.message || error.message === "[object Object]") {
-        errorMsg = "Mantra Neural link interrupted. Check your network or credentials.";
-      }
+      const errorMsg = "AI Coach is temporarily busy. Please try again after some time.";
 
       setMessages((prev) => {
         const next = [...prev];
@@ -242,18 +237,26 @@ export default function AISearch() {
             ))}
             {loading && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-start animate-fade-in"
               >
-                <div className="bg-neon-green/[0.02] border border-neon-green/20 p-6 rounded-3xl rounded-tl-sm flex gap-4 items-center backdrop-blur-3xl relative overflow-hidden group">
+                <div className="bg-neon-green/[0.03] border border-neon-green/25 p-6 rounded-3xl rounded-tl-sm flex flex-col gap-3 min-w-[280px] backdrop-blur-3xl relative overflow-hidden group shadow-[0_0_30px_rgba(57,255,20,0.05)]">
                   <div className="absolute inset-0 bg-neon-green/5 animate-pulse" />
-                  <div className="flex gap-2">
-                    <div className="w-2 h-2 bg-neon-green rounded-full animate-bounce shadow-[0_0_15px_#39FF14]" />
-                    <div className="w-2 h-2 bg-neon-green rounded-full animate-bounce [animation-delay:-0.15s] shadow-[0_0_15px_#39FF14]" />
-                    <div className="w-2 h-2 bg-neon-green rounded-full animate-bounce [animation-delay:-0.3s] shadow-[0_0_15px_#39FF14]" />
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 bg-neon-green rounded-full animate-bounce shadow-[0_0_15px_#39FF14]" />
+                      <div className="w-2.5 h-2.5 bg-neon-green rounded-full animate-bounce [animation-delay:-0.15s] shadow-[0_0_15px_#39FF14]" />
+                      <div className="w-2.5 h-2.5 bg-neon-green rounded-full animate-bounce [animation-delay:-0.3s] shadow-[0_0_15px_#39FF14]" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-neon-green/90 ml-1 animate-pulse leading-none font-mono">
+                      Compiling Neural Matrix...
+                    </span>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-neon-green/80 ml-3 animate-pulse leading-none font-mono">Compiling Neural Data...</span>
+                  <div className="text-[9px] text-white/40 font-mono uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                    <span>Analyzing biometrics & physiological telemetry...</span>
+                  </div>
                 </div>
               </motion.div>
             )}

@@ -6,56 +6,71 @@ import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
-    name: "Free Plan",
+    name: "30 Days Starter Plan",
     icon: Star,
-    price: "0",
-    period: "Forever",
-    desc: "Baseline physiological maintenance for recreational users.",
+    price: "299",
+    period: "30 Days",
+    desc: "Best for beginners and trial users.",
     features: [
-      "Standard Workout Library",
-      "Basic Diet Templates",
-      "BMI Analytics",
-      "Community Access",
+      "Basic Indian diet plan",
+      "Beginner home/gym workout plan",
+      "Fat loss & belly fat guidance",
+      "Veg & non-veg options",
+      "Basic WhatsApp support",
+      "1 weekly progress check",
+      "Basic full diet plan access",
+      "Basic workout videos access"
     ],
-    buttonText: "GET STARTED FREE",
-    highlight: false
+    buttonText: "Get 30 Days Plan",
+    highlight: false,
+    whatsappMsg: "Hi Manish, I want to buy Fitness Mantra 30 Days Plan ₹299."
   },
   {
-    name: "Premium Plan",
-    icon: Crown,
-    price: "2,999",
-    period: "Yearly",
-    desc: "The ultimate biopsychosocial optimization protocol by Fitness Mantra.",
-    features: [
-      "AI Neural Form Guidance",
-      "Personalized Vedic Diet Plans",
-      "Real-time Biometric Sync",
-      "1-on-1 Performance Audit",
-      "Priority Neural Assistant",
-      "Exclusive High-Fidelity Modules"
-    ],
-    buttonText: "START PREMIUM PLAN",
-    highlight: true
-  },
-  {
-    name: "Pro Plan",
+    name: "90 Days Transformation Plan",
     icon: Zap,
-    price: "499",
-    period: "Monthly",
-    desc: "Accelerated growth module for consistent performance evolution.",
+    price: "999",
+    period: "90 Days",
+    desc: "Best for serious fat loss, muscle gain, and body transformation.",
     features: [
-      "Full 3D Cinematic Exercises",
-      "Smart Nutrition Architecture",
-      "Weekly Progress Audits",
-      "Ad-Free Bio-Interface",
+      "Personalized diet plan",
+      "Personalized workout plan",
+      "Goal-based plan (fat loss, muscle gain, weight gain)",
+      "BMI & calorie guidance",
+      "WhatsApp support",
+      "Weekly progress tracking",
+      "Monthly plan update",
+      "Advanced exercise videos access"
     ],
-    buttonText: "START PRO PLAN",
-    highlight: false
+    buttonText: "Get 90 Days Plan",
+    highlight: true,
+    whatsappMsg: "Hi Manish, I want to buy Fitness Mantra 90 Days Plan ₹999."
+  },
+  {
+    name: "6 Months Premium Coaching Plan",
+    icon: Crown,
+    price: "2499",
+    period: "6 Months",
+    desc: "Best for complete personal body transformation.",
+    features: [
+      "Fully personalized diet/workout plan",
+      "Complete body transformation roadmap",
+      "WhatsApp support",
+      "Weekly progress tracking",
+      "Monthly plan updates",
+      "Priority support",
+      "Progress monitoring",
+      "Full coaching access",
+      "All workout videos access",
+      "All diet plans access"
+    ],
+    buttonText: "Get 6 Months Plan",
+    highlight: false,
+    whatsappMsg: "Hi Manish, I want to buy Fitness Mantra 6 Months Plan ₹2499."
   }
 ];
 
 export default function Subscription() {
-  const { user, profile, purchasePlan } = useAuth();
+  const { user, profile, purchasePlan, updateUserProfile } = useAuth();
   const navigate = useNavigate();
 
   // Checkout overlay state
@@ -70,18 +85,23 @@ export default function Subscription() {
   const [customPaymentError, setCustomPaymentError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleOpenCheckout = (plan: typeof plans[0]) => {
+  const handleOpenCheckout = async (plan: typeof plans[0]) => {
     if (!user) {
       navigate("/login?redirect=/subscription");
       return;
     }
-    if (plan.price === "0") {
-      purchasePlan(plan.name, "0", true);
-      setToast("Payment Successful! Welcome to Free Plan 🎉");
-      setTimeout(() => setToast(null), 4000);
-      navigate("/dashboard");
-      return;
+    
+    // Save state in DB to allow tracking leads & selectedPlan instantly
+    try {
+      await updateUserProfile({
+        selectedPlan: plan.name,
+        paymentStatus: "Pending",
+        accessStatus: "Inactive"
+      });
+    } catch (e) {
+      console.error("Error setting plan status:", e);
     }
+
     setSelectedPlan(plan);
     setCheckoutStep("form");
     setCardNumber("");
@@ -89,6 +109,14 @@ export default function Subscription() {
     setCardCvv("");
     setPaymentError(null);
     setCustomPaymentError(null);
+  };
+
+  const handleWhatsAppPayment = (plan: typeof plans[0]) => {
+    const encoded = encodeURIComponent(plan.whatsappMsg);
+    window.open(`https://wa.me/919765690437?text=${encoded}`, "_blank");
+    setSelectedPlan(null);
+    setToast("Redirected to WhatsApp for Plan Purchase! Manish will message you quickly.");
+    setTimeout(() => setToast(null), 4000);
   };
 
   const loadRazorpayScript = () => {
@@ -372,8 +400,8 @@ export default function Subscription() {
                       <CreditCard className="text-neon-green w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-black uppercase tracking-tighter text-white">Biometric Clearing Node</h4>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/30 font-mono mt-1 font-semibold">Order Summary: {selectedPlan.name}</p>
+                      <h4 className="text-lg font-black uppercase tracking-tighter text-white">Fitness Mantra Checkout</h4>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/30 font-mono mt-1 font-semibold">Selected: {selectedPlan.name}</p>
                     </div>
                   </div>
 
@@ -394,7 +422,7 @@ export default function Subscription() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Secure Card Module</label>
+                      <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Card details (Online Sandbox Sandbox)</label>
                       <input 
                         type="text"
                         placeholder="4111 2222 3333 4444"
@@ -407,7 +435,7 @@ export default function Subscription() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Expiry Protocol</label>
+                        <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Expiry Date</label>
                         <input 
                           type="text"
                           maxLength={5}
@@ -419,7 +447,7 @@ export default function Subscription() {
                         />
                       </div>
                       <div>
-                        <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">CVV Protocol</label>
+                        <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">CVV Sec</label>
                         <input 
                           type="password"
                           maxLength={3}
@@ -435,15 +463,39 @@ export default function Subscription() {
 
                   <div className="flex items-center gap-3 bg-white/[0.01] border border-white/[0.03] p-4 rounded-xl text-[9px] font-black uppercase text-white/30 tracking-wider">
                     <Lock className="w-4 h-4 text-neon-green shrink-0" />
-                    <span>Transactions are secured through certified biological clearance logic.</span>
+                    <span>Transactions are secured for Fitness Mantra coaching users.</span>
                   </div>
 
-                  <button 
-                    type="submit"
-                    className="w-full py-5 bg-neon-green text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] transition-all cursor-pointer"
-                  >
-                    Authorize INR {selectedPlan.price}
-                  </button>
+                  <div className="space-y-3 pt-2">
+                    <button 
+                      type="submit"
+                      className="w-full py-5 bg-neon-green text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] transition-all cursor-pointer font-bold"
+                    >
+                      Pay Instantly (Simulated Card Sandbox)
+                    </button>
+
+                    <div className="relative flex py-1 items-center">
+                      <div className="flex-grow border-t border-white/5"></div>
+                      <span className="flex-shrink mx-4 text-[9px] font-black uppercase tracking-widest text-white/30">OR</span>
+                      <div className="flex-grow border-t border-white/5"></div>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => handleWhatsAppPayment(selectedPlan)}
+                      className="w-full py-5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-[0_4px_15px_rgba(37,211,102,0.2)] transition-all cursor-pointer flex items-center justify-center gap-3"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 shrink-0"
+                      >
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.456 5.707 1.456h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                      </svg>
+                      Buy via WhatsApp (₹{selectedPlan.price})
+                    </button>
+                  </div>
                 </form>
               )}
 

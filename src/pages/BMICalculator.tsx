@@ -27,31 +27,65 @@ export default function BMICalculator() {
   const [category, setCategory] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [recommendation, setRecommendation] = useState<string>("");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     const w = parseFloat(weight);
-    const h = parseFloat(height) / 100;
-    if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
-      const val = w / (h * h);
-      setBmi(parseFloat(val.toFixed(1)));
-      
-      if (val < 18.5) {
-        setCategory("Underweight");
-      } else if (val < 25) {
-        setCategory("Normal");
-      } else if (val < 30) {
-        setCategory("Overweight");
-      } else {
-        setCategory("Obese");
-      }
-    } else {
+    const h = parseFloat(height);
+
+    if (!weight.trim() || !height.trim()) {
       setBmi(null);
       setCategory("");
+      setValidationError("Height and weight fields cannot be blank.");
+      return;
+    }
+
+    if (isNaN(w) || isNaN(h)) {
+      setBmi(null);
+      setCategory("");
+      setValidationError("Please enter valid numbers only.");
+      return;
+    }
+
+    if (w <= 0 || h <= 0) {
+      setBmi(null);
+      setCategory("");
+      setValidationError("Values must be positive and greater than zero.");
+      return;
+    }
+
+    if (h < 50 || h > 275) {
+      setBmi(null);
+      setCategory("");
+      setValidationError("Please specify a realistic height between 50 cm and 275 cm.");
+      return;
+    }
+
+    if (w < 10 || w > 400) {
+      setBmi(null);
+      setCategory("");
+      setValidationError("Please specify a realistic weight between 10 kg and 400 kg.");
+      return;
+    }
+
+    setValidationError(null);
+    const hMeter = h / 100;
+    const val = w / (hMeter * hMeter);
+    setBmi(parseFloat(val.toFixed(1)));
+    
+    if (val < 18.5) {
+      setCategory("Underweight");
+    } else if (val < 25) {
+      setCategory("Normal");
+    } else if (val < 30) {
+      setCategory("Overweight");
+    } else {
+      setCategory("Obese");
     }
   }, [weight, height]);
 
   const calculateBMI = async () => {
-    if (bmi !== null && bmi > 0) {
+    if (bmi !== null && bmi > 0 && !validationError) {
       setLoading(true);
       try {
         const langName = language === "hi" ? "Hindi (हिंदी)" : language === "mr" ? "Marathi (मराठी)" : "English";
@@ -59,7 +93,7 @@ export default function BMICalculator() {
         const result = await generateContent(prompt);
         setRecommendation(result);
       } catch (e) {
-        setRecommendation(language === "hi" ? "एआई विश्लेषण प्रणाली बाधित। मैन्युअल रूप से कार्य करें।" : language === "mr" ? "एआय विश्लेषण प्रणाली व्यत्यय आणली. स्वहस्ते कार्य करा." : "AI Analysis link disrupted. Optimize manually.");
+        setRecommendation("AI Coach is temporarily busy. Please try again after some time.");
       } finally {
         setLoading(false);
       }
@@ -91,6 +125,12 @@ export default function BMICalculator() {
               <div className="absolute inset-0 os-grid opacity-10" />
               
               <div className="relative z-10 space-y-12">
+                {validationError && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider text-center">
+                    {validationError}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase text-white/20 tracking-widest block font-mono">{t("Bmi.WeightLabel")}</label>
@@ -143,7 +183,8 @@ export default function BMICalculator() {
 
                 <button 
                   onClick={calculateBMI}
-                  className="btn-premium w-full py-8 text-xs group"
+                  disabled={!!validationError}
+                  className="btn-premium w-full py-8 text-xs group disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {t("Bmi.Btn")} <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </button>

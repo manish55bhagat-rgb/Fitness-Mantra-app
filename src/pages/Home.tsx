@@ -1,34 +1,36 @@
 import React, { useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform, Variants } from "motion/react";
-import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight, ShieldCheck, Dumbbell, Sparkles } from "lucide-react";
+import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight, ShieldCheck, Dumbbell, Sparkles, Send, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
+import { db } from "../lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const stats = [
-  { label: "Elite Members", value: "12k+", icon: Users },
-  { label: "Neural Protocols", value: "500+", icon: Target },
-  { label: "Pro Trainers", value: "30+", icon: Activity },
-  { label: "V-Max Success", value: "99.2%", icon: TrendingUp },
+  { label: "Happy Clients", value: "1000+", icon: Users },
+  { label: "Diet & Workout Plans", value: "500+", icon: Target },
+  { label: "Certified Coach", value: "Manish Bhagat", icon: Activity },
+  { label: "Success Rate", value: "99.2%", icon: TrendingUp },
 ];
 
 const programs = [
   { 
-    title: "Force Architecture", 
-    desc: "Elite hypertrophy and structural strength engineering.", 
+    title: "Muscle Gain Workouts", 
+    desc: "Build strong muscles and build power with personalized gym/home plans.", 
     image: "https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=2070&auto=format&fit=crop",
     category: "STRENGTH"
   },
   { 
-    title: "Metabolic Shred", 
-    desc: "High-intensity oxidative conditioning sequences.", 
+    title: "Fat Loss Cardio", 
+    desc: "Burn belly fat and get lean with high-energy cardio exercises.", 
     image: "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?q=80&w=2070&auto=format&fit=crop",
     category: "CARDIO"
   },
   { 
-    title: "Neural Recovery", 
-    desc: "Bio-mechanical restoration and cognitive flow.", 
+    title: "Body Flexibility & Yoga", 
+    desc: "Stretch, recover, and keep your joints healthy and pain-free.", 
     image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=2070&auto=format&fit=crop",
-    category: "MOBILITY"
+    category: "FLEXIBILITY"
   },
 ];
 
@@ -51,6 +53,99 @@ export default function Home() {
   const { t } = useLanguage();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    age: "",
+    gender: "Male",
+    height: "",
+    weight: "",
+    fitnessGoal: "Fat Loss",
+    foodPreference: "Veg",
+    medicalIssue: "",
+    whatsappNumber: "",
+    email: "",
+    selectedPlan: "30 Days Starter Plan",
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleConsultSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    // Validations
+    if (!formData.fullName.trim()) {
+      setErrorMsg("Full Name cannot be blank.");
+      return;
+    }
+    const ageNum = parseInt(formData.age);
+    if (!formData.age || isNaN(ageNum) || ageNum <= 0) {
+      setErrorMsg("Please enter a valid age.");
+      return;
+    }
+    const heightNum = parseFloat(formData.height);
+    if (!formData.height || isNaN(heightNum) || heightNum <= 0) {
+      setErrorMsg("Please enter a valid height in cm.");
+      return;
+    }
+    const weightNum = parseFloat(formData.weight);
+    if (!formData.weight || isNaN(weightNum) || weightNum <= 0) {
+      setErrorMsg("Please enter a valid weight in kg.");
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.whatsappNumber)) {
+      setErrorMsg("WhatsApp number must be exactly 10 digits only.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setErrorMsg("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const leadId = "lead_" + Date.now() + "_" + Math.random().toString(36).replace(/[^a-z0-9]/gi, "").substring(0, 10);
+      const leadData = {
+        fullName: formData.fullName.trim(),
+        age: ageNum,
+        gender: formData.gender,
+        height: heightNum,
+        weight: weightNum,
+        fitnessGoal: formData.fitnessGoal,
+        foodPreference: formData.foodPreference,
+        medicalIssue: formData.medicalIssue.trim() || "None",
+        whatsappNumber: formData.whatsappNumber,
+        email: formData.email.trim(),
+        selectedPlan: formData.selectedPlan,
+        paymentStatus: "Pending",
+        accessStatus: "Inactive",
+        createdAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, "leads", leadId), leadData);
+      setSuccess(true);
+      setFormData({
+        fullName: "",
+        age: "",
+        gender: "Male",
+        height: "",
+        weight: "",
+        fitnessGoal: "Fat Loss",
+        foodPreference: "Veg",
+        medicalIssue: "",
+        whatsappNumber: "",
+        email: "",
+        selectedPlan: "30 Days Starter Plan",
+      });
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Something went wrong while booking. Please try again or chat directly on WhatsApp.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -107,34 +202,34 @@ export default function Home() {
               className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-neon-green/20 mb-12"
             >
               <div className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse shadow-glow" />
-              <span className="text-[10px] font-black tracking-[0.5em] text-neon-green uppercase font-mono">Neural Performance v4.0.2</span>
+              <span className="text-[10px] font-black tracking-[0.5em] text-neon-green uppercase font-mono">Smart Fitness Support</span>
             </motion.div>
             
             <motion.h1 
               variants={itemVariants}
               className="text-6xl md:text-8xl lg:text-[10rem] font-black leading-[0.82] tracking-tighter uppercase mb-12 italic"
             >
-              <span className="block text-white/90">Evolve Your</span>
-              <span className="premium-gradient-text block">Physicality</span>
+              <span className="block text-white/90">Build Your</span>
+              <span className="premium-gradient-text block">Best Body</span>
             </motion.h1>
             
             <motion.p 
               variants={itemVariants}
               className="text-white/40 text-xl md:text-2xl max-w-3xl mx-auto mb-16 leading-relaxed font-semibold italic tracking-tight"
             >
-              The definitive high-performance ecosystem for the modern athlete. <br className="hidden md:block" /> 
-              Pro human form meets neural biometric intelligence.
+              Complete Fitness App by Manish Bhagat. <br className="hidden md:block" /> 
+              Choose a personalized diet/workout plan or chat with us.
             </motion.p>
 
             <motion.div 
               variants={itemVariants}
               className="flex flex-col sm:flex-row items-center justify-center gap-8"
             >
-              <Link to="/exercises" className="btn-premium px-16 py-7 text-xs group shadow-glow hover:shadow-[0_0_40px_rgba(57,255,20,0.4)] transition-all">
-                START YOUR PROTOCOL <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-              </Link>
+              <a href="#consultation-section" className="btn-premium px-16 py-7 text-xs group shadow-glow hover:shadow-[0_0_40px_rgba(57,255,20,0.4)] transition-all">
+                Start My Plan <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+              </a>
               <Link to="/dashboard" className="btn-outline px-16 py-7 text-xs border-white/10 hover:bg-white/5 transition-all">
-                VIEW ANALYTICS
+                View Progress
               </Link>
             </motion.div>
           </motion.div>
@@ -258,8 +353,8 @@ export default function Home() {
                 className="absolute -bottom-10 -left-10 glass-panel p-8 border-blue-500/20 z-20 backdrop-blur-3xl"
               >
                 <Activity className="text-blue-500 w-8 h-8 mb-4 animate-pulse" />
-                <div className="text-white font-black text-lg italic uppercase">Vitalized Sync</div>
-                <div className="text-[8px] font-black uppercase tracking-widest text-white/20">Protocol Online</div>
+                <div className="text-white font-black text-lg italic uppercase">Personal Support</div>
+                <div className="text-[8px] font-black uppercase tracking-widest text-white/20">Online 24/7</div>
               </motion.div>
             </motion.div>
           </div>
@@ -427,6 +522,244 @@ export default function Home() {
                   </div>
                </div>
              ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Book Free Consultation Form Section */}
+      <section id="consultation-section" className="py-32 relative overflow-hidden bg-deep-black border-t border-white/5">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-neon-green/5 blur-[150px] rounded-full pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <div className="w-16 h-16 bg-neon-green/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-neon-green/20">
+              <Sparkles className="w-8 h-8 text-neon-green animate-pulse" />
+            </div>
+            <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter italic">
+              Book A <span className="text-neon-green">Free Consultation</span>
+            </h2>
+            <p className="text-white/40 text-xs font-black uppercase tracking-[0.4em] mt-4 italic">
+              Get customized feedback from Coach Manish Bhagat
+            </p>
+          </div>
+
+          <div className="glass-panel p-8 md:p-16 border-white/10 bg-black/40 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+            {success ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-12"
+              >
+                <div className="w-20 h-20 bg-neon-green rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(57,255,20,0.4)]">
+                  <Check className="text-black w-10 h-10 stroke-[3]" />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-4 text-white">
+                  Consultation Booked Successfully!
+                </h3>
+                <p className="text-white/60 text-sm max-w-md mx-auto leading-relaxed mb-8">
+                  Coach Manish Bhagat will contact you on WhatsApp within 24 hours to discuss your personalized transformation roadmap.
+                </p>
+                <button 
+                  onClick={() => setSuccess(false)}
+                  className="px-8 py-4 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-white hover:bg-neon-green hover:text-black hover:border-transparent transition-all font-bold"
+                >
+                  Book Another Session
+                </button>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleConsultSubmit} className="space-y-8">
+                {errorMsg && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-wider">
+                    ⚠️ {errorMsg}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Full Name */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Full Name *</label>
+                    <input 
+                      type="text" 
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      placeholder="e.g. Manish Prasad"
+                      className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold"
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Email Address *</label>
+                    <input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="e.g. user@gmail.com"
+                      className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Age */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Age *</label>
+                    <input 
+                      type="number" 
+                      value={formData.age}
+                      onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                      placeholder="e.g. 25"
+                      className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold"
+                      required
+                    />
+                  </div>
+
+                  {/* Height */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Height (in cm) *</label>
+                    <input 
+                      type="number" 
+                      value={formData.height}
+                      onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                      placeholder="e.g. 175"
+                      className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold"
+                      required
+                    />
+                  </div>
+
+                  {/* Weight */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Weight (in kg) *</label>
+                    <input 
+                      type="number" 
+                      value={formData.weight}
+                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                      placeholder="e.g. 70"
+                      className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Gender */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Gender *</label>
+                    <div className="relative">
+                      <select 
+                        value={formData.gender}
+                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white/80 focus:outline-none focus:border-neon-green/50 appearance-none transition-all cursor-pointer font-semibold"
+                      >
+                        <option value="Male" className="bg-deep-black text-white">Male</option>
+                        <option value="Female" className="bg-deep-black text-white">Female</option>
+                        <option value="Other" className="bg-deep-black text-white">Other</option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
+                    </div>
+                  </div>
+
+                  {/* Fitness Goal */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Fitness Goal *</label>
+                    <div className="relative">
+                      <select 
+                        value={formData.fitnessGoal}
+                        onChange={(e) => setFormData({ ...formData, fitnessGoal: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white/80 focus:outline-none focus:border-neon-green/50 appearance-none transition-all cursor-pointer font-semibold"
+                      >
+                        <option value="Fat Loss" className="bg-deep-black text-white">Fat Loss</option>
+                        <option value="Muscle Gain" className="bg-deep-black text-white">Muscle Gain</option>
+                        <option value="Weight Gain" className="bg-deep-black text-white">Weight Gain</option>
+                        <option value="General Fitness" className="bg-deep-black text-white">General Fitness</option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
+                    </div>
+                  </div>
+
+                  {/* Food Preference */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Food Preference *</label>
+                    <div className="relative">
+                      <select 
+                        value={formData.foodPreference}
+                        onChange={(e) => setFormData({ ...formData, foodPreference: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white/80 focus:outline-none focus:border-neon-green/50 appearance-none transition-all cursor-pointer font-semibold"
+                      >
+                        <option value="Veg" className="bg-deep-black text-white">Veg (Pure Vegetarian)</option>
+                        <option value="Non-Veg" className="bg-deep-black text-white">Non-Veg (Egg/Meat)</option>
+                        <option value="Eggitarian" className="bg-deep-black text-white">Eggitarian</option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* WhatsApp Number */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">WhatsApp Number *</label>
+                    <div className="relative">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-mono text-sm pointer-events-none">+91</span>
+                      <input 
+                        type="tel" 
+                        value={formData.whatsappNumber}
+                        onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value.replace(/\D/g, "") })}
+                        placeholder="10-digit Mobile Number"
+                        maxLength={10}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-16 pr-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold font-mono"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Selected Plan */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Selected Plan *</label>
+                    <div className="relative">
+                      <select 
+                        value={formData.selectedPlan}
+                        onChange={(e) => setFormData({ ...formData, selectedPlan: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white/80 focus:outline-none focus:border-neon-green/50 appearance-none transition-all cursor-pointer font-semibold"
+                      >
+                        <option value="30 Days Starter Plan" className="bg-deep-black text-white font-semibold">30 Days Starter Plan (₹299)</option>
+                        <option value="90 Days Transformation Plan" className="bg-deep-black text-white font-semibold flex items-center justify-between">90 Days Transformation Plan (₹999)</option>
+                        <option value="6 Months Premium Coaching Plan" className="bg-deep-black text-white font-semibold">6 Months Premium Coaching Plan (₹2499)</option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medical Issue */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-white/40 font-mono">Any Medical Issue / Injury / Past Illness</label>
+                  <textarea 
+                    value={formData.medicalIssue}
+                    onChange={(e) => setFormData({ ...formData, medicalIssue: e.target.value })}
+                    placeholder="Describe any medical issues or injuries so we can design a safe workout protocol (e.g. thyroid, back pain, none)."
+                    rows={3}
+                    className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold"
+                  />
+                </div>
+
+                {/* Submit button */}
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full bg-neon-green text-black font-black uppercase tracking-widest text-xs py-5 rounded-2xl cursor-pointer hover:bg-white hover:text-black hover:shadow-glow transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>Booking Your Consultation...</>
+                  ) : (
+                    <>
+                      Book Free Consultation <Send className="w-4 h-4 text-black" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>

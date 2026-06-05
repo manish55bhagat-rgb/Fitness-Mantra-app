@@ -56,41 +56,41 @@ export const translations: Translations = {
     mr: "वारंवार विचारले जाणारे प्रश्न"
   },
   "Nav.EliteAccess": {
-    en: "PRICING",
-    hi: "मूल्य निर्धारण",
-    mr: "किंमत योजना"
+    en: "PREMIUM PLANS",
+    hi: "प्रीमियम प्लान्स",
+    mr: "प्रीमियम प्लॅन्स"
   },
   "Nav.SignIn": {
     en: "SIGN IN",
-    hi: "साइन इन",
-    mr: "साइन इन"
+    hi: "लॉगिन करें",
+    mr: "लॉगिन करा"
   },
 
   // BMI Calculator Section
   "Bmi.Title": {
-    en: "Body Metrics",
-    hi: "शारीरिक मापदंड (BMI)",
-    mr: "शारीरिक मापदंड (BMI)"
+    en: "BMI Calculator",
+    hi: "बीएमआई कैलकुलेटर",
+    mr: "बीएमआय कॅल्क्युलेटर"
   },
   "Bmi.Sub": {
-    en: "Initialize a comprehensive audit of your physical architecture using advanced neural classification.",
-    hi: "उन्नत तंत्रिका वर्गीकरण का उपयोग करके अपने शारीरिक संरचना का व्यापक विश्लेषण शुरू करें।",
-    mr: "प्रगत तंत्रिका वर्गीकरण वापरून आपल्या शारीरिक संरचनेचे सर्वसमावेशक विश्लेषण सुरू करा."
+    en: "Check your Body Mass Index (BMI) instantly with simple rules.",
+    hi: "सरल नियमों के साथ तुरंत अपने बॉडी मास इंडेक्स (बीएमआई) की जांच करें।",
+    mr: "साध्या नियमांसह आपले बॉडी मास इंडेक्स (बीएमआई) त्वरित तपासा."
   },
   "Bmi.WeightLabel": {
-    en: "Weight Protocol (KG)",
-    hi: "वजन प्रोटोकॉल (किग्रा)",
-    mr: "वजन प्रोटोकॉल (किग्रॅ)"
+    en: "Weight (KG)",
+    hi: "वजन (किग्रा)",
+    mr: "वजन (किग्रॅ)"
   },
   "Bmi.HeightLabel": {
-    en: "Height Protocol (CM)",
-    hi: "लंबाई प्रोटोकॉल (सेमी)",
-    mr: "उंची प्रोटोकॉल (सेमी)"
+    en: "Height (CM)",
+    hi: "लंबाई / ऊंचाई (सेमी)",
+    mr: "उंची (सेमी)"
   },
   "Bmi.GenderLabel": {
-    en: "Gender Matrix",
-    hi: "लिंग मैट्रिक्स",
-    mr: "लिंग मॅट्रिक्स"
+    en: "Gender",
+    hi: "लिंग",
+    mr: "लिंग"
   },
   "Bmi.Male": {
     en: "Male",
@@ -103,9 +103,9 @@ export const translations: Translations = {
     mr: "महिला"
   },
   "Bmi.GoalLabel": {
-    en: "Strategy Objective",
-    hi: "रणनीतिक उद्देश्य",
-    mr: "रणनीतीचे उद्दिष्ट"
+    en: "Fitness Goal",
+    hi: "फिटनेस लक्ष्य",
+    mr: "फिटनेस ध्येय"
   },
   "Bmi.Goal.Fit": {
     en: "General Fitness",
@@ -113,29 +113,29 @@ export const translations: Translations = {
     mr: "सामान्य फिटनेस"
   },
   "Bmi.Goal.Loss": {
-    en: "Weight Loss",
-    hi: "वजन घटाना",
-    mr: "वजन कमी करणे"
+    en: "Fat Loss",
+    hi: "वजन घटाना (Fat Loss)",
+    mr: "चरबी कमी करणे"
   },
   "Bmi.Goal.Muscle": {
-    en: "Build Muscle",
-    hi: "मांसपेशियों का निर्माण",
+    en: "Muscle Gain",
+    hi: "मांसपेशियों का निर्माण (Muscle Gain)",
     mr: "स्नायू वाढवणे"
   },
   "Bmi.Goal.Endu": {
-    en: "Endurance",
-    hi: "सहनशक्ति (एंड्यूरेंस)",
-    mr: "सहनशक्ती (एंड्यूरेंस)"
+    en: "General Health",
+    hi: "सामान्य स्वास्थ्य",
+    mr: "सामान्य आरोग्य"
   },
   "Bmi.Btn": {
-    en: "GENERATE NEURAL AUDIT",
-    hi: "न्यूरल विश्लेषण उत्पन्न करें",
-    mr: "न्यूरल विश्लेषण तयार करा"
+    en: "CHECK MY BMI",
+    hi: "बीएमआई चेक करें",
+    mr: "बीएमआय तपासा"
   },
   "Bmi.ResultTitle": {
-    en: "Diagnostic Output",
-    hi: "नैदानिक आउटपुट",
-    mr: "नैदानिक आउटपुट"
+    en: "Your BMI Result",
+    hi: "आपका बीएमआई परिणाम",
+    mr: "तुमचा बीएमआय निकाल"
   },
   "Bmi.Underweight": {
     en: "Underweight",
@@ -215,86 +215,86 @@ export const translations: Translations = {
     mr: "ॲथलीट मोड (डबल स्प्लिट्स / उच्च शारीरिक श्रम)"
   },
   "Cal.Btn": {
-    en: "COMMENCE PHYSIOLOGICAL AUDIT",
-    hi: "शारीरिक ऑडिट प्रारंभ करें",
-    mr: "शारीरिक ऑडिट सुरू करा"
+    en: "CALCULATE CALORIES",
+    hi: "कैलोरी की गणना करें",
+    mr: "कॅलरी मोजा"
   },
   "Cal.Output": {
-    en: "Energetics Output",
-    hi: "ऊर्जा गणना परिणाम",
-    mr: "ऊर्जा गणना परिणाम"
+    en: "Calorie Results",
+    hi: "कैलोरी गणना परिणाम",
+    mr: "कॅलरी गणना निकाल"
   },
   "Cal.Maintenance": {
     en: "Maintenance Calories",
-    hi: "रखरखाव कैलोरी (मैंटेनेंस)",
-    mr: "देखभाल कॅलरी (मेंटेनन्स)"
+    hi: "मैंटेनेंस कैलोरी (वजन सामान्य रखने के लिए)",
+    mr: "मेंटेनन्स कॅलरीज"
   },
   "Cal.Loss": {
-    en: "Weight Loss Calories",
-    hi: "वजन घटाने की कैलोरी",
+    en: "Fat Loss Calories",
+    hi: "वजन घटाने की कैलोरी (Fat Loss)",
     mr: "वजन कमी करण्याची कॅलरी"
   },
   "Cal.Gain": {
-    en: "Weight Gain Calories",
-    hi: "वजन बढ़ाने की कैलोरी",
+    en: "Muscle Gain Calories",
+    hi: "वजन बढ़ाने की कैलोरी (Muscle Gain)",
     mr: "वजन वाढवण्याची कॅलरी"
   },
   "Cal.Deficit": {
-    en: "-500 KCAL Deficit",
-    hi: "-५०० कैलोरी की कमी",
+    en: "-500 Calories Deficit",
+    hi: "-500 कैलोरी की कमी",
     mr: "-५०० कॅलरीची कमतरता"
   },
   "Cal.Surplus": {
-    en: "+500 KCAL Surplus",
-    hi: "+५०० कैलोरी की वृद्धि",
+    en: "+500 Calories Surplus",
+    hi: "+500 कैलोरी की वृद्धि",
     mr: "+५०० कॅलरीची वाढ"
   },
   "Cal.TargetLabel": {
-    en: "Custom Protocol Target",
-    hi: "कस्टम प्रोटोकॉल लक्ष्य",
-    mr: "सानुकूल प्रोटोकॉल लक्ष्य"
+    en: "Your Target Calories",
+    hi: "आपका कैलोरी लक्ष्य",
+    mr: "तुमचे कॅलरी ध्येय"
   },
 
   // Home CTA & Other Sections
   "Home.HeroSub": {
-    en: "Transform Your Body Naturally",
-    hi: "प्राकृतिक रूप से अपना शरीर बदलें",
-    mr: "नैसर्गिकरित्या आपले शरीर बदला"
+    en: "Start Your Fitness Journey",
+    hi: "अपनी फिटनेस यात्रा शुरू करें",
+    mr: "आपली फिटनेस प्रवास सुरू करा"
   },
   "Home.Subtitle": {
-    en: "Pinpoint precision diagnostics for calculating body mass quotients and energetic maintenance targets.",
-    hi: "शरीर के द्रव्यमान सूचकांक और ऊर्जा रखरखाव लक्ष्यों की सटीक गणना करने वाली प्रणाली।",
-    mr: "शरीरमान निर्देशांक आणि ऊर्जेच्या उद्दिष्टांची अचूक गणना करणारी प्रणाली."
+    en: "Calculate your BMI and Calorie targets. Choose a plan or book a free WhatsApp consultation to get started.",
+    hi: "अपने बीएमआई और कैलोरी लक्ष्यों की गणना करें। शुरू करने के लिए एक प्लान चुनें या व्हाट्सएप पर फ्री कंसल्टेशन बुक करें।",
+    mr: "तुमचे बीएमआय आणि कॅलरी लक्ष्य मोजा. सुरू करण्यासाठी प्लॅन निवडा किंवा व्हॉट्सॲपवर मोफत चर्चा करा."
   },
   "Home.BmiEngine": {
-    en: "BMI Diagnostic Engine",
-    hi: "बीएमआई निदान इंजन",
-    mr: "बीएमआय निदान प्रणाली"
+    en: "BMI Checker",
+    hi: "बीएमआई चेक",
+    mr: "बीएमआय चेक"
   },
   "Home.BmiDesc": {
-    en: "Compute your body mass index instantly based on accurate weight and height tracking ratios to discover body classifications.",
-    hi: "शरीर के वर्गीकरण का पता लगाने के लिए सटीक वजन और ऊंचाई के अनुपात के आधार पर तुरंत अपने बीएमआई की गणना करें।",
-    mr: "शरीराचे वर्गीकरण शोधण्यासाठी अचूक वजन आणि उंचीच्या गुणोत्तरावर आधारित तुमच्या बीएमआयची त्वरित गणना करा."
+    en: "Check your Body Mass Index (BMI) instantly to understand if your weight is healthy, under, or over.",
+    hi: "यह समझने के लिए कि आपका वजन स्वस्थ है, कम है या अधिक है, तुरंत अपने बॉडी मास इंडेक्स (बीएमआई) की जांच करें।",
+    mr: "तुमचे वजन निरोगी, कमी किंवा जास्त आहे हे समजून घेण्यासाठी तुमचे बीएमआय त्वरित तपासा."
   },
   "Home.LaunchBmi": {
-    en: "LAUNCH BMI ENGINE",
-    hi: "बीएमआई इंजन शुरू करें",
-    mr: "बीएमआय इंजिन सुरू करा"
+    en: "CHECK BMI NOW",
+    hi: "बीएमआई अभी चेक करें",
+    mr: "बीएमआय आता तपासा"
   },
   "Home.CalEngine": {
-    en: "Calorie Intake Architect",
-    hi: "कैलोरी सेवन वास्तुकला",
-    mr: "कॅलरी सेवन रचना"
+    en: "Calorie Checker",
+    hi: "कैलोरी चेक",
+    mr: "कॅलरी चेक"
   },
   "Home.CalDesc": {
-    en: "Calculate maintenance, deficit (weight loss), and surplus (weight gain) targets tailored to age, height, activity level, and gender.",
-    hi: "उम्र, ऊंचाई, गतिविधि स्तर और लिंग के अनुसार रखरखाव, कमी (वजन घटाने) और वृद्धि (वजन बढ़ाने) के लक्ष्यों की गणना करें।",
-    mr: "वय, उंची, क्रियाशीलता पातळी आणि लिंगानुसार देखभाल, घट (वजन कमी करणे) आणि वाढ (वजन वाढवणे) या उद्दिष्टांची गणना करा."
+    en: "Calculate your daily calorie needs to easily reach your fat loss, muscle gain or fitness goals.",
+    hi: "फैट लॉस, मसल गेन या फिटनेस लक्ष्यों तक आसानी से पहुंचने के लिए अपनी दैनिक कैलोरी आवश्यकताओं की गणना करें।",
+    mr: "फॅट लॉस, मसल गेन किंवा फिटनेस ध्येयांपर्यंत सहज पोहोचण्यासाठी तुमच्या दैनंदिन कॅलरी गरजा मोजा."
   },
   "Home.LaunchCal": {
-    en: "LAUNCH CALORIE ARCHITECT",
-    hi: "कॅलरी आर्किटेक्ट सुरू करा",
-    mr: "कॅलरी आर्किटेक्ट सुरू करा"
+    en: "CHECK CALORIES NOW",
+    hi: "कैलोरी अभी चेक करें",
+    mr: "कॅलरी आता तपासा"
   },
   "Common.Language": {
     en: "Language",

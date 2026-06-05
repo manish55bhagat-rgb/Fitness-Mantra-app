@@ -44,6 +44,86 @@ export default function CalorieCalculator() {
   const [biometricResult, setBiometricResult] = useState<{ bmr: number; tdee: number; maintenance: number; weightLoss: number; weightGain: number; goalIntake: number } | null>(null);
   const [isBioLoading, setIsBioLoading] = useState(false);
   const [dietPlan, setDietPlan] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Real-time input validation for calorie calculator
+  useEffect(() => {
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+    const a = parseFloat(age);
+    const act = parseFloat(activity);
+    const tw = parseFloat(targetWeight);
+    const wk = parseFloat(weeks);
+
+    if (!weight.trim() || !height.trim() || !age.trim()) {
+      setBiometricResult(null);
+      setValidationError("Height, weight, and age fields cannot be blank.");
+      return;
+    }
+
+    if (isNaN(w) || isNaN(h) || isNaN(a) || isNaN(act)) {
+      setBiometricResult(null);
+      setValidationError("Please enter valid numbers only.");
+      return;
+    }
+
+    if (w <= 0 || h <= 0 || a <= 0 || act <= 0) {
+      setBiometricResult(null);
+      setValidationError("Values must be positive and greater than zero.");
+      return;
+    }
+
+    if (h < 50 || h > 275) {
+      setBiometricResult(null);
+      setValidationError("Please specify a realistic height between 50 cm and 275 cm.");
+      return;
+    }
+
+    if (w < 10 || w > 400) {
+      setBiometricResult(null);
+      setValidationError("Please specify a realistic weight between 10 kg and 400 kg.");
+      return;
+    }
+
+    if (a < 1 || a > 120) {
+      setBiometricResult(null);
+      setValidationError("Please specify a realistic age between 1 and 120.");
+      return;
+    }
+
+    if (tw < 0 || isNaN(tw)) {
+      setBiometricResult(null);
+      setValidationError("Target loss cannot be negative.");
+      return;
+    }
+
+    if (wk <= 0 || isNaN(wk)) {
+      setBiometricResult(null);
+      setValidationError("Timeframe must be greater than zero.");
+      return;
+    }
+
+    setValidationError(null);
+
+    // Calculate BMR & TDEE Maintenance
+    // Mifflin-St Jeor Equation
+    const calculatedBmr = gender === "Male" ? (10 * w + 6.25 * h - 5 * a + 5) : (10 * w + 6.25 * h - 5 * a - 161);
+    const textTdee = Math.round(calculatedBmr * act);
+    
+    // 7700 kcal per kg of fat loss
+    const totalDeficitNeeded = tw * 7700;
+    const dailyDeficit = totalDeficitNeeded / (wk * 7);
+    const goalIntake = Math.round(textTdee - dailyDeficit);
+
+    setBiometricResult({ 
+      bmr: Math.round(calculatedBmr), 
+      tdee: textTdee, 
+      maintenance: textTdee, 
+      weightLoss: Math.round(textTdee - 500), 
+      weightGain: Math.round(textTdee + 500), 
+      goalIntake: Math.max(1000, goalIntake) // Ensure safe lowest bound calorie limit
+    });
+  }, [weight, height, age, gender, activity, targetWeight, weeks]);
 
   // Food Search/Analysis State
   const [foodQuery, setFoodQuery] = useState("");
@@ -76,26 +156,15 @@ export default function CalorieCalculator() {
     const target = parseFloat(targetWeight);
     const timeframeWeeks = parseFloat(weeks);
 
-    if (isNaN(w) || isNaN(h) || isNaN(a)) return;
+    if (isNaN(w) || isNaN(h) || isNaN(a) || validationError) return;
 
     setIsBioLoading(true);
-    // Mifflin-St Jeor Equation
     let bmr = gender === "Male" ? (10 * w + 6.25 * h - 5 * a + 5) : (10 * w + 6.25 * h - 5 * a - 161);
     const tdee = Math.round(bmr * activityLevel);
     
-    // 7700 kcal per kg of fat loss
     const totalDeficitNeeded = target * 7700;
     const dailyDeficit = totalDeficitNeeded / (timeframeWeeks * 7);
-    const goalIntake = Math.round(tdee - dailyDeficit);
-
-    setBiometricResult({ 
-      bmr: Math.round(bmr), 
-      tdee, 
-      maintenance: tdee, 
-      weightLoss: Math.round(tdee - 500), 
-      weightGain: Math.round(tdee + 500), 
-      goalIntake: Math.round(tdee - dailyDeficit) 
-    });
+    const goalIntake = Math.max(1000, Math.round(tdee - dailyDeficit));
 
     try {
       const langName = language === "hi" ? "Hindi (हिंदी)" : language === "mr" ? "Marathi (मराठी)" : "English";
@@ -114,7 +183,7 @@ export default function CalorieCalculator() {
       const response = await generateContent(prompt);
       setDietPlan(response);
     } catch (e) {
-      setDietPlan(language === "hi" ? "एआई पोषण प्रणाली बाधित। कृपया पुनः प्रयास करें।" : language === "mr" ? "एआय पोषण प्रणाली व्यत्यय आणली. कृपया पुन्हा प्रयत्न करा." : "Protocol uplink terminated by server security.");
+      setDietPlan("AI Coach is temporarily busy. Please try again after some time.");
     } finally {
       setIsBioLoading(false);
     }
@@ -291,6 +360,12 @@ export default function CalorieCalculator() {
                   </div>
                 </div>
 
+                {validationError && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider text-center mb-10">
+                    {validationError}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1 flex items-center gap-2">
@@ -389,8 +464,8 @@ export default function CalorieCalculator() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={calculateBiometrics}
-                  disabled={isBioLoading}
-                  className="w-full py-7 bg-neon-green text-black font-black uppercase tracking-[0.4em] rounded-[24px] shadow-[0_20px_60px_rgba(57,255,20,0.3)] flex items-center justify-center gap-4 group transition-all"
+                  disabled={isBioLoading || !!validationError}
+                  className="w-full py-7 bg-neon-green text-black font-black uppercase tracking-[0.4em] rounded-[24px] shadow-[0_20px_60px_rgba(57,255,20,0.3)] flex items-center justify-center gap-4 group transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   {isBioLoading ? (
                     <div className="flex items-center gap-3">

@@ -103,7 +103,31 @@ service cloud.firestore {
           && data.userId is string;
     }
 
+    function isValidLead(data) {
+      return data.keys().hasAll(['fullName', 'whatsappNumber', 'email', 'selectedPlan'])
+          && data.keys().size() <= 15
+          && data.fullName is string && data.fullName.size() <= 100
+          && data.whatsappNumber is string && data.whatsappNumber.size() == 10
+          && data.email is string && data.email.size() <= 100
+          && data.selectedPlan is string && data.selectedPlan.size() <= 100
+          && (!('age' in data) || data.age is number)
+          && (!('gender' in data) || data.gender is string)
+          && (!('height' in data) || data.height is number)
+          && (!('weight' in data) || data.weight is number)
+          && (!('fitnessGoal' in data) || data.fitnessGoal is string)
+          && (!('foodPreference' in data) || data.foodPreference is string)
+          && (!('medicalIssue' in data) || data.medicalIssue is string)
+          && (!('paymentStatus' in data) || data.paymentStatus is string)
+          && (!('accessStatus' in data) || data.accessStatus is string);
+    }
+
     // Collection Rules
+    match /leads/{leadId} {
+      allow create: if isValidId(leadId) && isValidLead(incoming());
+      allow get: if isSignedIn() && isAdmin();
+      allow list, update, delete: if isAdmin();
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();

@@ -79,9 +79,35 @@
         "expiryDate": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "planName", "transactionId", "paymentStatus", "purchaseDate", "expiryDate"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "User submitted free consultation form details saved as business leads.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "age": { "type": "integer" },
+        "gender": { "type": "string" },
+        "height": { "type": "number" },
+        "weight": { "type": "number" },
+        "fitnessGoal": { "type": "string" },
+        "foodPreference": { "type": "string" },
+        "medicalIssue": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "email": { "type": "string" },
+        "selectedPlan": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "accessStatus": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName", "whatsappNumber", "email", "selectedPlan"]
     }
   },
   "firestore": {
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Inquiries, signups, and trial consultation bookings from the homepage form."
+    },
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "User profiles store profile details."
