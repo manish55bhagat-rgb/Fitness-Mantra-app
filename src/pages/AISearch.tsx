@@ -18,7 +18,7 @@ export default function AISearch() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: "Hello! I am Mantra Neural, your personal AI fitness coach trained by certified athlete Coach Manish Bhagat. Query my database for custom diets, progressive hypertrophy workouts, or physical optimization protocols.",
+      content: "Hello! I am your Fitness Mantra AI Companion, trained under Coach Manish Bhagat. I am here to help you design personalized workout routines, natural diet plans, calculate BMI or calories, and support your natural transformation journey. How can I help you today?",
       timestamp: new Date(),
     }
   ]);
@@ -111,72 +111,65 @@ export default function AISearch() {
 
       setLoading(false);
     } catch (error: any) {
-      console.warn("Mantra Neural error detected. Transitioning to local biometric rules:", error);
+      console.warn("AI Companion temporarily offline. Loading offline guides:", error);
       setLoading(false);
       
       let fallbackText = "";
       const q = activeQuery.toLowerCase();
       
       if (q.includes("diet") || q.includes("meal") || q.includes("food") || q.includes("eat") || q.includes("protein") || q.includes("nutrition") || q.includes("caloric") || q.includes("sugar")) {
-        fallbackText = `### 🍽️ Offline Nutrition Diagnostic
+        fallbackText = `### 🍽️ Natural Nutrition Guidelines
+        
+Our live AI coach is currently busy. Here are Coach Manish Bhagat's essential guidelines for diet and nutrition:
 
-The live cloud is experiencing high demand. Here is your immediate, macro-precise offline coaching setup:
-
-1.  **Protein Coefficient:** Maintain a minimum of **2.0 grams of protein per kilogram of total body mass** daily to ensure nitrogen balance. Focus on solid food sources: egg whites, lean poultry, fresh paneer, and tofu.
-2.  **Caloric Metric:** 
-    *   For **Fat Loss / Lean Sculpting**: Aim for a **350-500 kcal deficit** below your calculated TDEE.
-    *   For **Hypertrophy / Clean Gain**: Aim for a **250-300 kcal progressive surplus** above TDEE.
-3.  **Meal Structure:** Focus on 4-5 small, high-density feedings spaced exactly 3-4 hours apart to keep muscle protein synthesis (MPS) continually stimulated throughout your daily metabolic cycle.`;
+1. **Protein Intake:** Aim for about **1.6 to 2.0 grams of protein per kilogram of body weight** to support natural muscle recovery. Main protein sources include eggs, chicken breast, paneer, sprouts, milk, fish, and lentils.
+2. **Calorie Targets:** 
+    * **For Fat Loss:** Aim for a moderate calorie deficit of **300 to 500 calories** below your daily maintenance limit.
+    * **For Muscle Gain:** Consuming **200 to 300 calories** above your daily maintenance will support clean, steady growth.
+3. **Consistency:** Eat 3 to 4 balanced meals daily to keep your energy level steady and support body transformation.`;
       } else if (q.includes("stack") || q.includes("supplement") || q.includes("creatine") || q.includes("whey") || q.includes("preworkout") || q.includes("bcaa") || q.includes("glutamine")) {
-        fallbackText = `### ⚡ Elite Ergogenic Supplement Stack
+        fallbackText = `### ⚡ Supplement Advice
 
-Cloud link is undergoing routine balance. Please reference Coach Manish Bhagat's offline gold-standard stack guidelines:
+Our live coach is currently experiencing a queue. Here is simple, realistic guidance on supplements:
 
-1.  **Whey Isolate:** 1 serving (24-30g protein) immediately post-exercise splits or during breakfast intervals to rapidly supply essential amino acids (EAAs).
-2.  **Creatine Monohydrate:** 3-5 grams daily, taken consistently at any hour. Creatine hydrates the intramuscular fibers, upgrading ATP synthesis and raw power metrics. No loading phase required.
-3.  **Pre-Workout Formulation:** 150-200mg Caffeine combined with 4-6g L-Citrulline Malate 30 minutes before high-intensity resistance splits to boost blood flow, cellular pumps, and mental clarity.`;
+1. **Whey Protein:** Helpful if you struggle to meet your daily protein goals from whole foods alone. You can take 1 scoop post-workout or as a snack.
+2. **Creatine Monohydrate:** 3 grams daily helper to store more water within muscles, helping with strength and steady energy.
+3. **Pre-Workout / Caffeine:** A cup of black coffee 30 minutes before training is an excellent, natural pre-workout booster.`;
       } else if (q.includes("workout") || q.includes("exercise") || q.includes("training") || q.includes("gym") || q.includes("routine") || q.includes("muscle") || q.includes("hypertrophy") || q.includes("split") || q.includes("program")) {
-        fallbackText = `### 🏋️ Elite Progressive Overload Workout Split
+        fallbackText = `### 🏋️ Simple 3-Day Workout Routine
 
-Cloud optimization is busy. Here is our recommended offline 4-Day Push/Pull/Legs high-intensity hypertrophy workout framework:
+AI links are currently busy. Here is our recommended weekly routine designed to build natural strength:
 
-*   **Day 1 (Push - Chest/Shoulders/Triceps):**
-    *   Flat Bench Press: 3 sets x 6-8 reps (heavy, 2m rest)
-    *   Incline Dumbbell Press: 3 sets x 8-10 reps
-    *   Cable Lateral Raises: 4 sets x 12-15 reps (focused pump)
-    *   Tricep Overhead Extensions: 3 sets x 10-12 reps
-*   **Day 2 (Pull - Back/Biceps):**
-    *   Weighted Pull-Ups or Lat Pulldowns: 4 sets x 8 reps
-    *   Barbell Bent-Over Row: 3 sets x 8-10 reps
-    *   Rear Delt Reverse Pec-Deck: 3 sets x 12-15 reps
-    *   Incline Alternate Dumbbell Curls: 3 sets x 10-12 reps
-*   **Day 3 (Active Recovery / Core / Cardio):**
-    *   Stretching, deep mobility drills + 30 minutes light incline treadmill walking.
-*   **Day 4 (Legs - Quad/Hamstring/Glute Emphasis):**
-    *   Barbell Back Squats: 4 sets x 6-8 reps (heavy, focused depth)
-    *   Romanian Deadlifts: 3 sets x 10 reps (slow eccentric)
-    *   Leg Extensions: 3 sets x 12-15 reps
-    *   Seated Calf Raises: 4 sets x 15 reps
+* **Day 1: Upper Body (Chest, Back, Shoulders & Arms)**
+    * Flat Dumbbell Chest Press: 3 sets x 8-12 reps
+    * Lat Pulldowns or Pull-ups: 3 sets x 10 reps
+    * Dumbbell Shoulder Press: 3 sets x 10 reps
+    * Bicep Curls / Tricep Pushdowns: 3 sets x 12 reps
+* **Day 2: Rest & Recovery**
+    * Take a brisk walk or do light stretching to improve mobility.
+* **Day 3: Lower Body (Legs & Core)**
+    * Goblet Squats or Barbell Squats: 3 sets x 8-12 reps
+    * Romanian Deadlifts: 3 sets x 10 reps
+    * Lying Leg Curls: 3 sets x 12 reps
+    * Plank: 3 sets x 45-second hold
 
-*Progression Standard: When you successfully execute all reps for a given set, increase total resistive load by 2.5% in the subsequent cycle.*`;
+*Tip: Focus on form over heavy weights. Only add weight when you can easily perform the target repetitions with clean control.*`;
       } else if (q.includes("recovery") || q.includes("sleep") || q.includes("rest") || q.includes("fatigue") || q.includes("sore") || q.includes("stretch")) {
-        fallbackText = `### 💤 Neuromuscular Recovery & CNS Maintenance Protocol
+        fallbackText = `### 💤 Rest and Natural Recovery Guidelines
 
-Cloud API is busy, loading our certified recovery metrics:
+Our AI assistant is temporarily busy. Here are key guidelines to recover:
 
-1.  **Sleep Target:** Ensure 7.5 to 8.5 hours of continuous sleep to maximize natural Growth Hormone (GH) release and neural recovery.
-2.  **Deload Cycle Periodization:** If performance markers plateau or joint pain rises, execute a structured deload every 6-8 weeks (reducing regular training weight by 30-40% and cutting set volume in half for one week).
-3.  **Active Hydration:** Consume roughly 35-40ml of structured pure water per kilogram of body weight to keep cells hydrated and speed up lactic acid filtration.`;
+1. **Sleep First:** Getting **7 to 8 hours of deep night sleep** is the most powerful tool for natural muscle repair and energy.
+2. **Rest Days:** Overtraining leads to injuries. Include at least 1 or 2 complete rest days in your weekly workout structure.
+3. **Hydration:** Drink **3 to 4 liters of water** daily. Hydrated muscles recover much more quickly from soreness.`;
       } else {
-        fallbackText = `### 🤖 Direct AI Coach Response Fallback
+        fallbackText = `### 🤖 Live AI Assistant Queue
 
-The global high-demand queues have temporarily restricted live cloud streams. Under Coach Manish Bhagat's fallback response directives, here is your essential guide to **"${activeQuery}"**:
+Our live AI Coach stream is currently experiencing high demand. Under Coach Manish Bhagat's guidance, here is an essential tip for **"${activeQuery}"**:
 
-*   **Custom Strategy:** Ensure you are tracking all daily macros (2.2g of protein per kg of lean mass, 20-30% of fats, and balance in clean carbohydrates).
-*   **Fitness Protocol:** Ensure progressive resistance training (hypertrophy-style, 3-5 days per week, training within 1-2 reps of failure/RPE 8.5).
-*   **Immediate Action Hook:** Consistency overrides intensity. Focus on nutrition compliance and incremental overload adjustments every week.
-
-*What is your specific height, weight, and fitness target? Let me know to formulate a localized tactical projection of your macros!*`;
+* **Keep It Simple:** Consistency is far more important than extreme efforts. Small daily habits produce the biggest natural body transformations.
+* **Basic Advice:** Ensure you track your water intake, prioritize rich food sources, walk 8k-10k steps daily, and exercise with controlled movements.
+* **Let's Connect:** If you need highly specialized feedback, feel free to use our book consultation form or message Manish directly on WhatsApp!`;
       }
 
       setMessages((prev) => {
@@ -204,11 +197,11 @@ The global high-demand queues have temporarily restricted live cloud streams. Un
             </div>
             <div>
               <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1.5">
-                <span className="text-[8px] md:text-[10px] bg-neon-green/20 text-neon-green px-1.5 py-0.5 rounded-sm font-black tracking-widest uppercase border border-neon-green/20 animate-pulse">Neural Active</span>
-                <span className="text-[8px] md:text-[10px] text-white/30 font-bold tracking-widest uppercase font-mono">ID: MANTRA-OS_v2.0</span>
+                <span className="text-[8px] md:text-[10px] bg-neon-green/20 text-neon-green px-1.5 py-0.5 rounded-sm font-black tracking-widest uppercase border border-neon-green/20 animate-pulse">Coach Online</span>
+                <span className="text-[8px] md:text-[10px] text-white/30 font-bold tracking-widest uppercase font-mono">FITNESS MANTRA AI</span>
               </div>
               <h1 className="text-xl md:text-4xl font-display font-black uppercase tracking-tighter leading-none group cursor-default">
-                MANTRA <span className="text-neon-green italic group-hover:drop-shadow-[0_0_20px_rgba(57,255,20,0.6)] transition-all">NEURAL</span>
+                AI FITNESS <span className="text-neon-green italic group-hover:drop-shadow-[0_0_20px_rgba(57,255,20,0.6)] transition-all">COACH</span>
               </h1>
             </div>
           </div>
@@ -288,7 +281,7 @@ The global high-demand queues have temporarily restricted live cloud streams. Un
                     <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     <span>{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <span>•</span>
-                    <span className="uppercase text-[8px] tracking-[0.2em] font-black">{msg.role === "user" ? "Uplink Transmission" : "Neural Output"}</span>
+                    <span className="uppercase text-[8px] tracking-[0.2em] font-black">{msg.role === "user" ? "User Message" : "Coach Reply"}</span>
                   </div>
                 </div>
               </motion.div>
@@ -308,12 +301,12 @@ The global high-demand queues have temporarily restricted live cloud streams. Un
                       <div className="w-2.5 h-2.5 bg-neon-green rounded-full animate-bounce [animation-delay:-0.3s] shadow-[0_0_15px_#39FF14]" />
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-neon-green/90 ml-1 animate-pulse leading-none font-mono">
-                      Compiling Neural Matrix...
+                      Thinking...
                     </span>
                   </div>
                   <div className="text-[9px] text-white/40 font-mono uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                    <span>Analyzing biometrics & physiological telemetry...</span>
+                    <span>Reviewing plan guidelines...</span>
                   </div>
                 </div>
               </motion.div>
@@ -365,7 +358,7 @@ The global high-demand queues have temporarily restricted live cloud streams. Un
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Query Interface or Upload Specimen..."
+                placeholder="Ask our AI Coach about exercises, diet, or weight loss..."
                 className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-5 md:px-10 py-4 md:py-6 pr-24 md:pr-32 text-xs md:text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans"
               />
               <button 
@@ -388,7 +381,7 @@ The global high-demand queues have temporarily restricted live cloud streams. Un
 
         {/* Quick Suggests */}
         <div className="flex flex-wrap gap-1.5 md:gap-3 mt-3 md:mt-6 justify-center">
-          {["Metabolic Efficiency?", "Elite Stack?", "Hypertrophy Guide", "Neural Recovery"].map((hint) => (
+          {["Custom Diet Support", "Safe Supplement Stack", "Workout Suggestion", "Rest & Recovery"].map((hint) => (
             <button
               key={hint}
               onClick={() => handleSearch(undefined, hint)}

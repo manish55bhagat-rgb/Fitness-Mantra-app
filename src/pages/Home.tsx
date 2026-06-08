@@ -66,7 +66,7 @@ export default function Home() {
     medicalIssue: "",
     contactPhone: "",
     email: "",
-    selectedPlan: "30 Days Plan",
+    selectedPlan: "1 Month Starter Plan",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -96,7 +96,7 @@ export default function Home() {
       setErrorMsg("Please enter a valid weight in kg.");
       return;
     }
-    if (!/^\d{10}$/.test(formData.contactPhone)) {
+    if (formData.contactPhone && !/^\d{10}$/.test(formData.contactPhone)) {
       setErrorMsg("Phone number must be exactly 10 digits only.");
       return;
     }
@@ -138,7 +138,7 @@ export default function Home() {
         medicalIssue: "",
         contactPhone: "",
         email: "",
-        selectedPlan: "30 Days Plan",
+        selectedPlan: "1 Month Starter Plan",
       });
     } catch (err: any) {
       console.error(err);
@@ -706,7 +706,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Phone Number */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Contact Phone Number *</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Phone Number (Optional)</label>
                     <div className="relative">
                       <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-mono text-sm pointer-events-none">+91</span>
                       <input 
@@ -716,9 +716,11 @@ export default function Home() {
                         placeholder="10-digit Mobile Number"
                         maxLength={10}
                         className="w-full bg-white/5 border border-white/10 rounded-xl pl-16 pr-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold font-mono"
-                        required
                       />
                     </div>
+                    <span className="text-[9px] font-semibold text-white/30 italic mt-1 uppercase tracking-wider block">
+                      We may contact you on WhatsApp only if you share your number.
+                    </span>
                   </div>
 
                   {/* Selected Plan */}
@@ -730,9 +732,9 @@ export default function Home() {
                         onChange={(e) => setFormData({ ...formData, selectedPlan: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white/80 focus:outline-none focus:border-neon-green/50 appearance-none transition-all cursor-pointer font-semibold"
                       >
-                        <option value="30 Days Plan" className="bg-deep-black text-white font-semibold">30 Days Plan (750 INR)</option>
-                        <option value="90 Days Plan" className="bg-deep-black text-white font-semibold flex items-center justify-between">90 Days Plan (2000 INR)</option>
-                        <option value="6 Months Plan" className="bg-deep-black text-white font-semibold">6 Months Plan (3500 INR)</option>
+                        <option value="1 Month Starter Plan" className="bg-deep-black text-white font-semibold">1 Month Starter Plan (₹299)</option>
+                        <option value="3 Months Transformation Plan" className="bg-deep-black text-white font-semibold">3 Months Transformation Plan (₹999)</option>
+                        <option value="6 Months Premium Plan" className="bg-deep-black text-white font-semibold">6 Months Premium Plan (₹1999)</option>
                       </select>
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
                     </div>
@@ -795,39 +797,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Luxury Footer */}
-      <footer className="py-40 bg-black/80 backdrop-blur-3xl relative border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-end">
-            <div>
-              <div className="flex items-center gap-4 mb-12">
-                <MBLogo size={48} className="rotate-6 shadow-glow" />
-                <h3 className="text-4xl font-display font-black tracking-tighter italic">FITNESS MANTRA</h3>
-              </div>
-              <p className="text-white/20 text-xs font-black uppercase tracking-[0.4em] leading-relaxed max-w-md italic mb-16">
-                Evolving human capability through neural biometric intelligence and high-fidelity kinetic architecture.
-              </p>
-              
-              <div className="flex gap-12">
-                 {["Instagram", "X Protocol", "Neural Link"].map(social => (
-                   <a key={social} href="#" className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-neon-green transition-all">{social}</a>
-                 ))}
-              </div>
-            </div>
-
-            <div className="text-center lg:text-right">
-              <div className="inline-block">
-                <span className="text-[10px] tracking-[0.8em] font-black text-white/20 uppercase mb-8 block font-mono">Principal Systems Architect</span>
-                <h3 className="text-5xl md:text-8xl font-display font-black tracking-tighter text-white/90 group cursor-default leading-none">
-                  MANISH <span className="text-neon-green italic drop-shadow-glow transition-all duration-700 uppercase">BHAGAT</span>
-                </h3>
-                <p className="mt-12 text-[9px] font-mono text-white/10 uppercase tracking-[0.4em]">Proprietary Performance OS // v4.0.2 // © 2024</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

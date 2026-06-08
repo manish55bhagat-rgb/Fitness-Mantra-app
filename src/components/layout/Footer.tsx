@@ -39,9 +39,9 @@ export default function Footer() {
           <div>
             <h4 className="font-extrabold text-[11px] uppercase tracking-[0.3em] mb-6 text-white/30">Our Plans</h4>
             <ul className="space-y-3.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
-              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">30 Days Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
-              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">90 Days Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
-              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">6 Months Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
+              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">1 Month Starter Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
+              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">3 Months Transformation <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
+              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">6 Months Premium Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
             </ul>
           </div>
 

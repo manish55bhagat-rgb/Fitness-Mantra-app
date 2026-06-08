@@ -103,10 +103,10 @@ service cloud.firestore {
     }
 
     function isValidLead(data) {
-      return data.keys().hasAll(['fullName', 'contactPhone', 'email', 'selectedPlan'])
+      return data.keys().hasAll(['fullName', 'email', 'selectedPlan'])
           && data.keys().size() <= 16
           && data.fullName is string && data.fullName.size() <= 100
-          && data.contactPhone is string && data.contactPhone.size() >= 10 && data.contactPhone.size() <= 15
+          && (!('contactPhone' in data) || (data.contactPhone is string && (data.contactPhone.size() == 0 || (data.contactPhone.size() >= 10 && data.contactPhone.size() <= 15))))
           && data.email is string && data.email.size() <= 100
           && data.selectedPlan is string && data.selectedPlan.size() <= 100
           && (!('age' in data) || data.age is number)

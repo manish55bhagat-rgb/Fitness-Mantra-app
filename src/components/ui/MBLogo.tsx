@@ -1,5 +1,5 @@
 import React from "react";
-const logoImg = new URL("../../assets/images/fm_premium_logo_1780745544979.png", import.meta.url).href;
+const logoImg = new URL("../../assets/images/app_logo_1780745261875.png", import.meta.url).href;
 
 interface MBLogoProps {
   className?: string;
@@ -14,8 +14,8 @@ export default function MBLogo({ className = "", size = 40 }: MBLogoProps) {
     >
       <img
         src={logoImg}
-        alt="MB Logo"
-        className="w-full h-full object-cover select-none pointer-events-none"
+        alt="Fitness Mantra MB Logo"
+        className="w-[145%] h-[145%] max-w-none object-cover select-none pointer-events-none -translate-y-[13%]"
         referrerPolicy="no-referrer"
       />
     </div>

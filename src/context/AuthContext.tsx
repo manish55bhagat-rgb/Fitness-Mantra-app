@@ -182,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const now = new Date().toISOString();
         const newProfile: UserProfile = {
           uid: user.uid,
-          fullName: user.displayName || "Anonymous Professional",
+          fullName: user.displayName || "Guest User",
           email: userEmail,
           role: role,
           registrationDate: now,
