@@ -93,14 +93,14 @@
         "fitnessGoal": { "type": "string" },
         "foodPreference": { "type": "string" },
         "medicalIssue": { "type": "string" },
-        "whatsappNumber": { "type": "string" },
+        "contactPhone": { "type": "string" },
         "email": { "type": "string" },
         "selectedPlan": { "type": "string" },
         "paymentStatus": { "type": "string" },
         "accessStatus": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["fullName", "whatsappNumber", "email", "selectedPlan"]
+      "required": ["fullName", "contactPhone", "email", "selectedPlan"]
     }
   },
   "firestore": {

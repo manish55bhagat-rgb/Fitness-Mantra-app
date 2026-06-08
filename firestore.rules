@@ -31,9 +31,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token != null && 'email' in request.auth.token && request.auth.token.email == 'manish55bhagat@gmail.com') || (
+        request.auth.token.email == 'manish55bhagat@gmail.com' || (
           exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          'role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data &&
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
         )
       );
@@ -104,10 +103,10 @@ service cloud.firestore {
     }
 
     function isValidLead(data) {
-      return data.keys().hasAll(['fullName', 'whatsappNumber', 'email', 'selectedPlan'])
-          && data.keys().size() <= 15
+      return data.keys().hasAll(['fullName', 'contactPhone', 'email', 'selectedPlan'])
+          && data.keys().size() <= 16
           && data.fullName is string && data.fullName.size() <= 100
-          && data.whatsappNumber is string && data.whatsappNumber.size() == 10
+          && data.contactPhone is string && data.contactPhone.size() >= 10 && data.contactPhone.size() <= 15
           && data.email is string && data.email.size() <= 100
           && data.selectedPlan is string && data.selectedPlan.size() <= 100
           && (!('age' in data) || data.age is number)
@@ -118,7 +117,8 @@ service cloud.firestore {
           && (!('foodPreference' in data) || data.foodPreference is string)
           && (!('medicalIssue' in data) || data.medicalIssue is string)
           && (!('paymentStatus' in data) || data.paymentStatus is string)
-          && (!('accessStatus' in data) || data.accessStatus is string);
+          && (!('accessStatus' in data) || data.accessStatus is string)
+          && (!('createdAt' in data) || data.createdAt is string);
     }
 
     // Collection Rules

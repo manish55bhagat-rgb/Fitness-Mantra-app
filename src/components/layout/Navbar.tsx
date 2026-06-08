@@ -63,16 +63,16 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] transition-all duration-500">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="glass-panel !rounded-[24px] border-white/10 px-8 h-20 flex items-center justify-between backdrop-blur-2xl bg-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 mt-2 sm:mt-6">
+        <div className="glass-panel !rounded-[16px] sm:!rounded-[24px] border-white/10 px-4 sm:px-8 h-14 sm:h-20 flex items-center justify-between backdrop-blur-2xl bg-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           
-          <Link to="/" className="flex items-center gap-4 group" id="navbar-brand-logo">
-            <MBLogo size={44} className="rotate-3 group-hover:rotate-12 transition-transform duration-300" />
+          <Link to="/" className="flex items-center gap-2 sm:gap-4 group" id="navbar-brand-logo">
+            <MBLogo size={32} className="sm:size-[44] rotate-3 group-hover:rotate-12 transition-transform duration-300" />
             <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
+              <span className="text-base sm:text-xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
                 FITNESS MANTRA
               </span>
-              <span className="text-[7px] uppercase tracking-[0.4em] text-neon-green font-black mt-1 leading-none italic font-mono">
+              <span className="text-[6px] sm:text-[7px] uppercase tracking-[0.4em] text-neon-green font-black mt-0.5 sm:mt-1 leading-none italic font-mono">
                 Manish Bhagat
               </span>
             </div>

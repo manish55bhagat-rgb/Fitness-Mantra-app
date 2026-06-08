@@ -262,9 +262,9 @@ export const translations: Translations = {
     mr: "आपली फिटनेस प्रवास सुरू करा"
   },
   "Home.Subtitle": {
-    en: "Calculate your BMI and Calorie targets. Choose a plan or book a free WhatsApp consultation to get started.",
-    hi: "अपने बीएमआई और कैलोरी लक्ष्यों की गणना करें। शुरू करने के लिए एक प्लान चुनें या व्हाट्सएप पर फ्री कंसल्टेशन बुक करें।",
-    mr: "तुमचे बीएमआय आणि कॅलरी लक्ष्य मोजा. सुरू करण्यासाठी प्लॅन निवडा किंवा व्हॉट्सॲपवर मोफत चर्चा करा."
+    en: "Calculate your BMI and Calorie targets. Choose a plan or book a free professional consultation to get started.",
+    hi: "अपने बीएमआई और कैलोरी लक्ष्यों की गणना करें। शुरू करने के लिए एक प्लान चुनें या फ्री कंसल्टेशन बुक करें।",
+    mr: "तुमचे बीएमआय आणि कॅलरी लक्ष्य मोजा. सुरू करण्यासाठी प्लॅन निवडा किंवा मोफत चर्चा करा."
   },
   "Home.BmiEngine": {
     en: "BMI Checker",

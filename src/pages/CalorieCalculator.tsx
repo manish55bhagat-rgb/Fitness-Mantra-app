@@ -183,7 +183,119 @@ export default function CalorieCalculator() {
       const response = await generateContent(prompt);
       setDietPlan(response);
     } catch (e) {
-      setDietPlan("AI Coach is temporarily busy. Please try again after some time.");
+      console.warn("AI nutrition calculation failed, generating professional biometric fallback plan:", e);
+      
+      // Calculate specific macronutrients offline
+      // Protein: 2.0g per kg of body weigh
+      const proteinGrams = Math.round(w * 2);
+      const proteinCalories = proteinGrams * 4;
+      
+      // Fats: 25% of total budget
+      const fatGrams = Math.round((goalIntake * 0.25) / 9);
+      const fatCalories = fatGrams * 9;
+      
+      // Carbs: Remainder
+      const carbCalories = Math.max(400, goalIntake - (proteinCalories + fatCalories));
+      const carbGrams = Math.round(carbCalories / 4);
+
+      let fallbackText = "";
+
+      if (language === "hi") {
+        fallbackText = `### 🌟 प्राकृतिक और वैज्ञानिक आहार योजना (Biometric Fallback)
+
+आपके जैव-माप और लक्ष्यों के आधार पर, यहाँ मनीष भगत द्वारा प्रमाणित सूक्ष्म पोषक तत्वों का विवरण है:
+
+*   **दैनिक कैलोरी लक्ष्य:** ${goalIntake} kcal (TDEE: ${tdee} kcal)
+*   **प्रोटीन लक्ष्य:** ${proteinGrams}g (${proteinCalories} kcal)
+*   **वसा (Fats) लक्ष्य:** ${fatGrams}g (${fatCalories} kcal)
+*   **कार्बोहाइड्रेट लक्ष्य:** ${carbGrams}g (${carbCalories} kcal)
+
+---
+
+#### 🍽️ भोजन संरचना सुझाव:
+
+1.  **भोजन १ (सुबह का नाश्ता / Breakfast):**
+    *   *शाकाहारी (Veg):* १ कप ओट्स, आधा स्कूप वे प्रोटीन और १ बड़ा चम्मच बादाम।
+    *   *गैर-शाकाहारी (Non-Veg):* ३ उबले अंडे (सफेद हिस्सा), १ पीला हिस्सा, २ स्लाइस ब्राउन ब्रेड।
+2.  **भोजन २ (दोपहर का भोजन / Lunch):**
+    *   *शाकाहारी (Veg):* १५० ग्राम पनीर, दाल, १ कप पके हुए चावल और हरी सब्जियाँ।
+    *   *गैर-शाकाहारी (Non-Veg):* १५० ग्राम ग्रिल्ड चिकन ब्रेस्ट, १ कप उबले हुए चावल और सलाद।
+3.  **भोजन ३ (शाम का नाश्ता / Pre-workout):**
+    *   १ केला, १० बादाम और १ कप ब्लैक कॉफ़ी या ग्रीन टी।
+4.  **भोजन ४ (रात का भोजन / Dinner):**
+    *   *शाकाहारी (Veg):* १०० ग्राम भुने हुए सोया चंक्स या टोफू, ग्रिल्ड ब्रोकली और हरी सब्जियाँ।
+    *   *गैर-शाकाहारी (Non-Veg):* १५० ग्राम उबली हुई मछली या चिकन, मिश्रित सलाद और हल्की चपाती।
+
+---
+
+#### 📈 कोच मनीष भगत की सलाह:
+*   प्रतिदिन ३.५ से ४ लीटर पानी का सेवन करें।
+*   नींद चक्र को ७-८ घंटे पर सुव्यवस्थित रखें। स्नायविक सुधार के लिए आवश्यक है।
+*   कैलोरी का सटीक रिकॉर्ड रखने के लिए भोजन तौलने की मशीन का उपयोग करें।`;
+      } else if (language === "mr") {
+        fallbackText = `### 🌟 वैज्ञानिक आहार आणि पोषण आराखडा (Biometric Fallback)
+
+तुमच्या शरीराची रचना आणि वजन उद्दिष्टावर आधारित, हे तुमच्या मॅक्रोन्यूट्रिएंट्सचे योग्य वितरण आहे:
+
+*   **एकूण दैनंदिन कॅलरी लक्ष्य:** ${goalIntake} kcal (TDEE: ${tdee} kcal)
+*   **प्रोटीन (Prathine):** ${proteinGrams}g (${proteinCalories} kcal)
+*   **फॅट्स (Snighdha):** ${fatGrams}g (${fatCalories} kcal)
+*   **कार्बोहायड्रेट्स (Karbohadake):** ${carbGrams}g (${carbCalories} kcal)
+
+---
+
+#### 🍽️ आहार आराखडा:
+
+1.  **जेवण १ (सकाळचा नाश्ता):**
+    *   *शाकाहारी (Veg):* १ कप ओट्स, अर्धा स्कूप वे प्रोटीन आणि १० बदाम.
+    *   *मांसाहारी (Non-Veg):* ३ उकडलेली अंडी (फक्त पांढरा भाग), २ स्लाईस ब्राऊन ब्रेड.
+2.  **जेवण २ (दुपारचे जेवण):**
+    *   *शाकाहारी (Veg):* १५० ग्रॅम पनीर भुर्जी किंवा भाजी तरकारी, १ वाटी डाळ आणि १ कप भात.
+    *   *मांसाहारी (Non-Veg):* १५० ग्रॅम ग्रिल्ड चिकन ब्रेस्ट, सोबतीला काकडी-टोमॅटो कोशिंबीर आणि १ कप उकडलेला भात.
+3.  **जेवण ३ (संध्याकाळचा नाश्ता / Pre-workout):**
+    *   १ सफरचंद किंवा केळे, मूठभर सुकामेवा आणि ब्लॅक कॉफी किंवा ग्रीन टी.
+4.  **जेवण ४ (रात्रीचे जेवण):**
+    *   *शाकाहारी (Veg):* १०० ग्रॅम सोया चंक्स किंवा टोफू, हिरवी कोबी किंवा वाफवलेली भाजी.
+    *   *मांसाहारी (Non-Veg):* १५० ग्रॅम वाफवलेले मासे किंवा चिकन आणि उकडलेला भाज्यांचा कोशिंबीर.
+
+---
+
+#### 📈 कोच मनीष भगत यांची महत्त्वाची टीप:
+*   दिवसभरात किमान ३.५ ते ४ लीटर पाणी प्या ज्यामुळे पचनक्रिया सुधारेल.
+*   नियमित ७-८ तास गाढ झोप घ्या. स्नायूंच्या वाढीसाठी झोप अत्यंत महत्त्वाची आहे.`;
+      } else {
+        fallbackText = `### 🌟 Elite Nutrition & Macro Blueprint (Biometric Performance Model)
+
+Based on your unique anthropometric metrics and targets, here is your customized macronutrient allocation:
+
+*   **Target Intake:** ${goalIntake} kcal / Day (Active TDEE: ${tdee} kcal)
+*   **Target Protein:** ${proteinGrams}g (${proteinCalories} kcal) — Optimized for muscle-mass retention
+*   **Target Fats:** ${fatGrams}g (${fatCalories} kcal) — Essential for hormonal regulation
+*   **Target Carbs:** ${carbGrams}g (${carbCalories} kcal) — Clean energy glycogen resource
+
+---
+
+#### 🍽️ Daily Meal Protocol:
+
+1.  **Meal 1 (Physiological Break-Fast):**
+    *   *Vegetarian Split:* 1 cup organic oats with 0.5 scoop clean whey isolate, topped with 10 whole almonds.
+    *   *Lean Protein Split:* 3 egg whites, 1 whole egg scrambled dry, served with 2 slices of low-sodium whole wheat sourdough.
+2.  **Meal 2 (Mid-Day Replenishment / Lunch):**
+    *   *Vegetarian Split:* 150g grilled low-fat paneer, 1 serving of local sprouted lentils, mixed green salad, and 1 cup steamed basmati rice.
+    *   *Lean Protein Split:* 150g organic flame-grilled chicken breast, steamed local broccoli, and 1 cup of nutrient-dense brown rice.
+3.  **Meal 3 (Pre-Workout Conditioning Fuel):**
+    *   1 ripe medium banana, 10-12 raw unsalted almonds, and 1 shot of pure black robusta coffee.
+4.  **Meal 4 (Post-Workout Cellular Recovery / Dinner):**
+    *   *Vegetarian Split:* 100g roasted soya chunks or edamame/tofu, stir-fried spinach, and a side of green peas.
+    *   *Lean Protein Split:* 150g steamed wild fish filet or lean chicken breast, seasoned mixed baby greens, and light chapati.
+
+---
+
+#### 📈 Head Coach Manish Bhagat's Direct Advice:
+*   Ensure absolute compliance with water metrics: 3.5 to 4.0 liters of structured pure water daily.
+*   Prioritize deep REM sleep: 7 to 8 hours is non-negotiable for target nervous system recoverability.`;
+      }
+      setDietPlan(fallbackText);
     } finally {
       setIsBioLoading(false);
     }

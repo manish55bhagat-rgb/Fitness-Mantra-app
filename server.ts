@@ -46,8 +46,8 @@ app.post("/api/ai/tts", async (req, res) => {
   try {
     const ai = getAI();
     let response;
-    let retries = 3;
-    let delay = 1000;
+    let retries = 4;
+    let delay = 500;
     
     while (retries > 0) {
       try {
@@ -66,7 +66,9 @@ app.post("/api/ai/tts", async (req, res) => {
         break;
       } catch (err: any) {
         retries--;
-        const isTransient = err.message?.includes("503") || err.message?.includes("Service Unavailable") || err.message?.includes("UNAVAILABLE") || err.message?.includes("high demand");
+        const errStr = String(err.message || err.status || err.code || err);
+        const isTransient = errStr.includes("503") || errStr.includes("Service Unavailable") || errStr.includes("UNAVAILABLE") || errStr.includes("high demand") || err.status === 503 || err.code === 503;
+        
         if (isTransient && retries > 0) {
           console.warn(`TTS 503 error, retrying in ${delay}ms... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -129,11 +131,14 @@ ${isDataRequest ? "- CRITICAL: Follow formatting instructions EXACTLY. Output on
 
     let response;
     let retries = 3;
-    let delay = 1000;
+    let delay = 500;
+    let currentModel = "gemini-3.5-flash";
+    
     while (retries > 0) {
       try {
+        console.log(`[CHAT] Requesting stream from ${currentModel}... (Attempts remaining: ${retries})`);
         response = await ai.models.generateContentStream({
-          model: "gemini-3.5-flash",
+          model: currentModel,
           contents: { parts },
           config: {
             systemInstruction: systemPrompt,
@@ -144,11 +149,23 @@ ${isDataRequest ? "- CRITICAL: Follow formatting instructions EXACTLY. Output on
         break;
       } catch (err: any) {
         retries--;
-        const isTransient = err.message?.includes("503") || err.message?.includes("Service Unavailable") || err.message?.includes("UNAVAILABLE") || err.message?.includes("high demand");
+        const errStr = String(err.message || err.status || err.code || err);
+        const isTransient = errStr.includes("503") || errStr.includes("Service Unavailable") || errStr.includes("UNAVAILABLE") || errStr.includes("high demand") || err.status === 503 || err.code === 503;
+        
         if (isTransient && retries > 0) {
-          console.warn(`[CHAT] 503 Service Unavailable, retrying in ${delay}ms... (${retries} attempts left)`);
+          console.warn(`[CHAT] 503 Service Unavailable on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
           delay *= 2;
+          
+          if (retries === 1 && currentModel === "gemini-3.5-flash") {
+            console.log(`[CHAT] Switching to high-availability fallback model: gemini-3.1-flash-lite`);
+            currentModel = "gemini-3.1-flash-lite";
+          }
+        } else if (currentModel === "gemini-3.5-flash") {
+          console.warn(`[CHAT] gemini-3.5-flash failed. Trying one last time with fallback model gemini-3.1-flash-lite...`);
+          currentModel = "gemini-3.1-flash-lite";
+          retries = 2; // Try twice with the light model
+          delay = 500;
         } else {
           throw err;
         }

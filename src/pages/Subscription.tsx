@@ -1,378 +1,235 @@
 import React, { useState } from "react";
-import { Check, Shield, Zap, Star, Crown, CreditCard, Lock, RefreshCw, X, ShieldAlert } from "lucide-react";
+import { Check, Shield, Zap, Star, Crown, Mail, ArrowRight, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
-    name: "30 Days Starter Plan",
+    name: "30 Days Plan",
     icon: Star,
-    price: "299",
+    price: "750",
     period: "30 Days",
-    desc: "Best for beginners and trial users.",
+    desc: "Clean-start bio-hacking setup to establish solid natural fitness habits.",
     features: [
-      "Basic Indian diet plan",
-      "Beginner home/gym workout plan",
-      "Fat loss & belly fat guidance",
-      "Veg & non-veg options",
-      "Basic WhatsApp support",
-      "1 weekly progress check",
-      "Basic full diet plan access",
-      "Basic workout videos access"
+      "Custom Workout Design",
+      "Personalized Meal & Diet Routine",
+      "Regular Progress Tracking",
+      "Priority Messaging Support",
+      "AI Fitness Coach Interaction"
     ],
-    buttonText: "Get 30 Days Plan",
+    buttonText: "Contact for Plan",
     highlight: false,
-    whatsappMsg: "Hi Manish, I want to buy Fitness Mantra 30 Days Plan ₹299."
   },
   {
-    name: "90 Days Transformation Plan",
+    name: "90 Days Plan",
     icon: Zap,
-    price: "999",
+    price: "2000",
     period: "90 Days",
-    desc: "Best for serious fat loss, muscle gain, and body transformation.",
+    desc: "Our high-recommended body transformation and conditioning protocol.",
     features: [
-      "Personalized diet plan",
-      "Personalized workout plan",
-      "Goal-based plan (fat loss, muscle gain, weight gain)",
-      "BMI & calorie guidance",
-      "WhatsApp support",
-      "Weekly progress tracking",
-      "Monthly plan update",
-      "Advanced exercise videos access"
+      "Custom Workout Design",
+      "Personalized Meal & Diet Routine",
+      "Regular Progress Tracking",
+      "Priority Messaging Support",
+      "AI Fitness Coach Interaction"
     ],
-    buttonText: "Get 90 Days Plan",
+    buttonText: "Contact for Plan",
     highlight: true,
-    whatsappMsg: "Hi Manish, I want to buy Fitness Mantra 90 Days Plan ₹999."
   },
   {
-    name: "6 Months Premium Coaching Plan",
+    name: "6 Months Plan",
     icon: Crown,
-    price: "2499",
+    price: "3500",
     period: "6 Months",
-    desc: "Best for complete personal body transformation.",
+    desc: "Long-term metabolic lifestyle adaptation. Full aesthetic support.",
     features: [
-      "Fully personalized diet/workout plan",
-      "Complete body transformation roadmap",
-      "WhatsApp support",
-      "Weekly progress tracking",
-      "Monthly plan updates",
-      "Priority support",
-      "Progress monitoring",
-      "Full coaching access",
-      "All workout videos access",
-      "All diet plans access"
+      "Custom Workout Design",
+      "Personalized Meal & Diet Routine",
+      "Regular Progress Tracking",
+      "Priority Messaging Support",
+      "AI Fitness Coach Interaction"
     ],
-    buttonText: "Get 6 Months Plan",
+    buttonText: "Contact for Plan",
     highlight: false,
-    whatsappMsg: "Hi Manish, I want to buy Fitness Mantra 6 Months Plan ₹2499."
   }
 ];
 
 export default function Subscription() {
-  const { user, profile, purchasePlan, updateUserProfile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
-
-  // Checkout overlay state
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  
-  const [checkoutStep, setCheckoutStep] = useState<"form" | "loading" | "success" | "error">("form");
-  const [transactionId, setTransactionId] = useState("");
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [customPaymentError, setCustomPaymentError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [contactName, setContactName] = useState(profile?.fullName || "");
+  const [contactNotes, setContactNotes] = useState("");
+  const [showStatusSuccess, setShowStatusSuccess] = useState(false);
 
-  const handleOpenCheckout = async (plan: typeof plans[0]) => {
+  const handleOpenContact = (plan: typeof plans[0]) => {
     if (!user) {
       navigate("/login?redirect=/subscription");
       return;
     }
-    
-    // Save state in DB to allow tracking leads & selectedPlan instantly
-    try {
-      await updateUserProfile({
-        selectedPlan: plan.name,
-        paymentStatus: "Pending",
-        accessStatus: "Inactive"
-      });
-    } catch (e) {
-      console.error("Error setting plan status:", e);
-    }
-
     setSelectedPlan(plan);
-    setCheckoutStep("form");
-    setCardNumber("");
-    setCardExpiry("");
-    setCardCvv("");
-    setPaymentError(null);
-    setCustomPaymentError(null);
+    setShowStatusSuccess(false);
   };
 
-  const handleWhatsAppPayment = (plan: typeof plans[0]) => {
-    const encoded = encodeURIComponent(plan.whatsappMsg);
-    window.open(`https://wa.me/919765690437?text=${encoded}`, "_blank");
-    setSelectedPlan(null);
-    setToast("Redirected to WhatsApp for Plan Purchase! Manish will message you quickly.");
-    setTimeout(() => setToast(null), 4000);
-  };
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if ((window as any).Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const processMockPayment = async (e: React.FormEvent) => {
+  const handleSendEmail = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlan) return;
-    setPaymentError(null);
-    setCustomPaymentError(null);
 
-    const cleanCard = cardNumber.replace(/\s/g, "");
-    if (!cardNumber || !cardExpiry || !cardCvv) {
-      setPaymentError("Please fill all payment details");
-      return;
-    }
-    if (!/^\d{16}$/.test(cleanCard)) {
-      setPaymentError("Please enter a valid 16-digit card number");
-      return;
-    }
-    if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-      setPaymentError("Please enter a valid expiry date");
-      return;
-    }
-    const [mm, yy] = cardExpiry.split("/");
-    const monthNum = parseInt(mm, 10);
-    if (monthNum < 1 || monthNum > 12) {
-      setPaymentError("Please enter a valid expiry date");
-      return;
-    }
-    if (!/^\d{3}$/.test(cardCvv)) {
-      setPaymentError("Please enter a valid CVV");
-      return;
-    }
+    const email = "manish456bhagat@gmail.com";
+    const subject = encodeURIComponent(`Fitness Mantra Plan Request: ${selectedPlan.name}`);
+    const body = encodeURIComponent(
+      `Hi Manish,\n\n` +
+      `I would like to initiate my Fitness Mantra coaching program.\n\n` +
+      `Plan Details:\n` +
+      `- Subscription Selected: ${selectedPlan.name} (${selectedPlan.price} INR)\n` +
+      `- Duration: ${selectedPlan.period}\n\n` +
+      `Client Bio & Notes:\n` +
+      `- Full Name: ${contactName}\n` +
+      `- Target Goals: ${contactNotes || "Fat loss and physical reconditioning"}\n\n` +
+      `Please guide me on the next steps for my personalized profile initialization.\n\n` +
+      `Best regards,\n` +
+      `${contactName}`
+    );
 
-    setCheckoutStep("loading");
-    
-    // Simulate failed payment logic based on trigger suffix keys
-    if (cleanCard.endsWith("0000")) {
-      setTimeout(() => {
-        setCustomPaymentError("Insufficient funds. Please try another card.");
-        setCheckoutStep("error");
-      }, 1500);
-      return;
-    }
-    if (cleanCard.endsWith("1111")) {
-      setTimeout(() => {
-        setCustomPaymentError("Card declined. Please contact your bank.");
-        setCheckoutStep("error");
-      }, 1500);
-      return;
-    }
-    if (cleanCard.endsWith("2222")) {
-      setTimeout(() => {
-        setCustomPaymentError("Network error. Please check your connection and try again.");
-        setCheckoutStep("error");
-      }, 1500);
-      return;
-    }
+    // Open native browser mail client
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 
-    try {
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        setCustomPaymentError("Network error. Please check your connection and try again.");
-        setCheckoutStep("error");
-        return;
-      }
-
-      const cleanPrice = selectedPlan.price.replace(/[^\d]/g, "");
-      const amountPaise = Number(cleanPrice) * 100;
-
-      const options = {
-        key: "rzp_test_mockkey",
-        amount: amountPaise,
-        currency: "INR",
-        name: "Fitness Mantra",
-        description: `${selectedPlan.name} Activation`,
-        image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>",
-        prefill: {
-          name: profile?.fullName || "Aesthetic Athlete",
-          email: user?.email || "athlete@fitnessmantra.com",
-          contact: "9999999999"
-        },
-        theme: {
-          color: "#39ff14"
-        },
-        handler: async function (response: any) {
-          try {
-            setCheckoutStep("loading");
-            const success = await purchasePlan(selectedPlan.name, selectedPlan.price, true);
-            if (success) {
-              const txnId = response.razorpay_payment_id || "TXN-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-              setTransactionId(txnId);
-              setCheckoutStep("success");
-              setToast(`Payment Successful! Welcome to ${selectedPlan.name} 🎉`);
-              setTimeout(() => setToast(null), 4500);
-            } else {
-              setCustomPaymentError("Card declined. Please contact your bank.");
-              setCheckoutStep("error");
-            }
-          } catch (upgradeErr) {
-            console.error("Upgrade error:", upgradeErr);
-            setCustomPaymentError("Card declined. Please contact your bank.");
-            setCheckoutStep("error");
-          }
-        },
-        modal: {
-          ondismiss: function() {
-            setCheckoutStep("form");
-          }
-        }
-      };
-
-      const rzpObj = new (window as any).Razorpay(options);
-      rzpObj.open();
-    } catch (err) {
-      console.error("Razorpay initiation error:", err);
-      setCustomPaymentError("Network error. Please check your connection and try again.");
-      setCheckoutStep("error");
-    }
-  };
-
-  const isCurrent = (onPlan: typeof plans[0]) => {
-    if (!profile?.subscriptionStatus) return onPlan.name === "Free Plan";
-    const status = profile.subscriptionStatus;
-    if (status === "Architect Elite" && onPlan.name === "Premium Plan") return true;
-    if (status === "Performance Pro" && onPlan.name === "Pro Plan") return true;
-    if (status === "Standard" && onPlan.name === "Free Plan") return true;
-    if (status === "Free" && onPlan.name === "Free Plan") return true;
-    return status === onPlan.name;
+    setShowStatusSuccess(true);
+    setTimeout(() => {
+      setSelectedPlan(null);
+      setContactNotes("");
+    }, 3000);
   };
 
   return (
-    <div className="py-40 bg-deep-black min-h-screen relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-neon-green/5 blur-[150px] rounded-full pointer-events-none" />
+    <div className="pt-8 sm:pt-16 pb-20 bg-deep-black min-h-[calc(100vh-80px)] relative overflow-hidden px-4 md:px-8">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[400px] bg-neon-green/5 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Instant Notification Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="fixed top-24 right-8 z-[300] bg-neon-green text-black px-6 py-4 rounded-xl font-black uppercase tracking-wider text-xs shadow-[0_15px_40px_rgba(57,255,20,0.45)] border border-neon-green/30"
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <header className="text-center mb-24">
-          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-neon-green/20 mb-10">
-            <Shield className="w-4 h-4 text-neon-green" />
-            <span className="text-[10px] font-black tracking-[0.5em] text-neon-green uppercase font-mono">Subscription Protocol v4.0</span>
+      <div className="max-w-6xl mx-auto relative z-10">
+        
+        {/* Compact, responsive Header */}
+        <header className="text-center mb-12 sm:mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.02] border border-white/5 mb-6">
+            <Shield className="w-3.5 h-3.5 text-neon-green" />
+            <span className="text-[9px] font-extrabold tracking-[0.4em] text-neon-green uppercase font-mono">Premium Access Blueprint</span>
           </div>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-black tracking-tighter uppercase leading-none mb-10 italic">
-            CHOOSE YOUR<br/><span className="premium-gradient-text uppercase italic">PLAN</span>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-display font-black tracking-tighter uppercase leading-none mb-6 italic">
+            EVOLVE YOUR <br className="hidden sm:block" />
+            <span className="text-neon-green">FITNESS PROTOCOL</span>
           </h1>
-          <p className="text-white/40 max-w-2xl mx-auto text-lg font-semibold uppercase tracking-tight leading-relaxed">
-            Choose your level of evolution. Precision-engineered plans for high-performance humans.
+          <p className="text-white/40 max-w-xl mx-auto text-sm sm:text-base font-semibold uppercase tracking-tight leading-relaxed px-2">
+            Elevate your lifestyle with custom coaching, metabolic recovery guides, and dedicated support.
           </p>
-
-          {profile?.subscriptionStatus && (
-            <div className="mt-8 inline-block px-10 py-4 bg-neon-green/10 border border-neon-green/30 text-neon-green rounded-2xl text-xs uppercase font-black tracking-widest animate-pulse">
-              Active Status: {
-                profile.subscriptionStatus === "Architect Elite" || profile.subscriptionStatus === "Premium Plan" 
-                  ? "Premium" 
-                  : profile.subscriptionStatus === "Performance Pro" || profile.subscriptionStatus === "Pro Plan"
-                    ? "Pro"
-                    : "Free"
-              } Member
-            </div>
-          )}
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-end">
+        {/* Pricing Layout - Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch max-w-5xl mx-auto">
           {plans.map((onPlan, idx) => {
-            const hasThisPlan = isCurrent(onPlan);
+            const isEliteStatus = (profile?.subscriptionStatus === onPlan.name) || 
+              (onPlan.name === "30 Days Plan" && (profile?.subscriptionStatus as string) === "30 Days Starter Plan") ||
+              (onPlan.name === "90 Days Plan" && (profile?.subscriptionStatus as string) === "90 Days Transformation Plan") ||
+              (onPlan.name === "6 Months Plan" && (profile?.subscriptionStatus as string) === "6 Months Premium Coaching Plan");
+
             return (
-              <motion.div
+              <div
                 key={idx}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                viewport={{ once: true }}
-                className={`relative glass-panel p-12 transition-all duration-700 group ${
+                className={`relative glass-panel p-8 sm:p-10 rounded-3xl transition-all duration-300 flex flex-col justify-between ${
                   onPlan.highlight 
-                    ? "border-neon-green/40 bg-neon-green/[0.03] scale-105 shadow-[0_30px_60px_-15px_rgba(57,255,20,0.15)] z-20 h-[850px]" 
-                    : "border-white/5 hover:border-white/20 h-[750px]"
+                    ? "border-neon-green/30 bg-neon-green/[5%] md:scale-[1.03] shadow-[0_20px_40px_rgba(57,255,20,0.1)] z-10" 
+                    : "border-white/5 hover:border-white/10"
                 }`}
               >
                 {onPlan.highlight && (
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-8 py-2 bg-neon-green text-black font-black text-[10px] uppercase tracking-[0.4em] rounded-full shadow-[0_0_20px_rgba(57,255,20,0.4)]">
-                    Architect's Choice
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-5 py-1 bg-neon-green text-black font-black text-[9px] uppercase tracking-[0.3em] rounded-full shadow-[0_0_15px_rgba(57,255,20,0.3)]">
+                    RECOMMENDED PROTOCOL
                   </div>
                 )}
 
-                <div className="mb-12">
-                  <onPlan.icon className={`w-12 h-12 mb-8 ${onPlan.highlight ? "text-neon-green" : "text-white/40"}`} />
-                  <h2 className="text-4xl font-display font-black uppercase tracking-tighter italic mb-4">{onPlan.name}</h2>
-                  <p className="text-white/40 text-xs font-semibold uppercase tracking-tight leading-relaxed">{onPlan.desc}</p>
-                </div>
-
-                <div className="mb-16">
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-[12px] font-black text-white/20">INR</span>
-                    <span className={`text-6xl font-black tracking-tighter ${onPlan.highlight ? "text-neon-green" : "text-white"}`}>{onPlan.price}</span>
-                  </div>
-                  <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] font-mono whitespace-nowrap">PRE-TAX PRICE / {onPlan.period}</div>
-                </div>
-
-                <div className="space-y-6 mb-16">
-                  {onPlan.features.map((feature, fidx) => (
-                    <div key={fidx} className="flex items-center gap-4">
-                      <Check className={`w-4 h-4 shrink-0 ${onPlan.highlight ? "text-neon-green" : "text-white/20"}`} />
-                      <span className="text-[11px] font-bold text-white/60 uppercase tracking-tight">{feature}</span>
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className={`p-3 rounded-2xl ${onPlan.highlight ? "bg-neon-green/15 text-neon-green" : "bg-white/5 text-white/40"}`}>
+                      <onPlan.icon className="w-6 h-6" />
                     </div>
-                  ))}
+                    {isEliteStatus && (
+                      <span className="text-[8px] bg-neon-green/20 text-neon-green border border-neon-green/30 px-2 py-0.5 rounded font-black tracking-widest uppercase">
+                        Active Plan
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-2xl font-display font-black uppercase tracking-tight italic text-white mb-2">{onPlan.name}</h3>
+                  <p className="text-white/40 text-xs font-medium leading-relaxed mb-6">{onPlan.desc}</p>
+
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1.5 mb-1">
+                      <span className="text-3xl sm:text-4xl font-extrabold tracking-tighter text-white">{onPlan.price}</span>
+                      <span className="text-xs font-black text-neon-green font-mono">INR</span>
+                    </div>
+                    <span className="text-[8px] text-white/20 font-bold uppercase tracking-widest font-mono">FIXED RATE / {onPlan.period}</span>
+                  </div>
+
+                  <div className="h-[1px] bg-white/5 w-full mb-6" />
+
+                  {/* Pricing Key Features list */}
+                  <div className="space-y-3 mb-8">
+                    {onPlan.features.map((feature, fidx) => (
+                      <div key={fidx} className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-neon-green shrink-0 mt-0.5" />
+                        <span className="text-xs text-white/60 font-semibold tracking-tight leading-tight">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <button 
-                  onClick={() => handleOpenCheckout(onPlan)}
-                  disabled={hasThisPlan}
-                  className={`w-full py-6 font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl transition-all duration-500 absolute bottom-12 left-1/2 -translate-x-1/2 px-12 cursor-pointer ${
-                    hasThisPlan 
-                      ? "bg-white/10 text-white/30 border-dashed border-white/5 cursor-not-allowed"
-                      : onPlan.highlight 
-                        ? "bg-neon-green text-black hover:shadow-[0_20px_40px_rgba(57,255,20,0.3)] hover:scale-[1.02]" 
-                        : "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20"
-                  }`}
-                >
-                  {hasThisPlan ? "Current Plan" : onPlan.buttonText}
-                </button>
-              </motion.div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => handleOpenContact(onPlan)}
+                    disabled={isEliteStatus}
+                    className={`w-full py-3 px-6 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      isEliteStatus
+                        ? "bg-white/5 text-white/20 border border-dashed border-white/5 cursor-not-allowed"
+                        : onPlan.highlight
+                          ? "bg-neon-green text-black hover:shadow-[0_12px_25px_rgba(57,255,20,0.25)] hover:scale-[1.02]"
+                          : "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20"
+                    }`}
+                  >
+                    {isEliteStatus ? (
+                      "Your Active Protocol"
+                    ) : (
+                      <>
+                        Contact for Plan <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
+
+        {/* Confidence Banner */}
+        <div className="max-w-3xl mx-auto mt-16 p-6 sm:p-8 rounded-3xl bg-white/[0.01] border border-white/5 flex flex-col sm:flex-row items-center gap-6 justify-between text-center sm:text-left">
+          <div className="space-y-1">
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Natural Conditioning Guarantee</h4>
+            <p className="text-xs text-white/40 leading-relaxed max-w-md">
+              Mantra fitness architectures rely entirely on verified physiological methods, custom calorie profiles, and drug-free metabolic conditioning.
+            </p>
+          </div>
+          <div className="flex flex-col items-center sm:items-end font-mono">
+            <span className="text-[10px] font-black tracking-widest text-white/30 uppercase">DIRECT DISPATCH</span>
+            <a href="mailto:manish456bhagat@gmail.com" className="text-neon-green text-xs font-bold hover:underline">
+              manish456bhagat@gmail.com
+            </a>
+          </div>
+        </div>
       </div>
 
-      {/* Simulated Premium Checkout Overlay Modal */}
+      {/* Styled Contact Dialog Modal */}
       <AnimatePresence>
         {selectedPlan && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -380,178 +237,75 @@ export default function Subscription() {
               onClick={() => setSelectedPlan(null)}
             />
 
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 30 }}
-              className="relative w-full max-w-lg glass-panel border-white/10 p-10 bg-black overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.9)] z-10"
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md glass-panel border-white/10 p-6 sm:p-8 bg-black overflow-hidden shadow-2xl z-10 rounded-2xl"
             >
-              <button 
-                onClick={() => setSelectedPlan(null)}
-                className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tight mb-2">
+                REACH COACHING MATRIX
+              </h3>
+              <p className="text-xs text-white/40 leading-relaxed mb-6">
+                Complete your details below to instantly pre-fill an initialization proposal for the <span className="text-neon-green font-bold">{selectedPlan.name}</span> ({selectedPlan.price} INR).
+              </p>
 
-              {checkoutStep === "form" && (
-                <form onSubmit={processMockPayment} className="space-y-6">
-                  <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-                    <div className="w-10 h-10 bg-neon-green/10 border border-neon-green/20 rounded-xl flex items-center justify-center">
-                      <CreditCard className="text-neon-green w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-black uppercase tracking-tighter text-white">Fitness Mantra Checkout</h4>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/30 font-mono mt-1 font-semibold">Selected: {selectedPlan.name}</p>
-                    </div>
+              {showStatusSuccess ? (
+                <div className="py-8 flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="w-12 h-12 bg-neon-green/10 border border-neon-green/20 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-neon-green animate-pulse" />
+                  </div>
+                  <h4 className="text-lg font-black text-white uppercase tracking-wider">Mail Draft Dispatched</h4>
+                  <p className="text-[10px] text-white/40 max-w-xs leading-relaxed uppercase tracking-widest">
+                    Redirecting to your native mailer to send to manish456bhagat@gmail.com.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSendEmail} className="space-y-4">
+                  <div>
+                    <label className="block text-[8px] font-black uppercase text-white/40 tracking-wider mb-1.5">Athlete Full Name</label>
+                    <input
+                      type="text"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-xs text-white uppercase font-black"
+                      placeholder="Your Name"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      required
+                    />
                   </div>
 
-                  {paymentError && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs uppercase font-bold tracking-wide"
-                    >
-                      {paymentError}
-                    </motion.div>
-                  )}
-
-                  <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex justify-between items-center text-xs font-black uppercase">
-                    <span className="text-white/40">Amount Due:</span>
-                    <span className="text-neon-green tracking-wider font-bold">INR {selectedPlan.price} / {selectedPlan.period}</span>
+                  <div>
+                    <label className="block text-[8px] font-black uppercase text-white/40 tracking-wider mb-1.5">Target Goals / Notes</label>
+                    <textarea
+                      rows={3}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-xs text-white font-medium"
+                      placeholder="E.g., extreme fat loss, natural physical recomposition, better recovery..."
+                      value={contactNotes}
+                      onChange={(e) => setContactNotes(e.target.value)}
+                    />
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Card details (Online Sandbox Sandbox)</label>
-                      <input 
-                        type="text"
-                        placeholder="4111 2222 3333 4444"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim())}
-                        className="w-full bg-black border border-white/5 rounded-xl py-4 px-4 text-xs font-mono font-bold tracking-widest text-white focus:outline-none focus:border-neon-green/20"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Expiry Date</label>
-                        <input 
-                          type="text"
-                          maxLength={5}
-                          placeholder="MM/YY"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          className="w-full bg-black border border-white/5 rounded-xl py-4 px-4 text-xs font-mono font-bold tracking-widest text-white focus:outline-none focus:border-neon-green/20 text-center"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">CVV Sec</label>
-                        <input 
-                          type="password"
-                          maxLength={3}
-                          placeholder="***"
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
-                          className="w-full bg-black border border-white/5 rounded-xl py-4 px-4 text-xs font-mono font-bold tracking-widest text-white focus:outline-none focus:border-neon-green/20 text-center"
-                          required
-                        />
-                      </div>
-                    </div>
+                  <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-[9px] text-white/30 leading-relaxed uppercase tracking-wider font-mono">
+                    You will send an active registration request directly to <strong>manish456bhagat@gmail.com</strong>. No service fees or external checkouts are applied.
                   </div>
 
-                  <div className="flex items-center gap-3 bg-white/[0.01] border border-white/[0.03] p-4 rounded-xl text-[9px] font-black uppercase text-white/30 tracking-wider">
-                    <Lock className="w-4 h-4 text-neon-green shrink-0" />
-                    <span>Transactions are secured for Fitness Mantra coaching users.</span>
-                  </div>
-
-                  <div className="space-y-3 pt-2">
-                    <button 
-                      type="submit"
-                      className="w-full py-5 bg-neon-green text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:shadow-[0_15px_30px_rgba(57,255,20,0.3)] transition-all cursor-pointer font-bold"
-                    >
-                      Pay Instantly (Simulated Card Sandbox)
-                    </button>
-
-                    <div className="relative flex py-1 items-center">
-                      <div className="flex-grow border-t border-white/5"></div>
-                      <span className="flex-shrink mx-4 text-[9px] font-black uppercase tracking-widest text-white/30">OR</span>
-                      <div className="flex-grow border-t border-white/5"></div>
-                    </div>
-
-                    <button 
+                  <div className="flex gap-3 pt-3">
+                    <button
                       type="button"
-                      onClick={() => handleWhatsAppPayment(selectedPlan)}
-                      className="w-full py-5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-[0_4px_15px_rgba(37,211,102,0.2)] transition-all cursor-pointer flex items-center justify-center gap-3"
+                      onClick={() => setSelectedPlan(null)}
+                      className="flex-1 py-3 border border-white/10 hover:bg-white/5 text-white/60 font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-4 h-4 shrink-0"
-                      >
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.456 5.707 1.456h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                      </svg>
-                      Buy via WhatsApp (₹{selectedPlan.price})
+                      Dismiss
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-[2] py-3 bg-neon-green hover:bg-neon-green/90 text-black font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(57,255,20,0.3)] animate-glow"
+                    >
+                      <Mail className="w-3.5 h-3.5" /> Launch Mailer
                     </button>
                   </div>
                 </form>
               )}
-
-              {checkoutStep === "loading" && (
-                <div className="py-20 flex flex-col items-center justify-center text-center">
-                  <RefreshCw className="w-12 h-12 text-neon-green animate-spin mb-6 shadow-[0_0_20px_rgba(57,255,20,0.2)]" />
-                  <h4 className="text-xl font-black uppercase tracking-tighter text-white animate-pulse">Running Clearance Network</h4>
-                  <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/30 font-mono mt-2">Bypassing local merchant nodes...</p>
-                </div>
-              )}
-
-              {checkoutStep === "success" && (
-                <div className="py-12 flex flex-col items-center justify-center text-center">
-                  <div className="w-16 h-16 bg-neon-green/10 border border-neon-green/20 rounded-full flex items-center justify-center mb-6">
-                    <Check className="w-8 h-8 text-neon-green" />
-                  </div>
-                  <h4 className="text-3xl font-display font-black uppercase tracking-tighter text-white italic">CLEARANCE APPROVED</h4>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-neon-green mt-3 font-semibold">Vault Upgraded. Welcome to {selectedPlan.name}!</p>
-                  
-                  <div className="mt-8 p-4 bg-white/[0.01] border border-white/5 rounded-2xl w-full text-left font-mono space-y-2">
-                    <div className="flex justify-between text-[8px] uppercase text-white/20">
-                      <span>Receipt Token:</span>
-                      <span className="text-white/60">{transactionId}</span>
-                    </div>
-                    <div className="flex justify-between text-[8px] uppercase text-white/20">
-                      <span>Gate Protocol:</span>
-                      <span className="text-white/60">Success</span>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => { setSelectedPlan(null); navigate("/dashboard"); }}
-                    className="w-full py-4 bg-white/5 border border-white/10 hover:bg-neon-green hover:text-black hover:border-transparent text-white font-black uppercase tracking-widest text-[9px] rounded-xl mt-8 cursor-pointer transition-all font-semibold"
-                  >
-                    Enter Live Member Grid
-                  </button>
-                </div>
-              )}
-
-              {checkoutStep === "error" && (
-                <div className="py-12 flex flex-col items-center justify-center text-center">
-                  <ShieldAlert className="w-12 h-12 text-red-400 mb-6" />
-                  <h4 className="text-2xl font-black uppercase tracking-tighter text-white">SIGN-OFF REJECTED</h4>
-                  <p className="text-xs text-red-400 uppercase font-black tracking-wide mt-2 px-6">
-                    {customPaymentError || "Transaction declined by core clearance rules."}
-                  </p>
-                  
-                  <button 
-                    onClick={() => setCheckoutStep("form")}
-                    className="w-full py-4 bg-white/[0.07] border border-white/10 hover:bg-neon-green hover:text-black hover:border-transparent text-white font-black uppercase tracking-widest text-[9px] rounded-xl mt-8 cursor-pointer transition-all"
-                  >
-                    Retry Clearance
-                  </button>
-                </div>
-              )}
-
             </motion.div>
           </div>
         )}

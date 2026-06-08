@@ -93,7 +93,42 @@ export default function BMICalculator() {
         const result = await generateContent(prompt);
         setRecommendation(result);
       } catch (e) {
-        setRecommendation("AI Coach is temporarily busy. Please try again after some time.");
+        console.warn("AI recommendation failed, falling back to clean local rules:", e);
+        
+        // Highly localized offline fallback response
+        let fallback = "";
+        if (language === "hi") {
+          if (bmi < 18.5) {
+            fallback = `आपका बीएमआई ${bmi} (${category}) है। वजन बढ़ाने के लिए प्रतिदिन ३००-५०० अतिरिक्त कैलोरी का सेवन करें। सप्ताह में ३ बार स्क्वैट्स और डंबल प्रेस जैसे महत्वपूर्ण शक्ति व्यायाम करें, और मांसपेशियों के स्वस्थ विकास के लिए पर्याप्त प्रोटीन लें।`;
+          } else if (bmi < 25) {
+            fallback = `आपका बीएमआई ${bmi} (${category}) है। यह एक उत्कृष्ट और स्वस्थ रेंज है। इस शारीरिक स्थिति को बनाए रखने के लिए सप्ताह में ४-५ बार प्रोग्रेसिव रेजिस्टेंस वेट लिफ्टिंग करें और प्रतिदिन १.८ ग्राम प्रति किलो वजन के अनुसार प्रोटीन लें।`;
+          } else if (bmi < 30) {
+            fallback = `आपका बीएमआई ${bmi} (${category}) है। फैट लॉस के लिए दैनिक जरूरतों से ३५०-५०० कैलोरी की कमी रखें। मांसपेशियों के संरक्षण के लिए नियमित स्ट्रेंथ सेशन और भारी कंपाउंड लिफ्ट्स करने के साथ-साथ प्रोटीन का स्तर अच्छा बनाए रखें।`;
+          } else {
+            fallback = `आपका बीएमआई ${bmi} (${category}) है। जोड़ों को सुरक्षित रखने के लिए शुरुआत में कम प्रभाव वाले व्यायाम (low-impact compound) और कार्डियो ट्रेनिंग करें। उच्च फाइबर, पर्याप्त पानी और ५०० कैलोरी के सुनियोजित कैलोरी डेफिसिट का पालन करें।`;
+          }
+        } else if (language === "mr") {
+          if (bmi < 18.5) {
+            fallback = `तुमचा बीएमआय ${bmi} (${category}) आहे. वजन वाढवण्यासाठी दररोज ३००-५०० जादा कॅलरीज घ्या. आठवड्यातून ३ वेळा स्नायूंच्या वाढीसाठी डेडलिफ्ट किंवा स्क्वॅट्स सारख्या स्ट्रेंथ ट्रेनिंग व्यायाम प्रकारांवर लक्ष केंद्रित करा.`;
+          } else if (bmi < 25) {
+            fallback = `तुमचा बीएमआय ${bmi} (${category}) आहे. ही अतिशय योग्य श्रेणी आहे. ही स्थिती टिकवून ठेवण्यासाठी आठवड्यातून ४-५ दिवस प्रोग्रेसिव्ह रेझिस्टन्स ट्रेनिंग करा आणि पुरेशा प्रमाणात प्रोटीनयुक्त आहार ठेवा.`;
+          } else if (bmi < 30) {
+            fallback = `तुमचा बीएमआय ${bmi} (${category}) आहे. फॅट लॉस प्रक्रियेसाठी ३५०-५०० कॅलरीज कमी घ्या. स्नायूंचे नुकसान टाळण्यासाठी स्ट्रेंथ ट्रेनिंग सुरू ठेवून आहारातील प्रोटीनचे प्रमाण वाढवणे आवश्यक आहे.`;
+          } else {
+            fallback = `तुमचा बीएमआय ${bmi} (${category}) आहे. सांध्यांवर जास्त ताण न देता हलक्या व्यायामाने आणि कार्डिओने सुरुवात करा. दररोज ५०० कॅलरीजचे सुनियोजित डेफिसिट ठेवून अधिक पालेभाज्या व ताजी फळे खा.`;
+          }
+        } else {
+          if (bmi < 18.5) {
+            fallback = `Your BMI is ${bmi} (${category}). To optimize tissue growth, target a caloric surplus of 300-500 kcal daily. Focus on compound exercises (squats, deadlifts, presses) 3 days a week, and elevate protein to 1.6-2.0g per kg.`;
+          } else if (bmi < 25) {
+            fallback = `Your BMI is ${bmi} (${category}). This is the optimal physiological range. Maintain high performance splits (4-5 days of progressive hypertrophy coaching) and fuel muscle synthesis with 1.8g of protein per kg daily.`;
+          } else if (bmi < 30) {
+            fallback = `Your BMI is ${bmi} (${category}). We recommend a precise caloric deficit of 350-500 kcal under your TDEE. Maintain heavy strength lifting sessions to preserve muscle integrity while centering protein around 2.0g/kg.`;
+          } else {
+            fallback = `Your BMI is ${bmi} (${category}). Prioritize joint safety by selecting low-impact resistance exercises and steady cardinal cardio splits. Aim for a caloric deficit of 500 kcal, supported by high-satiety foods, lean proteins, and optimal hydration metrics.`;
+          }
+        }
+        setRecommendation(fallback);
       } finally {
         setLoading(false);
       }

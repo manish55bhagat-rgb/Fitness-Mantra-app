@@ -3,7 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform, Variants } from "motio
 import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight, ShieldCheck, Dumbbell, Sparkles, Send, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-import { db } from "../lib/firebase";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import MBLogo from "../components/ui/MBLogo";
 
@@ -64,9 +64,9 @@ export default function Home() {
     fitnessGoal: "Fat Loss",
     foodPreference: "Veg",
     medicalIssue: "",
-    whatsappNumber: "",
+    contactPhone: "",
     email: "",
-    selectedPlan: "30 Days Starter Plan",
+    selectedPlan: "30 Days Plan",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -96,8 +96,8 @@ export default function Home() {
       setErrorMsg("Please enter a valid weight in kg.");
       return;
     }
-    if (!/^\d{10}$/.test(formData.whatsappNumber)) {
-      setErrorMsg("WhatsApp number must be exactly 10 digits only.");
+    if (!/^\d{10}$/.test(formData.contactPhone)) {
+      setErrorMsg("Phone number must be exactly 10 digits only.");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -106,8 +106,8 @@ export default function Home() {
     }
 
     setLoading(true);
+    const leadId = "lead_" + Date.now() + "_" + Math.random().toString(36).replace(/[^a-z0-9]/gi, "").substring(0, 10);
     try {
-      const leadId = "lead_" + Date.now() + "_" + Math.random().toString(36).replace(/[^a-z0-9]/gi, "").substring(0, 10);
       const leadData = {
         fullName: formData.fullName.trim(),
         age: ageNum,
@@ -117,7 +117,7 @@ export default function Home() {
         fitnessGoal: formData.fitnessGoal,
         foodPreference: formData.foodPreference,
         medicalIssue: formData.medicalIssue.trim() || "None",
-        whatsappNumber: formData.whatsappNumber,
+        contactPhone: formData.contactPhone,
         email: formData.email.trim(),
         selectedPlan: formData.selectedPlan,
         paymentStatus: "Pending",
@@ -136,13 +136,19 @@ export default function Home() {
         fitnessGoal: "Fat Loss",
         foodPreference: "Veg",
         medicalIssue: "",
-        whatsappNumber: "",
+        contactPhone: "",
         email: "",
-        selectedPlan: "30 Days Starter Plan",
+        selectedPlan: "30 Days Plan",
       });
     } catch (err: any) {
       console.error(err);
-      setErrorMsg("Something went wrong while booking. Please try again or chat directly on WhatsApp.");
+      setErrorMsg("Something went wrong while booking. Please try again or email us directly.");
+      try {
+        handleFirestoreError(err, OperationType.CREATE, `leads/${leadId}`);
+      } catch (authErr) {
+        // rethrow formatted auth error for diagnostic rules to find it
+        throw authErr;
+      }
     } finally {
       setLoading(false);
     }
@@ -557,7 +563,7 @@ export default function Home() {
                   Consultation Booked Successfully!
                 </h3>
                 <p className="text-white/60 text-sm max-w-md mx-auto leading-relaxed mb-8">
-                  Coach Manish Bhagat will contact you on WhatsApp within 24 hours to discuss your personalized transformation roadmap.
+                  Coach Manish Bhagat will review your biological profile and reach out via your email address within 24 hours to discuss details.
                 </p>
                 <button 
                   onClick={() => setSuccess(false)}
@@ -698,15 +704,15 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* WhatsApp Number */}
+                  {/* Phone Number */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">WhatsApp Number *</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Contact Phone Number *</label>
                     <div className="relative">
                       <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-mono text-sm pointer-events-none">+91</span>
                       <input 
                         type="tel" 
-                        value={formData.whatsappNumber}
-                        onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value.replace(/\D/g, "") })}
+                        value={formData.contactPhone}
+                        onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value.replace(/\D/g, "") })}
                         placeholder="10-digit Mobile Number"
                         maxLength={10}
                         className="w-full bg-white/5 border border-white/10 rounded-xl pl-16 pr-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold font-mono"
@@ -724,9 +730,9 @@ export default function Home() {
                         onChange={(e) => setFormData({ ...formData, selectedPlan: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white/80 focus:outline-none focus:border-neon-green/50 appearance-none transition-all cursor-pointer font-semibold"
                       >
-                        <option value="30 Days Starter Plan" className="bg-deep-black text-white font-semibold">30 Days Starter Plan (₹299)</option>
-                        <option value="90 Days Transformation Plan" className="bg-deep-black text-white font-semibold flex items-center justify-between">90 Days Transformation Plan (₹999)</option>
-                        <option value="6 Months Premium Coaching Plan" className="bg-deep-black text-white font-semibold">6 Months Premium Coaching Plan (₹2499)</option>
+                        <option value="30 Days Plan" className="bg-deep-black text-white font-semibold">30 Days Plan (750 INR)</option>
+                        <option value="90 Days Plan" className="bg-deep-black text-white font-semibold flex items-center justify-between">90 Days Plan (2000 INR)</option>
+                        <option value="6 Months Plan" className="bg-deep-black text-white font-semibold">6 Months Plan (3500 INR)</option>
                       </select>
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
                     </div>

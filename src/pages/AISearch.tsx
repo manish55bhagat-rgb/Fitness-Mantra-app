@@ -15,25 +15,20 @@ interface Message {
 export default function AISearch() {
   const [query, setQuery] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "ai",
+      content: "Hello! I am Mantra Neural, your personal AI fitness coach trained by certified athlete Coach Manish Bhagat. Query my database for custom diets, progressive hypertrophy workouts, or physical optimization protocols.",
+      timestamp: new Date(),
+    }
+  ]);
+  const [loading, setLoading] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Auto-welcome message after 3 seconds on mount
-    const timer = setTimeout(() => {
-      setMessages([
-        {
-          role: "ai",
-          content: "Hello! I'm Mantra Neural, your personal AI fitness coach. Ask me anything about workouts, nutrition, or your fitness goals.",
-          timestamp: new Date(),
-        }
-      ]);
-      setLoading(false);
-    }, 3000);
-    return () => clearTimeout(timer);
+    // Welcoming is already in state init, making loading instant
   }, []);
 
   useEffect(() => {
@@ -116,16 +111,79 @@ export default function AISearch() {
 
       setLoading(false);
     } catch (error: any) {
-      console.error("Neural Error:", error);
+      console.warn("Mantra Neural error detected. Transitioning to local biometric rules:", error);
       setLoading(false);
       
-      const errorMsg = "AI Coach is temporarily busy. Please try again after some time.";
+      let fallbackText = "";
+      const q = activeQuery.toLowerCase();
+      
+      if (q.includes("diet") || q.includes("meal") || q.includes("food") || q.includes("eat") || q.includes("protein") || q.includes("nutrition") || q.includes("caloric") || q.includes("sugar")) {
+        fallbackText = `### 🍽️ Offline Nutrition Diagnostic
+
+The live cloud is experiencing high demand. Here is your immediate, macro-precise offline coaching setup:
+
+1.  **Protein Coefficient:** Maintain a minimum of **2.0 grams of protein per kilogram of total body mass** daily to ensure nitrogen balance. Focus on solid food sources: egg whites, lean poultry, fresh paneer, and tofu.
+2.  **Caloric Metric:** 
+    *   For **Fat Loss / Lean Sculpting**: Aim for a **350-500 kcal deficit** below your calculated TDEE.
+    *   For **Hypertrophy / Clean Gain**: Aim for a **250-300 kcal progressive surplus** above TDEE.
+3.  **Meal Structure:** Focus on 4-5 small, high-density feedings spaced exactly 3-4 hours apart to keep muscle protein synthesis (MPS) continually stimulated throughout your daily metabolic cycle.`;
+      } else if (q.includes("stack") || q.includes("supplement") || q.includes("creatine") || q.includes("whey") || q.includes("preworkout") || q.includes("bcaa") || q.includes("glutamine")) {
+        fallbackText = `### ⚡ Elite Ergogenic Supplement Stack
+
+Cloud link is undergoing routine balance. Please reference Coach Manish Bhagat's offline gold-standard stack guidelines:
+
+1.  **Whey Isolate:** 1 serving (24-30g protein) immediately post-exercise splits or during breakfast intervals to rapidly supply essential amino acids (EAAs).
+2.  **Creatine Monohydrate:** 3-5 grams daily, taken consistently at any hour. Creatine hydrates the intramuscular fibers, upgrading ATP synthesis and raw power metrics. No loading phase required.
+3.  **Pre-Workout Formulation:** 150-200mg Caffeine combined with 4-6g L-Citrulline Malate 30 minutes before high-intensity resistance splits to boost blood flow, cellular pumps, and mental clarity.`;
+      } else if (q.includes("workout") || q.includes("exercise") || q.includes("training") || q.includes("gym") || q.includes("routine") || q.includes("muscle") || q.includes("hypertrophy") || q.includes("split") || q.includes("program")) {
+        fallbackText = `### 🏋️ Elite Progressive Overload Workout Split
+
+Cloud optimization is busy. Here is our recommended offline 4-Day Push/Pull/Legs high-intensity hypertrophy workout framework:
+
+*   **Day 1 (Push - Chest/Shoulders/Triceps):**
+    *   Flat Bench Press: 3 sets x 6-8 reps (heavy, 2m rest)
+    *   Incline Dumbbell Press: 3 sets x 8-10 reps
+    *   Cable Lateral Raises: 4 sets x 12-15 reps (focused pump)
+    *   Tricep Overhead Extensions: 3 sets x 10-12 reps
+*   **Day 2 (Pull - Back/Biceps):**
+    *   Weighted Pull-Ups or Lat Pulldowns: 4 sets x 8 reps
+    *   Barbell Bent-Over Row: 3 sets x 8-10 reps
+    *   Rear Delt Reverse Pec-Deck: 3 sets x 12-15 reps
+    *   Incline Alternate Dumbbell Curls: 3 sets x 10-12 reps
+*   **Day 3 (Active Recovery / Core / Cardio):**
+    *   Stretching, deep mobility drills + 30 minutes light incline treadmill walking.
+*   **Day 4 (Legs - Quad/Hamstring/Glute Emphasis):**
+    *   Barbell Back Squats: 4 sets x 6-8 reps (heavy, focused depth)
+    *   Romanian Deadlifts: 3 sets x 10 reps (slow eccentric)
+    *   Leg Extensions: 3 sets x 12-15 reps
+    *   Seated Calf Raises: 4 sets x 15 reps
+
+*Progression Standard: When you successfully execute all reps for a given set, increase total resistive load by 2.5% in the subsequent cycle.*`;
+      } else if (q.includes("recovery") || q.includes("sleep") || q.includes("rest") || q.includes("fatigue") || q.includes("sore") || q.includes("stretch")) {
+        fallbackText = `### 💤 Neuromuscular Recovery & CNS Maintenance Protocol
+
+Cloud API is busy, loading our certified recovery metrics:
+
+1.  **Sleep Target:** Ensure 7.5 to 8.5 hours of continuous sleep to maximize natural Growth Hormone (GH) release and neural recovery.
+2.  **Deload Cycle Periodization:** If performance markers plateau or joint pain rises, execute a structured deload every 6-8 weeks (reducing regular training weight by 30-40% and cutting set volume in half for one week).
+3.  **Active Hydration:** Consume roughly 35-40ml of structured pure water per kilogram of body weight to keep cells hydrated and speed up lactic acid filtration.`;
+      } else {
+        fallbackText = `### 🤖 Direct AI Coach Response Fallback
+
+The global high-demand queues have temporarily restricted live cloud streams. Under Coach Manish Bhagat's fallback response directives, here is your essential guide to **"${activeQuery}"**:
+
+*   **Custom Strategy:** Ensure you are tracking all daily macros (2.2g of protein per kg of lean mass, 20-30% of fats, and balance in clean carbohydrates).
+*   **Fitness Protocol:** Ensure progressive resistance training (hypertrophy-style, 3-5 days per week, training within 1-2 reps of failure/RPE 8.5).
+*   **Immediate Action Hook:** Consistency overrides intensity. Focus on nutrition compliance and incremental overload adjustments every week.
+
+*What is your specific height, weight, and fitness target? Let me know to formulate a localized tactical projection of your macros!*`;
+      }
 
       setMessages((prev) => {
         const next = [...prev];
         next[next.length - 1] = {
           ...next[next.length - 1],
-          content: errorMsg
+          content: fallbackText
         };
         return next;
       });

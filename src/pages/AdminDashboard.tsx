@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { db } from "../lib/firebase";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
 import { collection, getDocs, orderBy, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
@@ -86,6 +86,7 @@ export default function AdminDashboard() {
           console.error("[AdminDashboard] Firestore fetch error fetching user directory records in real-time:", err);
           setError(`Failed to fetch user directory records in real-time. error: ${err.message || err}`);
           setLoading(false);
+          handleFirestoreError(err, OperationType.LIST, "users");
         });
 
         console.log("[AdminDashboard] Subscribing to leads collection in real-time...");
@@ -106,6 +107,7 @@ export default function AdminDashboard() {
           setLeads(leadsList);
         }, (err: any) => {
           console.error("[AdminDashboard] Firestore fetch error fetching leads records in real-time:", err);
+          handleFirestoreError(err, OperationType.LIST, "leads");
         });
 
         return () => {
@@ -159,7 +161,7 @@ export default function AdminDashboard() {
       console.log(`Lead ${leadId} updated successfully: ${field} = ${value}`);
     } catch (err: any) {
       console.error("Error updating lead field:", err);
-      alert("Failed to update lead: " + err.message);
+      handleFirestoreError(err, OperationType.UPDATE, `leads/${leadId}`);
     }
   };
 
@@ -170,7 +172,7 @@ export default function AdminDashboard() {
         console.log(`Lead ${leadId} deleted successfully.`);
       } catch (err: any) {
         console.error("Error deleting lead:", err);
-        alert("Failed to delete lead: " + err.message);
+        handleFirestoreError(err, OperationType.DELETE, `leads/${leadId}`);
       }
     }
   };
@@ -218,13 +220,14 @@ export default function AdminDashboard() {
   const filteredLeads = leads.filter((l) => {
     const fullNameLower = (l.fullName || "").toLowerCase();
     const emailLower = (l.email || "").toLowerCase();
-    const whatsappLower = (l.whatsappNumber || "").toLowerCase();
+    const phoneVal = (l.contactPhone || l.whatsappNumber || "");
+    const phoneLower = phoneVal.toLowerCase();
     const fitnessGoalLower = (l.fitnessGoal || "").toLowerCase();
     const selectedPlanLower = (l.selectedPlan || "").toLowerCase();
     
     return fullNameLower.includes(searchTerm.toLowerCase()) ||
            emailLower.includes(searchTerm.toLowerCase()) ||
-           whatsappLower.includes(searchTerm.toLowerCase()) ||
+           phoneLower.includes(searchTerm.toLowerCase()) ||
            fitnessGoalLower.includes(searchTerm.toLowerCase()) ||
            selectedPlanLower.includes(searchTerm.toLowerCase());
   });
@@ -234,9 +237,9 @@ export default function AdminDashboard() {
   const paidLeadsCount = leads.filter(l => l.paymentStatus === "Paid" || l.paymentStatus === "Completed").length;
   const activeLeadsCount = leads.filter(l => l.accessStatus === "Active").length;
 
-  const starterCount = leads.filter(l => l.selectedPlan === "30 Days Starter Plan").length;
-  const transCount = leads.filter(l => l.selectedPlan === "90 Days Transformation Plan").length;
-  const premiumCount = leads.filter(l => l.selectedPlan === "6 Months Premium Coaching Plan").length;
+  const starterCount = leads.filter(l => l.selectedPlan?.includes("30 Days")).length;
+  const transCount = leads.filter(l => l.selectedPlan?.includes("90 Days")).length;
+  const premiumCount = leads.filter(l => l.selectedPlan?.includes("6 Months")).length;
 
   console.log(`[AdminDashboard] Dashboard rendering debug log: Rendering admin display with ${filteredUsers.length} of ${totalCount} users. adminCount=${adminCount}, activeCount=${activeCount}.`);
 
@@ -659,13 +662,13 @@ export default function AdminDashboard() {
                                   {leadItem.email}
                                 </a>
                                 <a 
-                                  href={`https://wa.me/91${leadItem.whatsappNumber}`} 
+                                  href={`https://wa.me/91${leadItem.contactPhone || leadItem.whatsappNumber}`} 
                                   target="_blank" 
                                   rel="noreferrer"
                                   className="text-neon-green hover:underline flex items-center gap-1 font-bold"
                                 >
                                   <Phone className="w-3 h-3 text-neon-green/60" />
-                                  +91 {leadItem.whatsappNumber}
+                                  +91 {leadItem.contactPhone || leadItem.whatsappNumber || "N/A"}
                                 </a>
                               </div>
                             </td>
