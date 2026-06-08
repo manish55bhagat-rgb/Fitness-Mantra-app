@@ -210,6 +210,73 @@ CRITICAL formatting instructions:
   }
 });
 
+app.post("/api/ai-coach", async (req, res) => {
+  const { message, query } = req.body;
+  const userMessage = message || query;
+
+  if (!userMessage) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  try {
+    let ai;
+    try {
+      ai = getAI();
+    } catch (apiKeyErr: any) {
+      console.error("[AI Coach API Config Error] Missing or invalid GEMINI_API_KEY:", apiKeyErr.message || apiKeyErr);
+      return res.status(500).json({ error: "AI Coach is currently busy. Please try again in a few minutes." });
+    }
+
+    const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Reply in the user's language. If user writes Marathi mde, Marathi madhe, or मराठीत, reply in Marathi. Avoid medical diagnosis. For medical issues, advise consulting a doctor. Keep answers clear and easy to follow. Return plain text only.`;
+
+    const modelName = "gemini-3.5-flash";
+    console.log(`[AI Coach API] Requesting response using model: ${modelName} for message: "${userMessage.substring(0, 50)}..."`);
+    
+    let responseText = "";
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: userMessage,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.8,
+          topP: 0.95,
+        },
+      });
+
+      if (response && response.text) {
+        responseText = response.text;
+      }
+    } catch (apiErr: any) {
+      console.error(`[AI Coach API Error] Gemini API call failed:`, apiErr.message || apiErr);
+      throw apiErr;
+    }
+
+    if (!responseText) {
+      throw new Error(`Empty response returned from model "${modelName}"`);
+    }
+
+    // Clean up any residual markdown symbols to ensure 100% plain text as requested by user
+    const cleanedReply = responseText
+      .replace(/^#+\s*(.*?)$/gm, "$1") // Remove headers (such as #, ##, ###)
+      .replace(/\*\*([\s\S]*?)\*\*/g, "$1") // Remove bold text notation
+      .replace(/__([\s\S]*?)__/g, "$1")
+      .replace(/\*([\s\S]*?)\*/g, "$1") // Remove italic text notation
+      .replace(/_([\s\S]*?)_/g, "$1")
+      .replace(/^\s*[\*\-]\s+/gm, "• ") // Replace leading asterisks or dashes in lists with a simple bullet
+      .replace(/`([^`]+)`/g, "$1") // Remove backticks
+      .replace(/^\s*[\-\*_]{3,}\s*$/gm, "") // Remove horizontal separation lines
+      .replace(/\n{3,}/g, "\n\n") // Normalize excessive empty lines
+      .trim();
+
+    console.log(`[AI Coach API] Successfully generated plain text response`);
+    res.json({ reply: cleanedReply });
+  } catch (error: any) {
+    console.error("[AI Coach Backend Terminal Error]:", error);
+    res.status(500).json({ error: "AI Coach is currently busy. Please try again in a few minutes." });
+  }
+});
+
 // Vite and Startup
 const initServer = async () => {
   if (!process.env.VERCEL) {

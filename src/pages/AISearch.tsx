@@ -125,20 +125,27 @@ export default function AISearch() {
     setMessages((prev) => [...prev, aiMsg]);
 
     try {
-      let fullResponse = "";
-      const stream = generateContentStream(activeQuery, currentImage || undefined);
+      const response = await fetch("/api/ai-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: activeQuery }),
+      });
 
-      for await (const chunk of stream) {
-        fullResponse += chunk;
-        setMessages((prev) => {
-          const next = [...prev];
-          next[next.length - 1] = {
-            ...next[next.length - 1],
-            content: fullResponse
-          };
-          return next;
-        });
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
       }
+
+      const data = await response.json();
+      const reply = data.reply || "AI Coach is currently busy. Please try again in a few minutes.";
+
+      setMessages((prev) => {
+        const next = [...prev];
+        next[next.length - 1] = {
+          ...next[next.length - 1],
+          content: reply
+        };
+        return next;
+      });
 
       setLoading(false);
     } catch (error: any) {

@@ -1,13 +1,13 @@
-export async function generateContent(prompt: string, image?: string) {
+export async function generateContent(prompt: string, image?: string): Promise<string> {
   try {
-    const response = await fetch("/api/ai/chat", {
+    const response = await fetch("/api/ai-coach", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: prompt, image }),
     });
 
     if (!response.ok) {
-      let errMsg = "Neural link failed";
+      let errMsg = "AI Coach is currently busy. Please try again in a few minutes.";
       try {
         const text = await response.text();
         try {
@@ -26,23 +26,24 @@ export async function generateContent(prompt: string, image?: string) {
       throw new Error(errMsg);
     }
 
-    return await response.text();
+    const data = await response.json();
+    return data.response;
   } catch (error: any) {
-    console.error("AI Generation Error:", error);
+    console.error("AI Generation Error calling /api/ai-coach:", error);
     throw error;
   }
 }
 
 export async function* generateContentStream(prompt: string, image?: string) {
   try {
-    const response = await fetch("/api/ai/chat", {
+    const response = await fetch("/api/ai-coach", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: prompt, image }),
     });
 
     if (!response.ok) {
-      let errMsg = "Neural link failed";
+      let errMsg = "AI Coach is currently busy. Please try again in a few minutes.";
       try {
         const text = await response.text();
         try {
@@ -61,18 +62,10 @@ export async function* generateContentStream(prompt: string, image?: string) {
       throw new Error(errMsg);
     }
 
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        yield decoder.decode(value, { stream: true });
-      }
-    }
+    const data = await response.json();
+    yield data.response || "";
   } catch (error: any) {
-    console.error("AI Stream Error:", error);
+    console.error("AI Stream Error calling /api/ai-coach:", error);
     throw error;
   }
 }
