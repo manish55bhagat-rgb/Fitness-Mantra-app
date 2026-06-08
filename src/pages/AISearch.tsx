@@ -12,6 +12,37 @@ interface Message {
   image?: string;
 }
 
+function formatResponseText(text: string): string {
+  if (!text) return "";
+  
+  // If it's the loading placeholder, keep it unchanged
+  if (text === "AI Coach is thinking...") {
+    return text;
+  }
+
+  // Purely clean up markdown and preserve clear paragraph breaks
+  let cleaned = text
+    // Replace markdown headers with bold/plain header representation
+    .replace(/^#+\s*(.*?)$/gm, "$1")
+    // Remove bold markdown (**text** or __text__)
+    .replace(/\*\*([\s\S]*?)\*\*/g, "$1")
+    .replace(/__([\s\S]*?)__/g, "$1")
+    // Remove italic markdown (*text* or _text_)
+    .replace(/\*([\s\S]*?)\*/g, "$1")
+    .replace(/_([\s\S]*?)_/g, "$1")
+    // Replace bullet points highlights (* or -) with •
+    .replace(/^\s*[\*\-]\s+/gm, "• ")
+    // Remove inline code accent marks
+    .replace(/`([^`]+)`/g, "$1")
+    // Remove horizontal separating lines
+    .replace(/^\s*[\-\*_]{3,}\s*$/gm, "")
+    // Remove excessive trailing or leading newlines
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return cleaned;
+}
+
 export default function AISearch() {
   const [query, setQuery] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -87,7 +118,7 @@ export default function AISearch() {
 
     const aiMsg: Message = {
       role: "ai",
-      content: "",
+      content: "AI Coach is thinking...",
       timestamp: new Date(),
     };
     
@@ -111,72 +142,14 @@ export default function AISearch() {
 
       setLoading(false);
     } catch (error: any) {
-      console.warn("AI Companion temporarily offline. Loading offline guides:", error);
+      console.error("AI Coach Error:", error);
       setLoading(false);
       
-      let fallbackText = "";
-      const q = activeQuery.toLowerCase();
-      
-      if (q.includes("diet") || q.includes("meal") || q.includes("food") || q.includes("eat") || q.includes("protein") || q.includes("nutrition") || q.includes("caloric") || q.includes("sugar")) {
-        fallbackText = `### 🍽️ Natural Nutrition Guidelines
-        
-Our live AI coach is currently busy. Here are Coach Manish Bhagat's essential guidelines for diet and nutrition:
-
-1. **Protein Intake:** Aim for about **1.6 to 2.0 grams of protein per kilogram of body weight** to support natural muscle recovery. Main protein sources include eggs, chicken breast, paneer, sprouts, milk, fish, and lentils.
-2. **Calorie Targets:** 
-    * **For Fat Loss:** Aim for a moderate calorie deficit of **300 to 500 calories** below your daily maintenance limit.
-    * **For Muscle Gain:** Consuming **200 to 300 calories** above your daily maintenance will support clean, steady growth.
-3. **Consistency:** Eat 3 to 4 balanced meals daily to keep your energy level steady and support body transformation.`;
-      } else if (q.includes("stack") || q.includes("supplement") || q.includes("creatine") || q.includes("whey") || q.includes("preworkout") || q.includes("bcaa") || q.includes("glutamine")) {
-        fallbackText = `### ⚡ Supplement Advice
-
-Our live coach is currently experiencing a queue. Here is simple, realistic guidance on supplements:
-
-1. **Whey Protein:** Helpful if you struggle to meet your daily protein goals from whole foods alone. You can take 1 scoop post-workout or as a snack.
-2. **Creatine Monohydrate:** 3 grams daily helper to store more water within muscles, helping with strength and steady energy.
-3. **Pre-Workout / Caffeine:** A cup of black coffee 30 minutes before training is an excellent, natural pre-workout booster.`;
-      } else if (q.includes("workout") || q.includes("exercise") || q.includes("training") || q.includes("gym") || q.includes("routine") || q.includes("muscle") || q.includes("hypertrophy") || q.includes("split") || q.includes("program")) {
-        fallbackText = `### 🏋️ Simple 3-Day Workout Routine
-
-AI links are currently busy. Here is our recommended weekly routine designed to build natural strength:
-
-* **Day 1: Upper Body (Chest, Back, Shoulders & Arms)**
-    * Flat Dumbbell Chest Press: 3 sets x 8-12 reps
-    * Lat Pulldowns or Pull-ups: 3 sets x 10 reps
-    * Dumbbell Shoulder Press: 3 sets x 10 reps
-    * Bicep Curls / Tricep Pushdowns: 3 sets x 12 reps
-* **Day 2: Rest & Recovery**
-    * Take a brisk walk or do light stretching to improve mobility.
-* **Day 3: Lower Body (Legs & Core)**
-    * Goblet Squats or Barbell Squats: 3 sets x 8-12 reps
-    * Romanian Deadlifts: 3 sets x 10 reps
-    * Lying Leg Curls: 3 sets x 12 reps
-    * Plank: 3 sets x 45-second hold
-
-*Tip: Focus on form over heavy weights. Only add weight when you can easily perform the target repetitions with clean control.*`;
-      } else if (q.includes("recovery") || q.includes("sleep") || q.includes("rest") || q.includes("fatigue") || q.includes("sore") || q.includes("stretch")) {
-        fallbackText = `### 💤 Rest and Natural Recovery Guidelines
-
-Our AI assistant is temporarily busy. Here are key guidelines to recover:
-
-1. **Sleep First:** Getting **7 to 8 hours of deep night sleep** is the most powerful tool for natural muscle repair and energy.
-2. **Rest Days:** Overtraining leads to injuries. Include at least 1 or 2 complete rest days in your weekly workout structure.
-3. **Hydration:** Drink **3 to 4 liters of water** daily. Hydrated muscles recover much more quickly from soreness.`;
-      } else {
-        fallbackText = `### 🤖 Live AI Assistant Queue
-
-Our live AI Coach stream is currently experiencing high demand. Under Coach Manish Bhagat's guidance, here is an essential tip for **"${activeQuery}"**:
-
-* **Keep It Simple:** Consistency is far more important than extreme efforts. Small daily habits produce the biggest natural body transformations.
-* **Basic Advice:** Ensure you track your water intake, prioritize rich food sources, walk 8k-10k steps daily, and exercise with controlled movements.
-* **Let's Connect:** If you need highly specialized feedback, feel free to use our book consultation form or message Manish directly on WhatsApp!`;
-      }
-
       setMessages((prev) => {
         const next = [...prev];
         next[next.length - 1] = {
           ...next[next.length - 1],
-          content: fallbackText
+          content: "AI Coach is currently busy. Please try again in a few minutes."
         };
         return next;
       });
@@ -224,7 +197,7 @@ Our live AI Coach stream is currently experiencing high demand. Under Coach Mani
         {/* Enhanced OS Chat Area */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto mb-3 md:mb-6 p-4 md:p-8 space-y-6 md:space-y-10 scrollbar-hide bg-os-black/40 backdrop-blur-[60px] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] rounded-2xl md:rounded-[40px] border border-white/5 neon-border outline-offset-8"
+          className="flex-1 overflow-y-auto mb-3 md:mb-6 p-3 sm:p-6 space-y-4 sm:space-y-6 scrollbar-hide bg-os-black/40 backdrop-blur-[60px] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] rounded-2xl md:rounded-[40px] border border-white/5 neon-border outline-offset-8"
         >
           {messages.length === 0 && !loading && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 md:space-y-10 p-2">
@@ -261,7 +234,7 @@ Our live AI Coach stream is currently experiencing high demand. Under Coach Mani
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`relative max-w-[85%] p-6 rounded-3xl ${
+                <div className={`relative max-w-[90%] sm:max-w-[85%] p-4 sm:p-6 rounded-3xl ${
                   msg.role === "user" 
                     ? "bg-white text-black font-extrabold rounded-tr-sm shadow-[0_20px_50px_rgba(255,255,255,0.1)]" 
                     : "bg-white/[0.03] border border-white/10 text-white/90 rounded-tl-sm backdrop-blur-2xl shadow-2xl"
@@ -276,8 +249,8 @@ Our live AI Coach stream is currently experiencing high demand. Under Coach Mani
                       <img src={msg.image} alt="Uplink Data" className="w-full max-h-60 object-cover" referrerPolicy="no-referrer" />
                     </div>
                   )}
-                  <p className="text-[15px] leading-relaxed font-semibold tracking-tight">{msg.content}</p>
-                  <div className={`flex items-center gap-2 mt-5 opacity-40 font-mono tracking-widest text-[9px] ${msg.role === "user" ? "text-black" : "text-neon-green"}`}>
+                  <p className="text-sm sm:text-base leading-snug sm:leading-relaxed font-semibold tracking-tight whitespace-pre-wrap">{formatResponseText(msg.content)}</p>
+                  <div className={`flex items-center gap-2 mt-4 sm:mt-5 opacity-40 font-mono tracking-widest text-[9px] ${msg.role === "user" ? "text-black" : "text-neon-green"}`}>
                     <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     <span>{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <span>•</span>
@@ -358,13 +331,15 @@ Our live AI Coach stream is currently experiencing high demand. Under Coach Mani
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                disabled={loading}
                 placeholder="Ask our AI Coach about exercises, diet, or weight loss..."
-                className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-5 md:px-10 py-4 md:py-6 pr-24 md:pr-32 text-xs md:text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans"
+                className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-5 md:px-10 py-4 md:py-6 pr-24 md:pr-32 text-xs md:text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans disabled:opacity-50"
               />
               <button 
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`absolute right-14 md:right-20 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${selectedImage ? "text-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-white/30 hover:text-white hover:bg-white/5"}`}
+                disabled={loading}
+                className={`absolute right-14 md:right-20 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${selectedImage ? "text-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-white/30 hover:text-white hover:bg-white/5"} disabled:opacity-30`}
               >
                 <ImageIcon className="w-5 h-5 md:w-6 md:h-6" />
               </button>
