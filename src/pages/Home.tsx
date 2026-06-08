@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { db } from "../lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import MBLogo from "../components/ui/MBLogo";
 
 const stats = [
   { label: "Happy Clients", value: "1000+", icon: Users },
@@ -795,9 +796,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-end">
             <div>
               <div className="flex items-center gap-4 mb-12">
-                <div className="w-12 h-12 bg-neon-green rounded-2xl flex items-center justify-center rotate-6 shadow-glow">
-                  <Activity className="text-black w-8 h-8" />
-                </div>
+                <MBLogo size={48} className="rotate-6 shadow-glow" />
                 <h3 className="text-4xl font-display font-black tracking-tighter italic">FITNESS MANTRA</h3>
               </div>
               <p className="text-white/20 text-xs font-black uppercase tracking-[0.4em] leading-relaxed max-w-md italic mb-16">

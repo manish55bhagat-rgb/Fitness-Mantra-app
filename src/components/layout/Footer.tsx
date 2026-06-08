@@ -1,5 +1,6 @@
 import { Instagram, Twitter, Mail, Phone, MapPin, Shield, Zap, Globe, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
+import MBLogo from "../ui/MBLogo";
 
 export default function Footer() {
   return (
@@ -11,9 +12,7 @@ export default function Footer() {
           
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-4 group mb-10" id="footer-brand-logo">
-              <div className="w-10 h-10 bg-neon-green rounded-xl flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_20px_rgba(57,255,20,0.4)]">
-                <span className="text-black font-black text-sm tracking-tighter">MB</span>
-              </div>
+              <MBLogo size={44} className="rotate-3 group-hover:rotate-12 transition-transform duration-300" />
               <div className="flex flex-col">
                 <span className="text-xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
                   FITNESS MANTRA

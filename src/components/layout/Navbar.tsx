@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "../../lib/utils";
 import { useLanguage, Language } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
+import MBLogo from "../ui/MBLogo";
 
 const navLinks = [
   { name: "Home", key: "Nav.Home", path: "/" },
@@ -66,9 +67,7 @@ export default function Navbar() {
         <div className="glass-panel !rounded-[24px] border-white/10 px-8 h-20 flex items-center justify-between backdrop-blur-2xl bg-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           
           <Link to="/" className="flex items-center gap-4 group" id="navbar-brand-logo">
-            <div className="w-10 h-10 bg-neon-green rounded-xl flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_20px_rgba(57,255,20,0.4)]">
-              <span className="text-black font-black text-sm tracking-tighter">MB</span>
-            </div>
+            <MBLogo size={44} className="rotate-3 group-hover:rotate-12 transition-transform duration-300" />
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
                 FITNESS MANTRA
