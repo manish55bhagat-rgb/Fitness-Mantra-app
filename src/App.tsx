@@ -32,6 +32,7 @@ const PerformancePortal = lazy(() => import("./pages/PerformancePortal"));
 const SuccessStories = lazy(() => import("./pages/SuccessStories"));
 const AuthPage = lazy(() => import("./pages/Auth"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const WorkoutPlayer = lazy(() => import("./pages/WorkoutPlayer"));
 
 function AppContent() {
   const location = useLocation();
@@ -73,6 +74,11 @@ function AppContent() {
               </ProtectedRoute>
             } />
             <Route path="/programs" element={<Programs />} />
+            <Route path="/workout-player" element={
+              <ProtectedRoute>
+                <WorkoutPlayer />
+              </ProtectedRoute>
+            } />
             <Route path="/success-stories" element={<SuccessStories />} />
             <Route path="/subscription" element={<Subscription />} />
             <Route path="/about" element={<About />} />
