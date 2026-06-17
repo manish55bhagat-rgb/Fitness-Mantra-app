@@ -49,7 +49,7 @@ export default function AISearch() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: "Hello! I am your Fitness Mantra AI Companion, trained under Coach Manish Bhagat. I am here to help you design personalized workout routines, natural diet plans, calculate BMI or calories, and support your natural transformation journey. How can I help you today?",
+      content: "Hello! I am your Fitness Mantra AI Companion, trained under Manish Bhagat. I am here to help you design personalized workout routines, natural diet plans, calculate BMI or calories, and support your natural transformation journey. How can I help you today?",
       timestamp: new Date(),
     }
   ]);
@@ -128,11 +128,29 @@ export default function AISearch() {
       const response = await fetch("/api/ai-coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: activeQuery }),
+        body: JSON.stringify({
+          message: activeQuery,
+          image: currentImage || undefined
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        let errMsg = "AI Coach is currently busy. Please try again in a few minutes.";
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errMsg = errData.error;
+          }
+        } catch (e) {
+          if (response.status === 403) {
+            errMsg = "Invalid API Key";
+          } else if (response.status === 429) {
+            errMsg = "Quota Exceeded";
+          } else if (response.status === 404) {
+            errMsg = "Model Not Found";
+          }
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
@@ -152,11 +170,13 @@ export default function AISearch() {
       console.error("AI Coach Error:", error);
       setLoading(false);
       
+      const userFriendlyMsg = error.message || "AI Coach is currently busy. Please try again in a few minutes.";
+      
       setMessages((prev) => {
         const next = [...prev];
         next[next.length - 1] = {
           ...next[next.length - 1],
-          content: "AI Coach is currently busy. Please try again in a few minutes."
+          content: userFriendlyMsg
         };
         return next;
       });

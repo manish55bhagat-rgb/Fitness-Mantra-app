@@ -80,6 +80,10 @@ export interface ProgressLog {
   bmi: number;
   bodyFat?: number;
   goalProgress?: number;
+  chest?: number;
+  waist?: number;
+  biceps?: number;
+  progressPhotoUrl?: string;
   timestamp: string; // ISO string
 }
 
@@ -114,7 +118,16 @@ interface AuthContextType {
   addWorkoutRecord: (name: string, duration: number, calories: number, completed: boolean) => Promise<void>;
   deleteWorkoutRecord: (id: string) => Promise<void>;
   addDietRecord: (name: string, cal: number, pro: number, carbs: number, fat: number) => Promise<void>;
-  addProgressRecord: (weight: number, heightCm: number, bodyFat?: number, goalProg?: number) => Promise<void>;
+  addProgressRecord: (
+    weight: number, 
+    heightCm: number, 
+    bodyFat?: number, 
+    goalProg?: number,
+    chest?: number,
+    waist?: number,
+    biceps?: number,
+    progressPhotoUrl?: string
+  ) => Promise<void>;
   purchasePlan: (planName: string, amount: string, isSuccess: boolean) => Promise<boolean>;
 }
 
@@ -452,7 +465,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function addProgressRecord(weight: number, heightCm: number, bodyFat?: number, goalProg?: number) {
+  async function addProgressRecord(
+    weight: number, 
+    heightCm: number, 
+    bodyFat?: number, 
+    goalProg?: number,
+    chest?: number,
+    waist?: number,
+    biceps?: number,
+    progressPhotoUrl?: string
+  ) {
     if (!user) return;
     const subPath = `users/${user.uid}/progress`;
     try {
@@ -465,6 +487,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         bmi,
         bodyFat: bodyFat || 18,
         goalProgress: goalProg || 50,
+        chest: chest || 0,
+        waist: waist || 0,
+        biceps: biceps || 0,
+        progressPhotoUrl: progressPhotoUrl || "",
         timestamp: new Date().toISOString()
       };
       

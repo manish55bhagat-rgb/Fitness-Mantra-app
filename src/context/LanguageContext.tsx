@@ -55,6 +55,11 @@ export const translations: Translations = {
     hi: "अक्सर पूछे जाने वाले सवाल",
     mr: "वारंवार विचारले जाणारे प्रश्न"
   },
+  "Nav.SuccessStories": {
+    en: "Stories",
+    hi: "सफलता",
+    mr: "यशस्वी मार्ग"
+  },
   "Nav.EliteAccess": {
     en: "PREMIUM PLANS",
     hi: "प्रीमियम प्लान्स",

@@ -6,11 +6,11 @@ interface MBLogoProps {
   size?: number;
 }
 
-export default function MBLogo({ className = "", size = 40 }: MBLogoProps) {
+export default function MBLogo({ className = "", size }: MBLogoProps) {
   return (
     <div 
-      className={`relative rounded-xl overflow-hidden flex items-center justify-center bg-black border border-white/5 shadow-[0_0_20px_rgba(57,255,20,0.2)] ${className}`}
-      style={{ width: size, height: size }}
+      className={`relative rounded-xl overflow-hidden flex items-center justify-center bg-black border-2 border-neon-green/40 shadow-[0_0_15px_rgba(57,255,20,0.3)] shrink-0 select-none ${!size ? "w-10 h-10 sm:w-12 sm:h-12" : ""} ${className}`}
+      style={size ? { width: size, height: size } : undefined}
     >
       <img
         src={logoImg}

@@ -2,6 +2,9 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Coffee, Sun, Moon, Droplets, PieChart, Info, ChevronRight, Zap, Target, Search, ChefHat, Heart, ShieldCheck, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
+import { db } from "../lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuth } from "../context/AuthContext";
 
 const foodDatabase = [
   { id: 1, name: "Paneer (Indian Cottage Cheese)", cal: 265, protein: "18g", carbs: "1.2g", fat: "20g", vit: ["Calcium", "Vitamin D"], weight: "100g", category: "Protein" },
@@ -42,9 +45,55 @@ const plans = [
 ];
 
 export default function Diet() {
+  const { user, setModalOpen, setModalTab } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [userWeight, setUserWeight] = useState(75);
   const [activeCategory, setActiveCategory] = useState("All");
+
+  // Form State - Custom Diet Request
+  const [requestGoal, setRequestGoal] = useState("Fat Loss");
+  const [requestType, setRequestType] = useState("Vegetarian");
+  const [requestAllergies, setRequestAllergies] = useState("");
+  const [requestTargetWeight, setRequestTargetWeight] = useState("");
+  const [requestNotes, setRequestNotes] = useState("");
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestSuccess, setRequestSuccess] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  const handleSubmitDietRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      setModalTab("signin");
+      setModalOpen(true);
+      return;
+    }
+    setRequestLoading(true);
+    setRequestSuccess(false);
+    setRequestError(null);
+
+    try {
+      await addDoc(collection(db, "dietRequests"), {
+        userId: user.uid,
+        userEmail: user.email || "",
+        goal: requestGoal,
+        dietType: requestType,
+        allergies: requestAllergies,
+        targetWeight: parseFloat(requestTargetWeight) || 0,
+        notes: requestNotes,
+        status: "Pending",
+        timestamp: new Date().toISOString()
+      });
+      setRequestSuccess(true);
+      setRequestAllergies("");
+      setRequestTargetWeight("");
+      setRequestNotes("");
+    } catch (err: any) {
+      console.error(err);
+      setRequestError("Could not submit request. Please try again.");
+    } finally {
+      setRequestLoading(false);
+    }
+  };
 
   const filteredFood = useMemo(() => {
     return foodDatabase.filter(food => 
@@ -332,6 +381,132 @@ export default function Diet() {
 
           </div>
         </div>
+
+        {/* Personal Diet Request Section */}
+        <section className="glass-panel p-12 border-neon-green/10 bg-white/[0.01] relative rounded-3xl overflow-hidden mt-24">
+          <div className="absolute inset-0 os-grid opacity-5 pointer-events-none" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
+            <div className="lg:col-span-5 flex flex-col justify-center">
+              <span className="text-[10px] text-neon-green font-black uppercase tracking-[0.4em] mb-4 font-mono">Tailored Nutrition</span>
+              <h3 className="text-4xl md:text-5xl font-display font-black uppercase tracking-tighter italic mb-6">
+                Request a Custom<br/><span className="premium-gradient-text uppercase">Diet Protocol</span>
+              </h3>
+              <p className="text-white/40 text-sm font-semibold uppercase tracking-tight leading-relaxed mb-8">
+                Cannot find a pre-compiled profile suitable for your biometrics? Trigger a custom calculation from Manish Bhagat and our team based on your exact caloric target, allergies, and cellular objectives.
+              </p>
+              
+              {!user && (
+                <button
+                  type="button"
+                  onClick={() => { setModalTab("signin"); setModalOpen(true); }}
+                  className="bg-neon-green text-black font-black uppercase text-[10px] px-8 py-4.5 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(57,255,20,0.4)] cursor-pointer self-start"
+                >
+                  Sign In to Request
+                </button>
+              )}
+            </div>
+
+            <div className="lg:col-span-7 bg-black/40 border border-white/5 rounded-3xl p-8 sm:p-10">
+              {requestSuccess ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <ChefHat className="w-16 h-16 text-neon-green mb-6 animate-bounce animate-pulse-neon" />
+                  <h4 className="text-2xl font-black uppercase tracking-tight italic mb-2 text-white font-display">Request Synchronized!</h4>
+                  <p className="text-white/40 text-[10px] tracking-wider mb-6 font-mono font-bold uppercase">Our nutritional technicians are compiling your matrix. Check back soon.</p>
+                  <button 
+                    type="button"
+                    onClick={() => setRequestSuccess(false)}
+                    className="text-[10px] text-neon-green font-black uppercase tracking-widest hover:underline cursor-pointer"
+                  >
+                    Submit Another Request
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitDietRequest} className="space-y-6">
+                  {requestError && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-black uppercase tracking-wider font-mono">
+                      {requestError}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Target Goal *</label>
+                      <select 
+                        value={requestGoal}
+                        onChange={(e) => setRequestGoal(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 focus:outline-none focus:border-neon-green/40 cursor-pointer font-bold"
+                      >
+                        <option value="Fat Loss" className="bg-deep-black text-white">Fat Loss</option>
+                        <option value="Muscle Gain" className="bg-deep-black text-white">Muscle Gain</option>
+                        <option value="Metabolic Shift" className="bg-deep-black text-white">Metabolic Shift</option>
+                        <option value="Endurance Protocol" className="bg-deep-black text-white">Endurance Protocol</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Dietary Profile *</label>
+                      <select 
+                        value={requestType}
+                        onChange={(e) => setRequestType(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 focus:outline-none focus:border-neon-green/40 cursor-pointer font-bold"
+                      >
+                        <option value="Vegetarian" className="bg-deep-black text-white">Vegetarian (Vedic Veg)</option>
+                        <option value="Non-Vegetarian" className="bg-deep-black text-white">Non-Vegetarian</option>
+                        <option value="Eggitarian" className="bg-deep-black text-white">Eggitarian</option>
+                        <option value="Vegan" className="bg-deep-black text-white">Vegan</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Target weight (KG) *</label>
+                      <input 
+                        type="number" 
+                        value={requestTargetWeight}
+                        onChange={(e) => setRequestTargetWeight(e.target.value)}
+                        placeholder="e.g. 68"
+                        required
+                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-neon-green/40 font-bold"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Allergies / Restrictions</label>
+                      <input 
+                        type="text" 
+                        value={requestAllergies}
+                        onChange={(e) => setRequestAllergies(e.target.value)}
+                        placeholder="e.g. Glutens, Peanuts, Lactose"
+                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-neon-green/40 font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Notes / Metabolic Conditions</label>
+                    <textarea 
+                      value={requestNotes}
+                      onChange={(e) => setRequestNotes(e.target.value)}
+                      placeholder="Share a brief overview of your daily workout routine and health history..."
+                      rows={3}
+                      className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-neon-green/40 font-bold resize-none"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={requestLoading || !user}
+                    className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-white rounded-xl hover:bg-neon-green hover:text-black hover:border-transparent transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {!user ? "Access Protocol (Sign In Required)" : requestLoading ? "Submitting..." : "Initialize Custom Calculus"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );

@@ -51,9 +51,38 @@ export default function PerformancePortal() {
   const [metricWeight, setMetricWeight] = useState("");
   const [metricHeight, setMetricHeight] = useState(profile?.height || "172");
   const [metricFat, setMetricFat] = useState("");
+  const [metricChest, setMetricChest] = useState("");
+  const [metricWaist, setMetricWaist] = useState("");
+  const [metricBiceps, setMetricBiceps] = useState("");
+  const [metricPhotoUrl, setMetricPhotoUrl] = useState("");
+  const [chartTab, setChartTab] = useState<"calories" | "weight">("calories");
 
   const [formFeedback, setFormFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Dynamic weight and measurements trajectory analysis
+  const weightChartData = React.useMemo(() => {
+    if (progressList.length === 0) {
+      return [
+        { day: "Wk 1", weight: 75.0, chest: 38, waist: 32, biceps: 14 },
+        { day: "Wk 2", weight: 74.2, chest: 38, waist: 31.8, biceps: 14.1 },
+        { day: "Wk 3", weight: 73.5, chest: 38.2, waist: 31.5, biceps: 14.2 },
+        { day: "Wk 4", weight: 72.8, chest: 38.3, waist: 31.2, biceps: 14.3 },
+        { day: "Wk 5", weight: 72.0, chest: 38.5, waist: 30.8, biceps: 14.5 }
+      ];
+    }
+    return progressList.map((p, idx) => {
+      const dateObj = new Date(p.timestamp);
+      const label = isNaN(dateObj.getTime()) ? `Rec ${idx + 1}` : dateObj.toLocaleDateString("en", { month: "short", day: "numeric" });
+      return {
+        day: label,
+        weight: p.weight,
+        chest: p.chest || 0,
+        waist: p.waist || 0,
+        biceps: p.biceps || 0
+      };
+    });
+  }, [progressList]);
 
   // Static Mock Fallback for new accounts with no data
   const fallbackWorkoutData = [
@@ -174,9 +203,17 @@ export default function PerformancePortal() {
         parseFloat(metricWeight),
         parseFloat(metricHeight as string),
         parseInt(metricFat || "15"),
-        60
+        60,
+        parseFloat(metricChest || "0"),
+        parseFloat(metricWaist || "0"),
+        parseFloat(metricBiceps || "0"),
+        metricPhotoUrl || ""
       );
       setMetricWeight("");
+      setMetricChest("");
+      setMetricWaist("");
+      setMetricBiceps("");
+      setMetricPhotoUrl("");
       setFormFeedback("Biometric checkpoints logged successfully.");
     } catch (err) {
       setFormFeedback("Data transmission rejected by rules.");
@@ -365,7 +402,7 @@ export default function PerformancePortal() {
               <form onSubmit={handleProgressSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Weight (KG)</label>
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Weight (KG) *</label>
                     <input 
                       type="number" 
                       step="0.1"
@@ -377,7 +414,7 @@ export default function PerformancePortal() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Height (CM)</label>
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Height (CM) *</label>
                     <input 
                       type="number" 
                       value={metricHeight}
@@ -388,6 +425,78 @@ export default function PerformancePortal() {
                     />
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Chest (Inches)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={metricChest}
+                      onChange={(e) => setMetricChest(e.target.value)}
+                      placeholder="38.5"
+                      className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-[10px] font-bold text-white uppercase focus:outline-none focus:border-neon-green/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Waist (Inches)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={metricWaist}
+                      onChange={(e) => setMetricWaist(e.target.value)}
+                      placeholder="31.2"
+                      className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-[10px] font-bold text-white uppercase focus:outline-none focus:border-neon-green/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Biceps (Inches)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={metricBiceps}
+                      onChange={(e) => setMetricBiceps(e.target.value)}
+                      placeholder="14.5"
+                      className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-[10px] font-bold text-white uppercase focus:outline-none focus:border-neon-green/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30 mb-2">Body Fat (%)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={metricFat}
+                      onChange={(e) => setMetricFat(e.target.value)}
+                      placeholder="15"
+                      className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-[10px] font-bold text-white uppercase focus:outline-none focus:border-neon-green/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Progress Photo URL Input */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-[8px] font-black uppercase tracking-widest text-white/30">Progress Photo URL (Optional)</label>
+                    <button 
+                      type="button"
+                      onClick={() => setMetricPhotoUrl("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=400")}
+                      className="text-[8px] font-black text-neon-green uppercase hover:underline cursor-pointer"
+                    >
+                      Use Demo Preset Url
+                    </button>
+                  </div>
+                  <input 
+                    type="url" 
+                    value={metricPhotoUrl}
+                    onChange={(e) => setMetricPhotoUrl(e.target.value)}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full bg-black border border-white/5 rounded-xl px-4 py-3 text-[10px] font-bold text-white focus:outline-none focus:border-neon-green/20"
+                  />
+                </div>
+
                 <button 
                   type="submit" 
                   disabled={loading}
@@ -401,44 +510,95 @@ export default function PerformancePortal() {
 
           {/* Main Activity Chart */}
           <div className="lg:col-span-2 glass-panel p-10 border-white/5 bg-white/[0.01]">
-            <div className="flex items-center justify-between mb-12">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
               <div>
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic">Caloric Thermal Output</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mt-2">7-Cycle Real-time Meta-Analysis</p>
+                <h3 className="text-2xl font-black uppercase tracking-tighter italic">
+                  {chartTab === "calories" ? "Caloric Thermal Output" : "Weight Progression trajectory"}
+                </h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mt-2">
+                  {chartTab === "calories" ? "7-Cycle Real-time Meta-Analysis" : "Durable Biometric Weight Tracking Timeline"}
+                </p>
               </div>
-              <Activity className="text-neon-green w-6 h-6" />
+              
+              <div className="flex items-center gap-2 bg-black border border-white/10 px-2 py-1 rounded-xl font-mono text-[9px] self-start sm:self-auto">
+                <button 
+                  type="button"
+                  onClick={() => setChartTab("calories")}
+                  className={`px-3 py-1.5 rounded-lg uppercase font-black transition-all cursor-pointer ${chartTab === "calories" ? "bg-neon-green text-black" : "text-white/40 hover:text-white"}`}
+                >
+                  Calories
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setChartTab("weight")}
+                  className={`px-3 py-1.5 rounded-lg uppercase font-black transition-all cursor-pointer ${chartTab === "weight" ? "bg-neon-green text-black" : "text-white/40 hover:text-white"}`}
+                >
+                  Weight
+                </button>
+              </div>
             </div>
 
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorKcal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#39FF14" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#39FF14" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#ffffff20', fontSize: 10, fontWeight: 900 }}
-                  />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#000', border: '1px solid #ffffff10', borderRadius: '16px' }}
-                    itemStyle={{ color: '#39FF14', fontWeight: 900 }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="kcal" 
-                    stroke="#39FF14" 
-                    fillOpacity={1} 
-                    strokeWidth={4}
-                    fill="url(#colorKcal)" 
-                  />
-                </AreaChart>
+                {chartTab === "calories" ? (
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorKcal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#39FF14" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#39FF14" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                    <XAxis 
+                      dataKey="day" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#ffffff20', fontSize: 10, fontWeight: 900 }}
+                    />
+                    <YAxis hide />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#000', border: '1px solid #ffffff10', borderRadius: '16px' }}
+                      itemStyle={{ color: '#39FF14', fontWeight: 900 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="kcal" 
+                      stroke="#39FF14" 
+                      fillOpacity={1} 
+                      strokeWidth={4}
+                      fill="url(#colorKcal)" 
+                    />
+                  </AreaChart>
+                ) : (
+                  <AreaChart data={weightChartData}>
+                    <defs>
+                      <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                    <XAxis 
+                      dataKey="day" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#ffffff20', fontSize: 10, fontWeight: 900 }}
+                    />
+                    <YAxis domain={['auto', 'auto']} hide />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#000', border: '1px solid #ffffff10', borderRadius: '16px' }}
+                      itemStyle={{ color: '#3b82f6', fontWeight: 900 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="#3b82f6" 
+                      fillOpacity={1} 
+                      strokeWidth={4}
+                      fill="url(#colorWeight)" 
+                    />
+                  </AreaChart>
+                )}
               </ResponsiveContainer>
             </div>
 
@@ -598,6 +758,57 @@ export default function PerformancePortal() {
                         Log Meal
                       </button>
                     </div>
+                  )}
+                </div>
+
+                {/* Measurements Tray */}
+                <div className="p-5 bg-white/[0.01] border border-white/5 rounded-xl">
+                  <div className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-3 font-mono">Active Body Measurements</div>
+                  {progressList.length > 0 ? (
+                    (() => {
+                      const latest = progressList[progressList.length - 1];
+                      return (
+                        <div className="grid grid-cols-3 gap-2 font-mono text-center">
+                          <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                            <span className="block text-[7px] text-white/40 uppercase">Chest</span>
+                            <span className="text-xs font-black text-neon-green">{latest.chest ? `${latest.chest}"` : "--"}</span>
+                          </div>
+                          <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                            <span className="block text-[7px] text-white/40 uppercase">Waist</span>
+                            <span className="text-xs font-black text-neon-green">{latest.waist ? `${latest.waist}"` : "--"}</span>
+                          </div>
+                          <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                            <span className="block text-[7px] text-white/40 uppercase">Bicep</span>
+                            <span className="text-xs font-black text-neon-green">{latest.biceps ? `${latest.biceps}"` : "--"}</span>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="text-[10px] font-semibold text-white/40 font-mono">No dimensions logged yet.</div>
+                  )}
+                </div>
+
+                {/* Progress Photo Timeline */}
+                <div className="p-5 bg-white/[0.01] border border-white/5 rounded-xl">
+                  <div className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-3 font-mono">Latest Progress Photos</div>
+                  {progressList.some(p => p.progressPhotoUrl) ? (
+                    <div className="flex gap-2 overflow-x-auto pr-1 py-1 custom-scrollbar">
+                      {progressList.filter(p => p.progressPhotoUrl).map((p, idx) => (
+                        <a 
+                          key={p.id || idx} 
+                          href={p.progressPhotoUrl} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 shrink-0 block hover:border-neon-green transition-all relative group/img"
+                        >
+                          <img src={p.progressPhotoUrl} className="w-full h-full object-cover" alt="Progress checkpoint" referrerPolicy="no-referrer" />
+                          <span className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-[7px] text-neon-green font-bold uppercase transition-all">View</span>
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] font-semibold text-white/40 font-mono font-mono">No progress photos logged.</div>
                   )}
                 </div>
               </div>

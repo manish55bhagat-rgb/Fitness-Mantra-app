@@ -291,7 +291,7 @@ Based on your unique anthropometric metrics and targets, here is your customized
 
 ---
 
-#### 📈 Head Coach Manish Bhagat's Direct Advice:
+#### 📈 Manish Bhagat's Direct Advice:
 *   Ensure absolute compliance with water metrics: 3.5 to 4.0 liters of structured pure water daily.
 *   Prioritize deep REM sleep: 7 to 8 hours is non-negotiable for target nervous system recoverability.`;
       }

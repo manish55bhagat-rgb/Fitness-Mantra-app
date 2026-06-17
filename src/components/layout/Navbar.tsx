@@ -12,6 +12,7 @@ const navLinks = [
   { name: "Dashboard", key: "Nav.Dashboard", path: "/dashboard" },
   { name: "Programs", key: "Nav.Programs", path: "/programs" },
   { name: "Exercises", key: "Nav.Exercises", path: "/exercises" },
+  { name: "Stories", key: "Nav.SuccessStories", path: "/success-stories" },
   { name: "Diet Plans", key: "Nav.Diet", path: "/diet" },
   { name: "BMI Calc", key: "Nav.BMICalc", path: "/bmi-calculator" },
   { name: "Calorie Calc", key: "Nav.CalorieCalc", path: "/calorie-calculator" },
@@ -66,13 +67,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 mt-2 sm:mt-6">
         <div className="glass-panel !rounded-[16px] sm:!rounded-[24px] border-white/10 px-4 sm:px-8 h-14 sm:h-20 flex items-center justify-between backdrop-blur-2xl bg-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           
-          <Link to="/" className="flex items-center gap-2 sm:gap-4 group" id="navbar-brand-logo">
-            <MBLogo size={32} className="sm:size-[44] rotate-3 group-hover:rotate-12 transition-transform duration-300" />
+          <Link to="/" className="flex items-center gap-3 sm:gap-4 group" id="navbar-brand-logo">
+            <MBLogo className="w-10 h-10 sm:w-12 sm:h-12 rotate-3 group-hover:rotate-12 transition-transform duration-300" />
             <div className="flex flex-col">
-              <span className="text-base sm:text-xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
+              <span className="text-lg sm:text-2xl font-black tracking-tighter text-white group-hover:text-neon-green transition-colors leading-none uppercase italic">
                 FITNESS MANTRA
               </span>
-              <span className="text-[6px] sm:text-[7px] uppercase tracking-[0.4em] text-neon-green font-black mt-0.5 sm:mt-1 leading-none italic font-mono">
+              <span className="text-[7px] sm:text-[9px] uppercase tracking-[0.45em] text-neon-green font-black mt-0.5 sm:mt-1 leading-none italic font-mono">
                 Manish Bhagat
               </span>
             </div>

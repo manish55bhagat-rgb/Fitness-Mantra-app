@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform, Variants } from "motion/react";
-import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight, ShieldCheck, Dumbbell, Sparkles, Send, Check } from "lucide-react";
+import { Activity, Zap, TrendingUp, Users, Target, ChevronRight, Play, ArrowRight, ShieldCheck, Dumbbell, Sparkles, Send, Check, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { db, handleFirestoreError, OperationType } from "../lib/firebase";
@@ -65,12 +65,15 @@ export default function Home() {
     foodPreference: "Veg",
     medicalIssue: "",
     contactPhone: "",
+    whatsApp: "",
     email: "",
     selectedPlan: "1 Month Starter Plan",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [usePhoneAsWhatsApp, setUsePhoneAsWhatsApp] = useState(false);
 
   const handleConsultSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,10 +99,24 @@ export default function Home() {
       setErrorMsg("Please enter a valid weight in kg.");
       return;
     }
-    if (formData.contactPhone && !/^\d{10}$/.test(formData.contactPhone)) {
-      setErrorMsg("Phone number must be exactly 10 digits only.");
+    
+    const phoneNo = formData.contactPhone;
+    if (phoneNo && !/^\d{10}$/.test(phoneNo)) {
+      setErrorMsg("Phone number must be exactly 10 digits.");
       return;
     }
+
+    const waNo = usePhoneAsWhatsApp ? phoneNo : formData.whatsApp;
+    if (waNo && !/^\d{10}$/.test(waNo)) {
+      setErrorMsg("WhatsApp number must be exactly 10 digits.");
+      return;
+    }
+
+    if (!phoneNo && !waNo) {
+      setErrorMsg("Please provide at least one contact number (Phone or WhatsApp) so we can reach you.");
+      return;
+    }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       setErrorMsg("Please enter a valid email address.");
       return;
@@ -117,7 +134,8 @@ export default function Home() {
         fitnessGoal: formData.fitnessGoal,
         foodPreference: formData.foodPreference,
         medicalIssue: formData.medicalIssue.trim() || "None",
-        contactPhone: formData.contactPhone,
+        contactPhone: phoneNo || "",
+        whatsApp: waNo || "",
         email: formData.email.trim(),
         selectedPlan: formData.selectedPlan,
         paymentStatus: "Pending",
@@ -137,9 +155,11 @@ export default function Home() {
         foodPreference: "Veg",
         medicalIssue: "",
         contactPhone: "",
+        whatsApp: "",
         email: "",
         selectedPlan: "1 Month Starter Plan",
       });
+      setUsePhoneAsWhatsApp(false);
     } catch (err: any) {
       console.error(err);
       setErrorMsg("Something went wrong while booking. Please try again or email us directly.");
@@ -506,26 +526,54 @@ export default function Home() {
           </h2>
           <p className="text-white/20 text-xs font-black uppercase tracking-[0.6em] mb-20 italic">Global High-Performance Network</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
              {[
                { 
-                 quote: "Manish's protocol transformed my biomechanics in just 12 weeks. The AI suggestions are unbelievably precise.", 
-                 author: "Amit K.", 
-                 meta: "Muscle Gain seeker" 
+                 quote: "Manish's custom weight training protocols transformed my body composition completely. The weekly feedback loops and direct WhatsApp messaging made sure I never skipped a workout.", 
+                 author: "Amit Kapoor", 
+                 meta: "Fat Loss & Conditioning",
+                 stars: 5,
+                 avatar: "https://i.pravatar.cc/150?u=amit"
                },
                { 
-                 quote: "Vedic Diet algorithm sorted my chronic gut issues while shredding fat. Highly recommended!", 
-                 author: "Deepa S.", 
-                 meta: "Endurance Athlete" 
+                 quote: "The personalized food substrates suggestions are absolute gold. It sorted my chronic metabolic slow-down while gaining 6 KG of lean muscle weight naturally without any artificial aids.", 
+                 author: "Vikram Mehta", 
+                 meta: "Hypertrophy Program",
+                 stars: 5,
+                 avatar: "https://i.pravatar.cc/150?u=vikram"
+               },
+               { 
+                 quote: "As a working mother, finding time was extremely hard. Manish designed a simple 40-minute daily home protocol that helped me shred 14 KG in 12 weeks. Lifelong habit transformation!", 
+                 author: "Deepa Sharma", 
+                 meta: "Home Workout Protocol",
+                 stars: 5,
+                 avatar: "https://i.pravatar.cc/150?u=deepa"
                }
              ].map((t, idx) => (
-               <div key={idx} className="glass-panel p-12 border-white/5 bg-white/[0.01] text-left hover:border-neon-green/35 hover:bg-neon-green/[0.01] transition-all duration-500 rounded-[32px] flex flex-col justify-between">
-                  <p className="text-sm md:text-md font-bold uppercase tracking-wide text-white/80 leading-relaxed italic mb-10">
-                    "{t.quote}"
-                  </p>
+               <div key={idx} className="glass-panel p-8 border-white/5 bg-white/[0.01] text-left hover:border-neon-green/35 hover:bg-neon-green/[2%] transition-all duration-500 rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-neon-green/[0.01] group-hover:bg-neon-green/[0.03] blur-xl transition-all duration-500 rounded-full" />
                   <div>
-                    <div className="text-[10px] font-black text-neon-green uppercase tracking-[0.4em] font-mono mb-1">— {t.author}</div>
-                    <div className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] font-mono">{t.meta}</div>
+                    {/* Stars bar */}
+                    <div className="flex items-center gap-1 mb-6">
+                      {[...Array(t.stars)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-neon-green text-neon-green drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]" />
+                      ))}
+                    </div>
+                    <p className="text-[12px] font-semibold uppercase tracking-tight text-white/70 leading-relaxed mb-8 italic">
+                      "{t.quote}"
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 pt-6 border-t border-white/5">
+                    <img 
+                      src={t.avatar} 
+                      alt={t.author} 
+                      className="w-11 h-11 rounded-full object-cover border border-neon-green/20"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <div className="text-[10px] font-black text-neon-green uppercase tracking-[0.25em] font-mono leading-none">{t.author}</div>
+                      <div className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] font-mono mt-1.5 leading-none">{t.meta}</div>
+                    </div>
                   </div>
                </div>
              ))}
@@ -545,7 +593,7 @@ export default function Home() {
               Book A <span className="text-neon-green">Free Consultation</span>
             </h2>
             <p className="text-white/40 text-xs font-black uppercase tracking-[0.4em] mt-4 italic">
-              Get customized feedback from Coach Manish Bhagat
+              Get customized feedback from Manish Bhagat
             </p>
           </div>
 
@@ -563,7 +611,7 @@ export default function Home() {
                   Consultation Booked Successfully!
                 </h3>
                 <p className="text-white/60 text-sm max-w-md mx-auto leading-relaxed mb-8">
-                  Coach Manish Bhagat will review your biological profile and reach out via your email address within 24 hours to discuss details.
+                  Manish Bhagat will review your biological profile and reach out via your email address within 24 hours to discuss details.
                 </p>
                 <button 
                   onClick={() => setSuccess(false)}
@@ -703,7 +751,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Phone Number */}
                   <div className="flex flex-col gap-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Phone Number (Optional)</label>
@@ -718,10 +766,36 @@ export default function Home() {
                         className="w-full bg-white/5 border border-white/10 rounded-xl pl-16 pr-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold font-mono"
                       />
                     </div>
-                    <span className="text-[9px] font-semibold text-white/30 italic mt-1 uppercase tracking-wider block">
-                      We may contact you on WhatsApp only if you share your number.
-                    </span>
                   </div>
+
+                  {/* WhatsApp Number */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-white/40">WhatsApp Number *</label>
+                      <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-neon-green/80 tracking-wider cursor-pointer select-none">
+                        <input 
+                          type="checkbox" 
+                          checked={usePhoneAsWhatsApp} 
+                          onChange={(e) => setUsePhoneAsWhatsApp(e.target.checked)}
+                          className="accent-neon-green w-3.5 h-3.5 rounded bg-black border border-white/10 cursor-pointer"
+                        />
+                        Same as Phone
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-mono text-sm pointer-events-none">+91</span>
+                      <input 
+                        type="tel" 
+                        value={usePhoneAsWhatsApp ? formData.contactPhone : formData.whatsApp}
+                        onChange={(e) => setFormData({ ...formData, whatsApp: e.target.value.replace(/\D/g, "") })}
+                        disabled={usePhoneAsWhatsApp}
+                        placeholder={usePhoneAsWhatsApp ? "Same as Phone" : "10-digit WhatsApp Number"}
+                        maxLength={10}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-16 pr-5 py-4 text-sm text-white focus:outline-none focus:border-neon-green/50 placeholder:text-white/20 transition-all font-semibold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                   {/* Selected Plan */}
                   <div className="flex flex-col gap-2">
@@ -739,7 +813,6 @@ export default function Home() {
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-xs">▼</span>
                     </div>
                   </div>
-                </div>
 
                 {/* Medical Issue */}
                 <div className="flex flex-col gap-2">

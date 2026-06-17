@@ -192,7 +192,7 @@ export default function Subscription() {
           <div className="space-y-1">
             <h4 className="text-sm font-black text-white uppercase tracking-wider">Natural Personal Coaching Guarantee</h4>
             <p className="text-xs text-white/40 leading-relaxed max-w-sm">
-              Coaching plans rely on direct human design, tailored meal programs, natural diet setups, and personalized tracking built by Coach Manish Bhagat.
+              Coaching plans rely on direct human design, tailored meal programs, natural diet setups, and personalized tracking built by Manish Bhagat.
             </p>
           </div>
           <div className="flex flex-col items-center sm:items-end font-mono">

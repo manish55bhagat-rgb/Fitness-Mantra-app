@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db, handleFirestoreError, OperationType } from "../lib/firebase";
-import { collection, getDocs, orderBy, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, onSnapshot, doc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   
   const [users, setUsers] = useState<ExtendedUserProfile[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
-  const [tab, setTab] = useState<"users" | "leads">("users");
+  const [tab, setTab] = useState<"users" | "leads" | "diet_requests" | "transformations">("users");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -54,6 +54,23 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<ExtendedUserProfile | null>(null);
   const [selectedUserStats, setSelectedUserStats] = useState<SelectedUserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+
+  // Additional Admin Collections States
+  const [dietRequests, setDietRequests] = useState<any[]>([]);
+  const [transformations, setTransformations] = useState<any[]>([]);
+
+  // Transformation Management forms
+  const [showAddTransformation, setShowAddTransformation] = useState(false);
+  const [editingTransformation, setEditingTransformation] = useState<any | null>(null);
+  const [transForm, setTransForm] = useState({
+    name: "",
+    beforePhotoUrl: "",
+    afterPhotoUrl: "",
+    weightLost: "",
+    duration: "",
+    category: "Shred",
+    description: ""
+  });
 
   // Authorization Check & Real-time users and leads subscription
   useEffect(() => {
@@ -110,10 +127,39 @@ export default function AdminDashboard() {
           handleFirestoreError(err, OperationType.LIST, "leads");
         });
 
+        const dietRequestsCollectionRef = collection(db, "dietRequests");
+        const unsubscribeDietRequests = onSnapshot(dietRequestsCollectionRef, (snapshot) => {
+          const reqs: any[] = [];
+          snapshot.forEach((doc) => {
+            reqs.push({ id: doc.id, ...doc.data() });
+          });
+          reqs.sort((a, b) => {
+            const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return dateB - dateA;
+          });
+          setDietRequests(reqs);
+        }, (err: any) => {
+          console.error("[AdminDashboard] Error fetching dietRequests in real-time:", err);
+        });
+
+        const transformationsCollectionRef = collection(db, "transformations");
+        const unsubscribeTransformations = onSnapshot(transformationsCollectionRef, (snapshot) => {
+          const trans: any[] = [];
+          snapshot.forEach((doc) => {
+            trans.push({ id: doc.id, ...doc.data() });
+          });
+          setTransformations(trans);
+        }, (err: any) => {
+          console.error("[AdminDashboard] Error fetching transformations in real-time:", err);
+        });
+
         return () => {
           console.log("[AdminDashboard] Unsubscribing from collections...");
           unsubscribeUsers();
           unsubscribeLeads();
+          unsubscribeDietRequests();
+          unsubscribeTransformations();
         };
       }
     }
@@ -175,6 +221,90 @@ export default function AdminDashboard() {
         handleFirestoreError(err, OperationType.DELETE, `leads/${leadId}`);
       }
     }
+  };
+
+  const handleUpdateDietRequestStatus = async (requestId: string, nextStatus: string) => {
+    try {
+      const docRef = doc(db, "dietRequests", requestId);
+      await updateDoc(docRef, { status: nextStatus });
+      console.log(`Diet Request ${requestId} status updated to: ${nextStatus}`);
+    } catch (err: any) {
+      console.error("Error updating diet request status:", err);
+    }
+  };
+
+  const handleDeleteDietRequest = async (requestId: string) => {
+    if (window.confirm("Are you sure you want to delete this diet request permanently?")) {
+      try {
+        await deleteDoc(doc(db, "dietRequests", requestId));
+        console.log(`Diet Request ${requestId} deleted.`);
+      } catch (err: any) {
+        console.error("Error deleting diet request:", err);
+      }
+    }
+  };
+
+  const handleSaveTransformation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transForm.name || !transForm.beforePhotoUrl || !transForm.afterPhotoUrl || !transForm.weightLost || !transForm.duration) {
+      alert("Please fill in all mandatory fields (*)");
+      return;
+    }
+
+    try {
+      if (editingTransformation) {
+        const docRef = doc(db, "transformations", editingTransformation.id);
+        await updateDoc(docRef, {
+          ...transForm,
+          updatedAt: new Date().toISOString()
+        });
+        setEditingTransformation(null);
+      } else {
+        await addDoc(collection(db, "transformations"), {
+          ...transForm,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      setShowAddTransformation(false);
+      setTransForm({
+        name: "",
+        beforePhotoUrl: "",
+        afterPhotoUrl: "",
+        weightLost: "",
+        duration: "",
+        category: "Shred",
+        description: ""
+      });
+    } catch (err: any) {
+      console.error("Error saving transformation:", err);
+      alert("Error saving transformation: " + err.message);
+    }
+  };
+
+  const handleDeleteTransformation = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this transformation success story permanently?")) {
+      try {
+        await deleteDoc(doc(db, "transformations", id));
+        console.log(`Transformation ${id} deleted.`);
+      } catch (err: any) {
+        console.error("Error deleting transformation:", err);
+      }
+    }
+  };
+
+  const startEditTransformation = (trans: any) => {
+    setEditingTransformation(trans);
+    setTransForm({
+      name: trans.name,
+      beforePhotoUrl: trans.beforePhotoUrl,
+      afterPhotoUrl: trans.afterPhotoUrl,
+      weightLost: trans.weightLost,
+      duration: trans.duration,
+      category: trans.category || "Shred",
+      description: trans.description || ""
+    });
+    setShowAddTransformation(true);
   };
 
   // Helper: Checks if a date string is within the last 7 days
@@ -307,19 +437,67 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Consolidated Cockpit Stats Matrix */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
+              <div className="bg-white/[0.01] border border-white/5 p-4 rounded-xl text-center">
+                <span className="block text-[7px] text-white/30 uppercase tracking-widest">Total Users</span>
+                <span className="text-xl font-display font-black text-white italic">{users.length}</span>
+              </div>
+              <div className="bg-white/[0.01] border border-white/5 p-4 rounded-xl text-center">
+                <span className="block text-[7px] text-white/30 uppercase tracking-widest">Active Users</span>
+                <span className="text-xl font-display font-black text-blue-400 italic">{users.filter(u => isActive(u.lastLogin)).length}</span>
+              </div>
+              <div className="bg-white/[0.01] border border-white/5 p-4 rounded-xl text-center">
+                <span className="block text-[7px] text-white/30 uppercase tracking-widest">Total Leads</span>
+                <span className="text-xl font-display font-black text-neon-green italic">{leads.length}</span>
+              </div>
+              <div className="bg-white/[0.01] border border-white/5 p-4 rounded-xl text-center">
+                <span className="block text-[7px] text-white/30 uppercase tracking-widest">Paid Leads</span>
+                <span className="text-xl font-display font-black text-amber-500 italic">{leads.filter(l => l.paymentStatus === "Paid" || l.paymentStatus === "Completed").length}</span>
+              </div>
+              <div className="bg-white/[0.01] border border-white/5 p-4 rounded-xl text-center">
+                <span className="block text-[7px] text-white/30 uppercase tracking-widest">Conversion Rate</span>
+                <span className="text-xl font-display font-black text-neon-green italic">
+                  {leads.length > 0 ? ((leads.filter(l => l.paymentStatus === "Paid" || l.paymentStatus === "Completed").length / leads.length) * 100).toFixed(1) + "%" : "0.0%"}
+                </span>
+              </div>
+              <div className="bg-white/[0.01] border border-white/5 p-4 rounded-xl text-center">
+                <span className="block text-[7px] text-white/30 uppercase tracking-widest">Est. Revenue</span>
+                <span className="text-xl font-display font-black text-white italic">
+                  ₹{(leads.filter(l => l.paymentStatus === "Paid" || l.paymentStatus === "Completed").length * 999).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
             {/* SUB-TABS SELECTOR */}
-            <div className="flex border-b border-white/5 pb-0.5">
+            <div className="flex flex-wrap border-b border-white/5 pb-0.5 gap-2">
               <button 
+                type="button"
                 onClick={() => { setTab("users"); setSearchTerm(""); }}
-                className={`px-8 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "users" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
+                className={`px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "users" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
               >
                 Registered Users ({users.length})
               </button>
               <button 
+                type="button"
                 onClick={() => { setTab("leads"); setSearchTerm(""); }}
-                className={`px-8 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "leads" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
+                className={`px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "leads" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
               >
                 Consultation Leads ({leads.length})
+              </button>
+              <button 
+                type="button"
+                onClick={() => { setTab("diet_requests"); setSearchTerm(""); }}
+                className={`px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "diet_requests" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
+              >
+                Diet Requests ({dietRequests.length})
+              </button>
+              <button 
+                type="button"
+                onClick={() => { setTab("transformations"); setSearchTerm(""); }}
+                className={`px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all duration-300 ${tab === "transformations" ? "border-neon-green text-neon-green" : "border-transparent text-white/40 hover:text-white"}`}
+              >
+                Success Stories ({transformations.length})
               </button>
             </div>
 
@@ -500,7 +678,13 @@ export default function AdminDashboard() {
             <div className="glass-panel border-white/5 overflow-hidden">
               <div className="p-6 border-b border-white/5 flex items-center justify-between">
                 <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/80 font-mono">
-                  {tab === "users" ? `Registry Dossier (${filteredUsers.length} listed)` : `Consultation Leads Registry (${filteredLeads.length} listed)`}
+                  {tab === "users" 
+                    ? `Registry Dossier (${filteredUsers.length} listed)` 
+                    : tab === "leads" 
+                      ? `Consultation Leads Registry (${filteredLeads.length} listed)` 
+                      : tab === "diet_requests" 
+                        ? `Diet Plan Requests (${dietRequests.length} listed)` 
+                        : `Success Stories / Transformations (${transformations.length} listed)`}
                 </h2>
                 <span className="h-2 w-2 rounded-full bg-neon-green animate-ping inline-block" />
               </div>
@@ -616,7 +800,7 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 )
-              ) : (
+              ) : tab === "leads" ? (
                 /* CONSULTATION LEADS DIRECTORY */
                 filteredLeads.length === 0 ? (
                   <div className="p-16 text-center border-t border-white/5">
@@ -635,7 +819,7 @@ export default function AdminDashboard() {
                           <th className="py-5 px-6">Selected Coaching Plan</th>
                           <th className="py-5 px-6">Payment Status</th>
                           <th className="py-5 px-6">Access Status</th>
-                          <th className="py-5 px-6">Created Date</th>
+                          <th className="py-4 px-6">Created Date</th>
                           <th className="py-5 px-6 text-center">Remove</th>
                         </tr>
                       </thead>
@@ -740,6 +924,309 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 )
+              ) : tab === "diet_requests" ? (
+                /* DIET PLAN REQUESTS DIRECTORY */
+                dietRequests.length === 0 ? (
+                  <div className="p-16 text-center">
+                    <p className="text-[10px] font-mono tracking-widest text-white/30 uppercase">
+                      NO DIET PLAN REQUESTS SUBMITTED YET.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-white/[0.02] border-b border-white/5 text-[8px] font-black uppercase tracking-[0.3em] font-mono text-white/40">
+                          <th className="py-5 px-6">Requester</th>
+                          <th className="py-5 px-6">Diet Parameters</th>
+                          <th className="py-5 px-6">Food allergies / notes</th>
+                          <th className="py-5 px-6">Filing clock</th>
+                          <th className="py-5 px-6">Status / pipeline</th>
+                          <th className="py-5 px-6 text-center">Delete</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-[9px] font-mono font-medium text-white/70">
+                        {dietRequests.map((req) => (
+                          <tr key={req.id} className="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                            <td className="py-4 px-6 font-sans">
+                              <span className="font-sans font-bold text-white text-[11px] block uppercase">
+                                {req.userId?.substring(0, 8)}...
+                              </span>
+                              <span className="text-[9px] text-white/50">{req.userEmail}</span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex flex-col">
+                                <span className="text-neon-green font-bold uppercase">{req.dietType || "General Diet"}</span>
+                                <span className="text-white/40 mt-1">Goal: <strong className="text-white font-medium">{req.goal || "Weight Control"}</strong></span>
+                                {req.targetWeight && <span className="text-white/40">Target Weight: <strong className="text-white font-medium">{req.targetWeight} kg</strong></span>}
+                              </div>
+                            </td>
+                            <td className="py-4 px-6 text-white/40">
+                              {req.allergies ? (
+                                <div className="flex flex-col">
+                                  <span className="text-red-400 font-bold">ALLERGIES:</span>
+                                  <span className="max-w-xs block break-words">{req.allergies}</span>
+                                </div>
+                              ) : null}
+                              {req.notes ? (
+                                <div className="flex flex-col mt-1">
+                                  <span>NOTES:</span>
+                                  <span className="max-w-xs block break-words italic text-white/70">"{req.notes}"</span>
+                                </div>
+                              ) : null}
+                              {!req.allergies && !req.notes && <span className="text-white/20 font-sans italic">None entered</span>}
+                            </td>
+                            <td className="py-4 px-6 text-white/40 text-[8px]">
+                              {req.timestamp ? new Date(req.timestamp).toLocaleString() : "N/A"}
+                            </td>
+                            <td className="py-4 px-6">
+                              <select
+                                value={req.status || "Pending"}
+                                onChange={(e) => handleUpdateDietRequestStatus(req.id, e.target.value)}
+                                className={`bg-deep-black border rounded px-2 py-1 text-[8px] font-black uppercase tracking-wider outline-none cursor-pointer ${
+                                  req.status === "Completed"
+                                    ? "border-neon-green text-neon-green"
+                                    : req.status === "In Progress"
+                                      ? "border-blue-500 text-blue-400"
+                                      : req.status === "Reviewed"
+                                        ? "border-amber-500/50 text-amber-500"
+                                        : "border-white/15 text-white/40"
+                                }`}
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Reviewed">Reviewed</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                              </select>
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteDietRequest(req.id)}
+                                className="p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              ) : (
+                /* SUCCESS STORIES TRANSFORMATION MANAGER */
+                <div>
+                  {/* Add / Edit Form view */}
+                  {showAddTransformation && (
+                    <form onSubmit={handleSaveTransformation} className="p-6 border-b border-white/5 bg-white/[0.01] space-y-4">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-neon-green mb-4">
+                        {editingTransformation ? "✏️ Edit Transformation Story" : "➕ Add Success Transformation Story"}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">Client Name *</label>
+                          <input
+                            type="text"
+                            required
+                            value={transForm.name}
+                            onChange={(e) => setTransForm({ ...transForm, name: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="e.g. Vicky Rathore"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">Weight Lost *</label>
+                          <input
+                            type="text"
+                            required
+                            value={transForm.weightLost}
+                            onChange={(e) => setTransForm({ ...transForm, weightLost: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="e.g. 14 KG Lost"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">Duration *</label>
+                          <input
+                            type="text"
+                            required
+                            value={transForm.duration}
+                            onChange={(e) => setTransForm({ ...transForm, duration: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="e.g. 12 Weeks"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">Before Photo URL *</label>
+                          <input
+                            type="url"
+                            required
+                            value={transForm.beforePhotoUrl}
+                            onChange={(e) => setTransForm({ ...transForm, beforePhotoUrl: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="https://images.unsplash.com/before"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">After Photo URL *</label>
+                          <input
+                            type="url"
+                            required
+                            value={transForm.afterPhotoUrl}
+                            onChange={(e) => setTransForm({ ...transForm, afterPhotoUrl: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="https://images.unsplash.com/after"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">Category (e.g. Fat Loss / Shred)</label>
+                          <input
+                            type="text"
+                            value={transForm.category}
+                            onChange={(e) => setTransForm({ ...transForm, category: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="Shred"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-white/40 uppercase mb-1">Brief Description</label>
+                          <input
+                            type="text"
+                            value={transForm.description}
+                            onChange={(e) => setTransForm({ ...transForm, description: e.target.value })}
+                            className="w-full bg-deep-black border border-white/10 rounded-xl px-3 py-2 text-[10px] font-mono text-white focus:outline-none focus:border-neon-green"
+                            placeholder="e.g. Achieved perfect metabolic rate through diet controls."
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddTransformation(false);
+                            setEditingTransformation(null);
+                          }}
+                          className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/70"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-neon-green text-black font-black text-[9px] uppercase tracking-widest rounded-lg"
+                        >
+                          {editingTransformation ? "Update Story" : "Save Story"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                    <span className="text-[10px] text-white/40 uppercase font-mono">
+                      Story Count: {transformations.length} items
+                    </span>
+                    {!showAddTransformation && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingTransformation(null);
+                          setTransForm({
+                            name: "",
+                            beforePhotoUrl: "",
+                            afterPhotoUrl: "",
+                            weightLost: "",
+                            duration: "",
+                            category: "Shred",
+                            description: ""
+                          });
+                          setShowAddTransformation(true);
+                        }}
+                        className="px-4 py-2 bg-neon-green/10 hover:bg-neon-green/20 border border-neon-green/35 text-neon-green rounded-xl text-[8px] font-black tracking-widest uppercase transition-all"
+                      >
+                        + NEW TRANSFORMATION
+                      </button>
+                    )}
+                  </div>
+
+                  {transformations.length === 0 ? (
+                    <div className="p-16 text-center">
+                      <p className="text-[10px] font-mono tracking-widest text-white/30 uppercase">
+                        NO TRANSFORMATIONS LISTED IN DATABASE RECORD BASE. CLICK + NEW TRANSFORMATION STORY TO GENERATE.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                      {transformations.map((trans) => (
+                        <div key={trans.id} className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 flex flex-col space-y-4 group relative overflow-hidden">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="px-2 py-0.5 bg-neon-green/15 text-neon-green text-[7px] font-black uppercase tracking-widest border border-neon-green/20 rounded">
+                                {trans.category || "Body Transformation"}
+                              </span>
+                              <h4 className="font-sans font-bold text-white text-[13px] uppercase mt-2">{trans.name}</h4>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => startEditTransformation(trans)}
+                                className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTransformation(trans.id)}
+                                className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/15 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Images Side-by-side inside small rounded frames */}
+                          <div className="grid grid-cols-2 gap-2 relative">
+                            <div className="relative rounded-xl overflow-hidden aspect-[4/5] bg-neutral-900 border border-white/5">
+                              <span className="absolute bottom-1.5 left-1.5 z-10 px-2 py-0.5 bg-black/60 backdrop-blur-sm text-[7px] font-mono text-white/80 uppercase">Before</span>
+                              <img
+                                src={trans.beforePhotoUrl}
+                                alt="before"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                            <div className="relative rounded-xl overflow-hidden aspect-[4/5] bg-neutral-900 border border-white/5">
+                              <span className="absolute bottom-1.5 left-1.5 z-10 px-2 py-0.5 bg-neon-green/80 text-[7px] font-mono text-black font-bold uppercase">After</span>
+                              <img
+                                src={trans.afterPhotoUrl}
+                                alt="after"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[9px] font-mono py-2 bg-white/[0.02] px-3 rounded-lg border border-white/5">
+                            <span className="text-white/40">LOST: <strong className="text-neon-green font-bold uppercase">{trans.weightLost}</strong></span>
+                            <span className="text-white/30">•</span>
+                            <span className="text-white/40">DURATION: <strong className="text-white font-bold uppercase">{trans.duration}</strong></span>
+                          </div>
+                          {trans.description && (
+                            <p className="text-[10px] text-white/50 italic font-mono leading-relaxed line-clamp-2">
+                              "{trans.description}"
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

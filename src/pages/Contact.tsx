@@ -51,7 +51,7 @@ export default function Contact() {
             <span className="text-neon-green uppercase italic">TRANSFORMATION</span>
           </h1>
           <p className="text-white/40 max-w-xl text-xs sm:text-sm font-semibold tracking-tight leading-relaxed">
-            Connect with certified coach Manish Bhagat. Reach out regarding personalized diets, custom workouts, or enterprise guidance.
+            Connect with Manish Bhagat. Reach out regarding personalized diets, custom workouts, or enterprise guidance.
           </p>
         </header>
 
@@ -96,7 +96,7 @@ export default function Contact() {
                 Verified Professional Coaching
               </h4>
               <p className="text-white/40 text-xs font-semibold leading-relaxed">
-                All communications and physical statistics submitted to Fitness Mantra are kept strictly confidential. Your coach, Manish Bhagat, reviews proposals within 24 business hours.
+                All communications and physical statistics submitted to Fitness Mantra are kept strictly confidential. Manish Bhagat reviews proposals within 24 business hours.
               </p>
             </div>
           </div>

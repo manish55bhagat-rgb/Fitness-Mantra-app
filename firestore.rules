@@ -121,7 +121,36 @@ service cloud.firestore {
           && (!('createdAt' in data) || data.createdAt is string);
     }
 
+    function isValidTransformation(data) {
+      return data.keys().hasAll(['name', 'weightLost', 'duration', 'beforePhotoUrl', 'afterPhotoUrl', 'createdAt'])
+          && data.keys().size() <= 8
+          && data.name is string
+          && data.weightLost is string
+          && data.duration is string
+          && data.beforePhotoUrl is string
+          && data.afterPhotoUrl is string;
+    }
+
+    function isValidDietRequest(data) {
+      return data.keys().hasAll(['fullName', 'email', 'contactPhone', 'age', 'weight', 'fitnessGoal', 'foodPreference', 'medicalIssue', 'createdAt', 'userId'])
+          && data.keys().size() <= 12
+          && data.fullName is string
+          && data.email is string
+          && data.contactPhone is string
+          && data.userId is string;
+    }
+
     // Collection Rules
+    match /transformations/{transId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /dietRequests/{requestId} {
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow list, get, update, delete: if isAdmin();
+    }
+
     match /leads/{leadId} {
       allow create: if isValidId(leadId) && isValidLead(incoming());
       allow get: if isSignedIn() && isAdmin();
