@@ -90,6 +90,7 @@ function AppContent() {
                 <AdminDashboard />
               </ProtectedRoute>
             } />
+            <Route path="*" element={<Home />} />
           </Routes>
         </Suspense>
       </main>
