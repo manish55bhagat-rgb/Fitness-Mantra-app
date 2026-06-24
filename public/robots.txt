@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fitness-mantra-app.vercel.app/sitemap.xml
