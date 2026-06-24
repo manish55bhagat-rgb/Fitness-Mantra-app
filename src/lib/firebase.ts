@@ -50,9 +50,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-
-  // Do not throw here. Firestore listener callbacks run asynchronously and throwing
-  // from those callbacks can crash the React app or leave admin pages blank.
-  console.error("Firestore Error:", JSON.stringify(errInfo));
-  return errInfo;
+  console.error("Firestore Error: ", JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
 }
