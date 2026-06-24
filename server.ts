@@ -144,22 +144,24 @@ CRITICAL formatting instructions:
         break;
       } catch (err: any) {
         retries--;
-        const errStr = String(err.message || err.status || err.code || err);
-        const isTransient = errStr.includes("503") || errStr.includes("Service Unavailable") || errStr.includes("UNAVAILABLE") || errStr.includes("high demand") || err.status === 503 || err.code === 503;
+        const errStr = String(err.message || err.status || err.code || err).toLowerCase();
+        const isTransient = errStr.includes("503") || errStr.includes("service unavailable") || errStr.includes("unavailable") || errStr.includes("high demand") || err.status === 503 || err.code === 503;
+        const isQuota = errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || err.status === 429 || err.code === 429;
         
-        if (isTransient && retries > 0) {
-          console.warn(`[CHAT] 503 Service Unavailable on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
+        if (isQuota && currentModel === GEMINI_MODEL) {
+          console.warn(`[CHAT] Quota limit reached on ${currentModel}. Switching immediately to high-availability fallback model: gemini-3.1-flash-lite`);
+          currentModel = "gemini-3.1-flash-lite";
+          retries = 2; // Try twice with the fallback model
+          delay = 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else if (isTransient && retries > 0) {
+          console.warn(`[CHAT] Transient error on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
           delay *= 2;
-          
-          if (retries === 1 && currentModel === GEMINI_MODEL) {
-            console.log(`[CHAT] Switching to high-availability fallback model: gemini-3.1-flash-lite`);
-            currentModel = "gemini-3.1-flash-lite";
-          }
         } else if (currentModel === GEMINI_MODEL) {
-          console.warn(`[CHAT] ${GEMINI_MODEL} failed. Trying one last time with fallback model gemini-3.1-flash-lite...`);
+          console.warn(`[CHAT] ${GEMINI_MODEL} failed. Trying fallback model gemini-3.1-flash-lite...`);
           currentModel = "gemini-3.1-flash-lite";
-          retries = 2; // Try twice with the light model
+          retries = 2; // Try twice with the fallback model
           delay = 500;
         } else {
           throw err;
@@ -274,16 +276,18 @@ app.post("/api/ai-coach", async (req, res) => {
         retries--;
         const errStr = String(apiErr.message || apiErr.status || apiErr.code || apiErr).toLowerCase();
         const isTransient = errStr.includes("503") || errStr.includes("service unavailable") || errStr.includes("unavailable") || errStr.includes("high demand") || apiErr.status === 503 || apiErr.code === 503;
+        const isQuota = errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || apiErr.status === 429 || apiErr.code === 429;
         
-        if ((isTransient || errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || apiErr.status === 429 || apiErr.code === 429) && retries > 0) {
-          console.warn(`[AI Coach API] Quota or transient error on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
+        if (isQuota && currentModel === (process.env.GEMINI_MODEL || GEMINI_MODEL)) {
+          console.warn(`[AI Coach API] Quota limit reached on ${currentModel}. Switching immediately to high-availability fallback model: gemini-3.1-flash-lite`);
+          currentModel = "gemini-3.1-flash-lite";
+          retries = 2; // Reset retries for the fallback model
+          delay = 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else if (isTransient && retries > 0) {
+          console.warn(`[AI Coach API] Transient error on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
           delay *= 2;
-          
-          if (retries === 1 && currentModel === (process.env.GEMINI_MODEL || GEMINI_MODEL)) {
-            console.log(`[AI Coach API] Switching to high-availability fallback model: gemini-3.1-flash-lite`);
-            currentModel = "gemini-3.1-flash-lite";
-          }
         } else if (currentModel === (process.env.GEMINI_MODEL || GEMINI_MODEL)) {
           console.warn(`[AI Coach API] ${currentModel} failed. Trying fallback model gemini-3.1-flash-lite...`);
           currentModel = "gemini-3.1-flash-lite";
