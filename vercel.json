@@ -1,9 +1,14 @@
 {
   "version": 2,
-  "rewrites": [
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
