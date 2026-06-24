@@ -1,18 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/ai-coach",
-      "dest": "/api/ai-coach.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/api/(.*)",
+      "destination": "/api"
     }
   ]
 }
