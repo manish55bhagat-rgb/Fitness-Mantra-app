@@ -15,50 +15,35 @@ export const translations: Translations = {
     hi: "होम",
     mr: "मुख्यपृष्ठ"
   },
-  "Nav.Dashboard": {
-    en: "Dashboard",
-    hi: "डैशबोर्ड",
-    mr: "डॅशबोर्ड"
+  "Nav.Diet": {
+    en: "Diet",
+    hi: "डाइट",
+    mr: "आहार"
   },
-  "Nav.Programs": {
-    en: "Programs",
-    hi: "प्रोग्राम्स",
-    mr: "कार्यक्रम"
-  },
-  "Nav.Exercises": {
-    en: "Exercises",
-    hi: "व्यायाम",
+  "Nav.Workout": {
+    en: "Workout",
+    hi: "वर्कआउट",
     mr: "व्यायाम"
   },
-  "Nav.Diet": {
-    en: "Diet Plans",
-    hi: "डाइट प्लान्स",
-    mr: "आहार योजना"
-  },
-  "Nav.BMICalc": {
-    en: "BMI Calc",
-    hi: "बीएमआई कैल्क",
-    mr: "बीएमआय कॅल्क"
-  },
-  "Nav.CalorieCalc": {
-    en: "Calorie Calc",
-    hi: "कैलोरी कैल्क",
-    mr: "कॅलरी कॅल्क"
+  "Nav.BMICalories": {
+    en: "BMI/Calories",
+    hi: "बीएमआई/कैलोरी",
+    mr: "बीएमआय/कॅलरी"
   },
   "Nav.AICoach": {
     en: "AI Coach",
     hi: "एआई कोच",
     mr: "एआय कोच"
   },
-  "Nav.FAQ": {
-    en: "FAQ",
-    hi: "अक्सर पूछे जाने वाले सवाल",
-    mr: "वारंवार विचारले जाणारे प्रश्न"
+  "Nav.Subscription": {
+    en: "Subscription",
+    hi: "सब्सक्रिप्शन",
+    mr: "सबस्क्रिप्शन"
   },
-  "Nav.SuccessStories": {
-    en: "Stories",
-    hi: "सफलता",
-    mr: "यशस्वी मार्ग"
+  "Nav.Contact": {
+    en: "Contact",
+    hi: "संपर्क",
+    mr: "संपर्क"
   },
   "Nav.EliteAccess": {
     en: "PREMIUM PLANS",

@@ -39,9 +39,9 @@ export default function Footer() {
           <div>
             <h4 className="font-extrabold text-[11px] uppercase tracking-[0.3em] mb-6 text-white/30">Our Plans</h4>
             <ul className="space-y-3.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
-              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">1 Month Starter Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
-              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">3 Months Transformation <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
-              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">6 Months Premium Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
+              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">Starter Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
+              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">Transformation Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
+              <li><Link to="/subscription" className="hover:text-neon-green transition-colors flex items-center gap-2 italic">Premium Lifestyle Plan <Zap className="w-2.5 h-2.5 text-neon-green/30" /></Link></li>
             </ul>
           </div>
 
@@ -49,8 +49,9 @@ export default function Footer() {
           <div>
             <h4 className="font-extrabold text-[11px] uppercase tracking-[0.3em] mb-6 text-white/30">Quick Links</h4>
             <ul className="space-y-3.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
-              <li><Link to="/about" className="hover:text-neon-green transition-colors">Our Vision</Link></li>
+              <li><Link to="/about" className="hover:text-neon-green transition-colors">About Us</Link></li>
               <li><Link to="/faq" className="hover:text-neon-green transition-colors">FAQ</Link></li>
+              <li><Link to="/blog" className="hover:text-neon-green transition-colors">Blog</Link></li>
               <li><Link to="/exercises" className="hover:text-neon-green transition-colors">Workout Library</Link></li>
               <li><Link to="/bmi-calculator" className="hover:text-neon-green transition-colors">BMI Calculator</Link></li>
               <li><Link to="/calorie-calculator" className="hover:text-neon-green transition-colors">Calorie Calculator</Link></li>
@@ -89,6 +90,13 @@ export default function Footer() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Health Disclaimer banner in Footer */}
+        <div className="mb-8 p-4.5 rounded-2xl bg-white/[0.01] border border-white/5 text-center">
+          <p className="text-[9px] text-white/40 leading-relaxed uppercase tracking-wider">
+            ⚠️ <strong className="text-white/60">Health Disclaimer:</strong> Fitness Mantra provides general fitness and diet guidance. For medical conditions, consult a qualified doctor or dietitian.
+          </p>
         </div>
 
         {/* Footer Bottom */}

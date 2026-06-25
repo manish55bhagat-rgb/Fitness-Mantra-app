@@ -6,54 +6,69 @@ import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
-    name: "1 Month Starter Plan",
+    name: "Starter Plan",
     icon: Star,
     price: "299",
     period: "30 Days",
-    desc: "Establish solid natural fitness habits with custom feedback.",
+    desc: "1 Month Plan – Perfect to kickstart your fitness journey.",
     features: [
-      "Basic diet guidance",
-      "Basic workout plan",
-      "BMI and calorie calculator access",
-      "Weekly progress check",
-      "Email support"
+      "AI Coach access",
+      "BMI & Calories Calculator",
+      "7-Day Diet Plan",
+      "7-Day Workout Plan",
+      "Basic weight-loss guidance",
+      "WhatsApp enquiry support",
+      "Weekly check-in form"
+    ],
+    notIncluded: [
+      "PDF Diet Plan",
+      "Food image calorie analysis",
+      "Monthly custom update",
+      "Priority support"
     ],
     highlight: false,
-    whatsappEnquiryLink: "https://wa.me/919765690437?text=Hi%20Manish,%20I%20am%20interested%20in%20the%201%20Month%20Starter%20Plan%20for%20%E2%82%B9299.%20Please%20share%20details."
+    whatsappEnquiryLink: "https://wa.me/919765690437?text=Hi%20Manish,%20I%20am%20interested%20in%20the%20Starter%20Plan%20for%20%E2%82%B9299.%20Please%20share%20details."
   },
   {
-    name: "3 Months Transformation Plan",
+    name: "Transformation Plan",
     icon: Zap,
     price: "999",
     period: "90 Days",
-    desc: "Our highly recommended natural body transformation and conditioning program.",
+    desc: "3 Months Plan – Highly recommended for natural body transformation.",
     features: [
-      "Personalized diet guidance",
-      "Custom workout plan",
-      "BMI and calorie tracking",
-      "Regular progress guidance",
-      "AI Fitness Coach access",
-      "Email support"
+      "Everything in Starter Plan",
+      "30-Day Diet Plan",
+      "30-Day Workout Plan",
+      "PDF Diet Plan",
+      "Food image calorie estimate",
+      "Progress tracking",
+      "2 plan updates per month",
+      "Priority WhatsApp support"
     ],
+    notIncluded: [],
     highlight: true,
-    whatsappEnquiryLink: "https://wa.me/919765690437?text=Hi%20Manish,%20I%20am%20interested%20in%20the%203%20Months%20Transformation%20Plan%20for%20%E2%82%B9999.%20Please%20share%20details."
+    whatsappEnquiryLink: "https://wa.me/919765690437?text=Hi%20Manish,%20I%20am%20interested%20in%20the%20Transformation%20Plan%20for%20%E2%82%B9999.%20Please%20share%20details."
   },
   {
-    name: "6 Months Premium Plan",
+    name: "Premium Lifestyle Plan",
     icon: Crown,
     price: "1999",
     period: "6 Months",
-    desc: "Long-term natural metabolic lifestyle and aesthetic support.",
+    desc: "6 Months Plan – Build a sustainable premium healthy lifestyle.",
     features: [
-      "Complete diet and workout guidance",
-      "Long-term progress tracking",
-      "Monthly plan updates",
-      "AI Fitness Coach access",
-      "Priority email support",
-      "Lifestyle and habit guidance"
+      "Everything in Transformation Plan",
+      "6-month transformation roadmap",
+      "Monthly custom diet update",
+      "Monthly custom workout update",
+      "Weight & inch loss tracker",
+      "Habit guidance",
+      "Premium recipes",
+      "Priority human review by Manish",
+      "Early access to new features"
     ],
+    notIncluded: [],
     highlight: false,
-    whatsappEnquiryLink: "https://wa.me/919765690437?text=Hi%20Manish,%20I%20am%20interested%20in%20the%206%20Months%20Premium%20Plan%20for%20%E2%82%B91999.%20Please%20share%20details."
+    whatsappEnquiryLink: "https://wa.me/919765690437?text=Hi%20Manish,%20I%20am%20interested%20in%20the%20Premium%20Lifestyle%20Plan%20for%20%E2%82%B91999.%20Please%20share%20details."
   }
 ];
 
@@ -148,6 +163,12 @@ export default function Subscription() {
                         <span className="text-xs text-white/60 font-semibold tracking-tight leading-tight">{feature}</span>
                       </div>
                     ))}
+                    {onPlan.notIncluded && onPlan.notIncluded.map((feature, fidx) => (
+                      <div key={fidx} className="flex items-start gap-2.5 opacity-40">
+                        <span className="text-red-500 font-bold text-xs shrink-0 w-3.5 text-center mt-0.5">✕</span>
+                        <span className="text-xs text-white/40 line-through font-semibold tracking-tight leading-tight">{feature}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -201,6 +222,13 @@ export default function Subscription() {
               manish456bhagat@gmail.com
             </a>
           </div>
+        </div>
+
+        {/* Health Disclaimer */}
+        <div className="max-w-3xl mx-auto mt-8 p-6 rounded-2xl bg-white/[0.01] border border-red-500/10 text-center">
+          <p className="text-[10px] text-white/40 leading-relaxed uppercase tracking-widest">
+            ⚠️ <strong className="text-white/60">Health Disclaimer:</strong> Fitness Mantra provides general fitness and diet guidance. For medical conditions, consult a qualified doctor or dietitian.
+          </p>
         </div>
       </div>
 
@@ -259,19 +287,19 @@ export default function Subscription() {
               <div className="text-left space-y-3 p-4 bg-white/[0.01] border border-white/5 rounded-2xl mb-6 text-[11px] leading-relaxed text-white/70">
                 <div className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-neon-green/20 text-neon-green text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">1</div>
-                  <span>Scan the QR code above using GPay, PhonePe, Paytm, or any UPI App.</span>
+                  <span>Scan QR and complete payment.</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-neon-green/20 text-neon-green text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">2</div>
-                  <span>Complete the payment of <strong className="text-white">₹{selectedPlan.price}</strong> securely.</span>
+                  <span>Take payment screenshot.</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-neon-green/20 text-neon-green text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">3</div>
-                  <span>Take a screenshot of the successful transaction.</span>
+                  <span>Send screenshot on WhatsApp for plan activation.</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-neon-green/20 text-neon-green text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">4</div>
-                  <span>Click the button below to send the screenshot on WhatsApp for fast manual activation.</span>
+                  <span>Plan activation may take up to 24 hours after verification.</span>
                 </div>
               </div>
 

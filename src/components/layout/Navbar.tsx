@@ -9,15 +9,12 @@ import MBLogo from "../ui/MBLogo";
 
 const navLinks = [
   { name: "Home", key: "Nav.Home", path: "/" },
-  { name: "Dashboard", key: "Nav.Dashboard", path: "/dashboard" },
-  { name: "Programs", key: "Nav.Programs", path: "/programs" },
-  { name: "Exercises", key: "Nav.Exercises", path: "/exercises" },
-  { name: "Stories", key: "Nav.SuccessStories", path: "/success-stories" },
-  { name: "Diet Plans", key: "Nav.Diet", path: "/diet" },
-  { name: "BMI Calc", key: "Nav.BMICalc", path: "/bmi-calculator" },
-  { name: "Calorie Calc", key: "Nav.CalorieCalc", path: "/calorie-calculator" },
   { name: "AI Coach", key: "Nav.AICoach", path: "/ai-assistant" },
-  { name: "FAQ", key: "Nav.FAQ", path: "/faq" },
+  { name: "Diet", key: "Nav.Diet", path: "/diet" },
+  { name: "Workout", key: "Nav.Workout", path: "/programs" },
+  { name: "BMI/Calories", key: "Nav.BMICalories", path: "/bmi-calculator" },
+  { name: "Subscription", key: "Nav.Subscription", path: "/subscription" },
+  { name: "Contact", key: "Nav.Contact", path: "/contact" },
 ];
 
 export default function Navbar() {

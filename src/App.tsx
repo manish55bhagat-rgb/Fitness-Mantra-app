@@ -29,7 +29,6 @@ const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const WorkoutDetail = lazy(() => import("./pages/WorkoutDetail"));
 const PerformancePortal = lazy(() => import("./pages/PerformancePortal"));
-const SuccessStories = lazy(() => import("./pages/SuccessStories"));
 const AuthPage = lazy(() => import("./pages/Auth"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const WorkoutPlayer = lazy(() => import("./pages/WorkoutPlayer"));
@@ -79,7 +78,6 @@ function AppContent() {
                 <WorkoutPlayer />
               </ProtectedRoute>
             } />
-            <Route path="/success-stories" element={<SuccessStories />} />
             <Route path="/subscription" element={<Subscription />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
