@@ -1,6 +1,3 @@
-export default function handler(req, res) {
-  return res.status(200).json({
-    status: "ok",
-    brand: "Fitness Mantra"
-  });
-}
+import app from "../server.ts";
+
+export default app;
