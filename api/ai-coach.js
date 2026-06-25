@@ -2,14 +2,17 @@ import { GoogleGenAI } from '@google/genai';
 
 function getModelCandidates() {
   const envModel = String(process.env.GEMINI_MODEL || '').trim();
-  return [
-    envModel,
-    'gemini-3.5-flash',
-    'gemini-3-flash',
+  const models = [
     'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-1.5-flash'
-  ].filter(Boolean);
+  ];
+
+  if (envModel && models.includes(envModel)) {
+    return [envModel, ...models.filter(model => model !== envModel)];
+  }
+
+  return models;
 }
 
 export default async function handler(req, res) {
@@ -58,7 +61,7 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'AI limit reached. Please try again later.' });
     }
     if (msg.includes('404') || lower.includes('not found')) {
-      return res.status(404).json({ error: 'AI model issue. In Vercel set GEMINI_MODEL=gemini-3.5-flash, or remove GEMINI_MODEL to use automatic fallback.' });
+      return res.status(404).json({ error: 'AI model issue. Remove GEMINI_MODEL from Vercel or set GEMINI_MODEL=gemini-2.5-flash.' });
     }
     if (lower.includes('api key')) {
       return res.status(403).json({ error: 'Gemini API key issue. Check GEMINI_API_KEY in Vercel.' });
