@@ -8,35 +8,132 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
-const GEMINI_MODEL = "gemini-3.5-flash";
+const PORT = Number(process.env.PORT || 3000);
+
+// Prefer a stable production model. You can override this from Vercel Environment Variables.
+const PRIMARY_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const FALLBACK_GEMINI_MODELS = [
+  PRIMARY_GEMINI_MODEL,
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+].filter((model, index, models) => model && models.indexOf(model) === index);
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const getAI = () => {
   let apiKey = process.env.GEMINI_API_KEY;
   if (apiKey) {
-    apiKey = apiKey.trim().replace(/^["'](.+)["']$/, '$1');
+    apiKey = apiKey.trim().replace(/^["'](.+)["']$/, "$1");
   }
 
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.length < 10) {
     throw new Error("MISSING_API_KEY");
   }
 
-  return new GoogleGenAI({ 
+  return new GoogleGenAI({
     apiKey,
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
+        "User-Agent": "fitness-mantra-production",
+      },
+    },
   });
 };
 
+const getErrorInfo = (error: any) => {
+  const raw = String(error?.message || error?.status || error?.code || error || "").toLowerCase();
+  const status = Number(error?.status || error?.code || 0);
+  return {
+    raw,
+    status,
+    isApiKey: raw.includes("api_key") || raw.includes("api key") || raw.includes("permission") || status === 401 || status === 403,
+    isQuota: raw.includes("quota") || raw.includes("resource_exhausted") || raw.includes("rate") || raw.includes("limit") || status === 429,
+    isModel: raw.includes("not_found") || raw.includes("not found") || raw.includes("model") || status === 404,
+    isTransient: raw.includes("503") || raw.includes("500") || raw.includes("502") || raw.includes("504") || raw.includes("service unavailable") || raw.includes("unavailable") || raw.includes("overloaded") || raw.includes("high demand") || raw.includes("timeout") || status === 500 || status === 502 || status === 503 || status === 504,
+  };
+};
+
+async function generateAiCoachReply(ai: GoogleGenAI, parts: any[], systemPrompt: string) {
+  let lastError: any = null;
+
+  for (const model of FALLBACK_GEMINI_MODELS) {
+    let delay = 800;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`[AI Coach] Trying model=${model}, attempt=${attempt}`);
+
+        const response = await ai.models.generateContent({
+          model,
+          contents: parts,
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.75,
+            topP: 0.9,
+            maxOutputTokens: 900,
+          },
+        });
+
+        if (response?.text?.trim()) {
+          console.log(`[AI Coach] Success using model=${model}`);
+          return response.text.trim();
+        }
+
+        throw new Error("Empty response returned from Gemini");
+      } catch (error: any) {
+        lastError = error;
+        const info = getErrorInfo(error);
+        console.warn(`[AI Coach] model=${model} attempt=${attempt} failed:`, error?.message || error);
+
+        if (info.isApiKey) {
+          throw error;
+        }
+
+        // Bad/unavailable model: switch model immediately.
+        if (info.isModel) {
+          break;
+        }
+
+        // Quota or overload: retry once/twice, then switch to next fallback model.
+        if ((info.isQuota || info.isTransient) && attempt < 3) {
+          await sleep(delay);
+          delay *= 2;
+          continue;
+        }
+
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error("AI_COACH_UNAVAILABLE");
+}
+
+const cleanPlainText = (text: string) => text
+  .replace(/^#+\s*(.*?)$/gm, "$1")
+  .replace(/\*\*([\s\S]*?)\*\*/g, "$1")
+  .replace(/__([\s\S]*?)__/g, "$1")
+  .replace(/\*([\s\S]*?)\*/g, "$1")
+  .replace(/_([\s\S]*?)_/g, "$1")
+  .replace(/^\s*[\*\-]\s+/gm, "• ")
+  .replace(/`([^`]+)`/g, "$1")
+  .replace(/^\s*[\-\*_]{3,}\s*$/gm, "")
+  .replace(/\n{3,}/g, "\n\n")
+  .trim();
+
 // API Routes
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", owner: "Manish Bhagat", brand: "Fitness Mantra" });
+  res.json({
+    status: "ok",
+    owner: "Manish Bhagat",
+    brand: "Fitness Mantra",
+    aiModels: FALLBACK_GEMINI_MODELS,
+  });
 });
 
 app.post("/api/ai/tts", async (req, res) => {
@@ -44,13 +141,13 @@ app.post("/api/ai/tts", async (req, res) => {
   if (!text) {
     return res.status(400).json({ error: "Text is required" });
   }
+
   try {
     const ai = getAI();
-    let response;
-    let retries = 4;
-    let delay = 500;
-    
-    while (retries > 0) {
+    let response: any;
+    let delay = 800;
+
+    for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         response = await ai.models.generateContent({
           model: "gemini-3.1-flash-tts-preview",
@@ -66,17 +163,14 @@ app.post("/api/ai/tts", async (req, res) => {
         });
         break;
       } catch (err: any) {
-        retries--;
-        const errStr = String(err.message || err.status || err.code || err);
-        const isTransient = errStr.includes("503") || errStr.includes("Service Unavailable") || errStr.includes("UNAVAILABLE") || errStr.includes("high demand") || err.status === 503 || err.code === 503;
-        
-        if (isTransient && retries > 0) {
-          console.warn(`TTS 503 error, retrying in ${delay}ms... (${retries} attempts left)`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+        const info = getErrorInfo(err);
+        if ((info.isTransient || info.isQuota) && attempt < 4) {
+          console.warn(`TTS temporary error, retrying in ${delay}ms...`);
+          await sleep(delay);
           delay *= 2;
-        } else {
-          throw err;
+          continue;
         }
+        throw err;
       }
     }
 
@@ -93,123 +187,45 @@ app.post("/api/ai/tts", async (req, res) => {
 
 app.post("/api/ai/chat", async (req, res) => {
   const { query, image } = req.body;
-  
+
   if (!query && !image) {
     return res.status(400).json({ error: "Query or image is required" });
   }
 
   try {
     const ai = getAI();
-    const timestamp = new Date().toISOString();
-    
-    const isDataRequest = query?.toLowerCase().includes("json") || query?.toLowerCase().includes("biometrics");
-
-    const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Reply in the user's language. Avoid medical diagnosis. For medical issues, advise consulting a doctor. Keep answers clear and easy to follow.
-
-CRITICAL formatting instructions:
-- Return PLAIN TEXT only.
-- Do NOT use any Markdown formatting, headers (such as #, ##, ###), bold formatting (such as **text**), bullet-point lists with symbols (*, -), or horizontal lines (---).
-- Simply structure your response with plain text paragraphs and clean, double line breaks (blank lines) between sections to make it extremely readable and mobile-friendly.`;
+    const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Reply in the user's language. Avoid medical diagnosis. For medical issues, advise consulting a doctor. Keep answers clear and easy to follow. Return plain text only.`;
 
     const parts: any[] = [{ text: `User Transmission: ${query || "Analyze this visual data."}` }];
-    
+
     if (image) {
       const [mimeInfo, base64Data] = image.split(",");
       const mimeType = mimeInfo.match(/:(.*?);/)?.[1] || "image/jpeg";
       parts.push({
         inlineData: {
-          data: base64Data,
-          mimeType: mimeType,
+          data: base64Data || image,
+          mimeType,
         },
       });
     }
 
-    let response;
-    let retries = 3;
-    let delay = 500;
-    let currentModel = GEMINI_MODEL;
-    
-    while (retries > 0) {
-      try {
-        console.log(`[CHAT] Requesting stream from ${currentModel}... (Attempts remaining: ${retries})`);
-        response = await ai.models.generateContentStream({
-          model: currentModel,
-          contents: { parts },
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.9,
-            topP: 0.95,
-          }
-        });
-        break;
-      } catch (err: any) {
-        retries--;
-        const errStr = String(err.message || err.status || err.code || err).toLowerCase();
-        const isTransient = errStr.includes("503") || errStr.includes("service unavailable") || errStr.includes("unavailable") || errStr.includes("high demand") || err.status === 503 || err.code === 503;
-        const isQuota = errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || err.status === 429 || err.code === 429;
-        
-        if (isQuota && currentModel === GEMINI_MODEL) {
-          console.warn(`[CHAT] Quota limit reached on ${currentModel}. Switching immediately to high-availability fallback model: gemini-3.1-flash-lite`);
-          currentModel = "gemini-3.1-flash-lite";
-          retries = 2; // Try twice with the fallback model
-          delay = 500;
-          await new Promise(resolve => setTimeout(resolve, delay));
-        } else if (isTransient && retries > 0) {
-          console.warn(`[CHAT] Transient error on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2;
-        } else if (currentModel === GEMINI_MODEL) {
-          console.warn(`[CHAT] ${GEMINI_MODEL} failed. Trying fallback model gemini-3.1-flash-lite...`);
-          currentModel = "gemini-3.1-flash-lite";
-          retries = 2; // Try twice with the fallback model
-          delay = 500;
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    // Set headers for streaming
+    const responseText = await generateAiCoachReply(ai, parts, systemPrompt);
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.setHeader("Transfer-Encoding", "chunked");
     res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-
-    if (response) {
-      for await (const chunk of response) {
-        const chunkText = chunk.text;
-        if (chunkText) {
-          res.write(chunkText);
-        }
-      }
-    }
-
-    res.end();
+    res.end(cleanPlainText(responseText));
   } catch (error: any) {
-    console.error("AI Error:", error);
-    const errorMessage = error.message || String(error);
-    
-    if (errorMessage === "MISSING_API_KEY") {
-      res.status(500).json({ 
-        error: "CRITICAL: Gemini API Key is missing. Click 'Settings' (gear icon) -> 'Secrets' -> Add 'GEMINI_API_KEY' with your key from aistudio.google.com/app/apikey" 
-      });
-    } else if (errorMessage.includes("404") || errorMessage.includes("not found")) {
-      res.status(404).json({ 
-        error: `MODEL NOT FOUND: The requested model 'gemini-3.5-flash' was not found or is not supported. ${errorMessage}` 
-      });
-    } else if (errorMessage.includes("429") || errorMessage.includes("Quota exceeded") || errorMessage.includes("limit")) {
-      res.status(429).json({ 
-        error: "QUOTA EXCEEDED: You have reached the Gemini API limit. Please try again in 24 hours or provide your own API key with higher limits." 
-      });
-    } else if (errorMessage.includes("API key not valid") || errorMessage.includes("403")) {
-      res.status(401).json({ 
-        error: "CRITICAL: The GEMINI_API_KEY provided is invalid or has expired. Please verify it in Settings -> Secrets." 
-      });
-    } else {
-      res.status(500).json({ 
-        error: `AI Error: ${errorMessage}. Please check your configuration.` 
-      });
+    console.error("AI Chat Error:", error);
+    const info = getErrorInfo(error);
+
+    if (error?.message === "MISSING_API_KEY" || info.isApiKey) {
+      return res.status(401).json({ error: "Invalid or missing Gemini API Key" });
     }
+
+    if (info.isQuota) {
+      return res.status(429).json({ error: "AI Coach is reconnecting. Please try again after a few seconds." });
+    }
+
+    res.status(503).json({ error: "AI Coach is reconnecting. Please try again after a few seconds." });
   }
 });
 
@@ -222,7 +238,7 @@ app.post("/api/ai-coach", async (req, res) => {
   }
 
   try {
-    let ai;
+    let ai: GoogleGenAI;
     try {
       ai = getAI();
     } catch (apiKeyErr: any) {
@@ -236,6 +252,7 @@ app.post("/api/ai-coach", async (req, res) => {
     if (userMessage) {
       parts.push({ text: userMessage });
     }
+
     if (image) {
       const partsOfImage = image.split(",");
       const base64Data = partsOfImage[1] || image;
@@ -244,88 +261,33 @@ app.post("/api/ai-coach", async (req, res) => {
       parts.push({
         inlineData: {
           data: base64Data,
-          mimeType: mimeType,
+          mimeType,
         },
       });
     }
 
-    let responseText = "";
-    let retries = 3;
-    let delay = 500;
-    let currentModel = process.env.GEMINI_MODEL || GEMINI_MODEL;
-    
-    while (retries > 0) {
-      try {
-        console.log(`[AI Coach API] Requesting response using model: ${currentModel} (Attempts remaining: ${retries})`);
-        const response = await ai.models.generateContent({
-          model: currentModel,
-          contents: parts,
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.8,
-            topP: 0.95,
-          },
-        });
+    const responseText = await generateAiCoachReply(ai, parts, systemPrompt);
+    const cleanedReply = cleanPlainText(responseText);
 
-        if (response && response.text) {
-          responseText = response.text;
-          break;
-        }
-        throw new Error("Empty response returned from model");
-      } catch (apiErr: any) {
-        retries--;
-        const errStr = String(apiErr.message || apiErr.status || apiErr.code || apiErr).toLowerCase();
-        const isTransient = errStr.includes("503") || errStr.includes("service unavailable") || errStr.includes("unavailable") || errStr.includes("high demand") || apiErr.status === 503 || apiErr.code === 503;
-        const isQuota = errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || apiErr.status === 429 || apiErr.code === 429;
-        
-        if (isQuota && currentModel === (process.env.GEMINI_MODEL || GEMINI_MODEL)) {
-          console.warn(`[AI Coach API] Quota limit reached on ${currentModel}. Switching immediately to high-availability fallback model: gemini-3.1-flash-lite`);
-          currentModel = "gemini-3.1-flash-lite";
-          retries = 2; // Reset retries for the fallback model
-          delay = 500;
-          await new Promise(resolve => setTimeout(resolve, delay));
-        } else if (isTransient && retries > 0) {
-          console.warn(`[AI Coach API] Transient error on ${currentModel}, retrying in ${delay}ms... (${retries} attempts left)`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2;
-        } else if (currentModel === (process.env.GEMINI_MODEL || GEMINI_MODEL)) {
-          console.warn(`[AI Coach API] ${currentModel} failed. Trying fallback model gemini-3.1-flash-lite...`);
-          currentModel = "gemini-3.1-flash-lite";
-          retries = 2; // Try twice with the lite model
-          delay = 500;
-        } else {
-          console.error(`[AI Coach API Error] Gemini API call failed:`, apiErr);
-          
-          if (errStr.includes("api_key") || errStr.includes("api key") || apiErr.status === 403 || apiErr.code === 403) {
-            return res.status(403).json({ error: "Invalid API Key" });
-          } else if (errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || apiErr.status === 429 || apiErr.code === 429) {
-            return res.status(429).json({ error: "Quota Exceeded" });
-          } else if (errStr.includes("not_found") || errStr.includes("not found") || apiErr.status === 404 || apiErr.code === 404) {
-            return res.status(404).json({ error: "Model Not Found" });
-          }
-          return res.status(500).json({ error: "AI Coach is currently busy. Please try again in a few minutes." });
-        }
-      }
-    }
-
-    // Clean up any residual markdown symbols to ensure 100% plain text as requested by user
-    const cleanedReply = responseText
-      .replace(/^#+\s*(.*?)$/gm, "$1") // Remove headers (such as #, ##, ###)
-      .replace(/\*\*([\s\S]*?)\*\*/g, "$1") // Remove bold text notation
-      .replace(/__([\s\S]*?)__/g, "$1")
-      .replace(/\*([\s\S]*?)\*/g, "$1") // Remove italic text notation
-      .replace(/_([\s\S]*?)_/g, "$1")
-      .replace(/^\s*[\*\-]\s+/gm, "• ") // Replace leading asterisks or dashes in lists with a simple bullet
-      .replace(/`([^`]+)`/g, "$1") // Remove backticks
-      .replace(/^\s*[\-\*_]{3,}\s*$/gm, "") // Remove horizontal separation lines
-      .replace(/\n{3,}/g, "\n\n") // Normalize excessive empty lines
-      .trim();
-
-    console.log(`[AI Coach API] Successfully generated plain text response`);
+    console.log("[AI Coach API] Successfully generated stable response");
     res.json({ reply: cleanedReply });
   } catch (error: any) {
     console.error("[AI Coach Backend Terminal Error]:", error);
-    res.status(500).json({ error: "AI Coach is currently busy. Please try again in a few minutes." });
+    const info = getErrorInfo(error);
+
+    if (error?.message === "MISSING_API_KEY" || info.isApiKey) {
+      return res.status(403).json({ error: "Invalid API Key" });
+    }
+
+    if (info.isQuota) {
+      return res.status(429).json({ error: "AI Coach is reconnecting. Please try again after a few seconds." });
+    }
+
+    if (info.isModel) {
+      return res.status(503).json({ error: "AI Coach model is switching. Please try again after a few seconds." });
+    }
+
+    res.status(503).json({ error: "AI Coach is reconnecting. Please try again after a few seconds." });
   }
 });
 
@@ -347,12 +309,13 @@ const initServer = async () => {
     }
 
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`>>> [SERVER START] Fitness Mantra Protocol Initialized`);
+      console.log(">>> [SERVER START] Fitness Mantra Protocol Initialized");
       console.log(`>>> [INFO] Port: ${PORT}`);
-      console.log(`>>> [INFO] Host: 0.0.0.0`);
+      console.log(">>> [INFO] Host: 0.0.0.0");
       console.log(`>>> [INFO] Mode: ${process.env.NODE_ENV || "development"}`);
+      console.log(`>>> [INFO] AI Models: ${FALLBACK_GEMINI_MODELS.join(", ")}`);
       console.log(`>>> [INFO] Date: ${new Date().toISOString()}`);
-      console.log(`>>> [INFO] Owner: Manish Bhagat`);
+      console.log(">>> [INFO] Owner: Manish Bhagat");
     });
   }
 };
