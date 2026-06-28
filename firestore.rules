@@ -31,9 +31,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'manish55bhagat@gmail.com' || (
+        ('email' in request.auth.token && request.auth.token.email.lower() == 'manish55bhagat@gmail.com') || (
           exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin'
         )
       );
     }
@@ -132,12 +132,17 @@ service cloud.firestore {
     }
 
     function isValidDietRequest(data) {
-      return data.keys().hasAll(['fullName', 'email', 'contactPhone', 'age', 'weight', 'fitnessGoal', 'foodPreference', 'medicalIssue', 'createdAt', 'userId'])
+      return data.keys().hasAll(['userId', 'userEmail', 'goal', 'dietType', 'allergies', 'targetWeight', 'notes', 'status', 'timestamp'])
           && data.keys().size() <= 12
-          && data.fullName is string
-          && data.email is string
-          && data.contactPhone is string
-          && data.userId is string;
+          && data.userId is string
+          && data.userEmail is string
+          && data.goal is string
+          && data.dietType is string
+          && data.allergies is string
+          && data.targetWeight is number
+          && data.notes is string
+          && data.status is string
+          && data.timestamp is string;
     }
 
     // Collection Rules
@@ -161,7 +166,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && isValidUserProfile(incoming(), true)
-                     && incoming().role == (incoming().email == 'manish55bhagat@gmail.com' ? 'admin' : 'user');
+                     && incoming().role == (incoming().email.lower() == 'manish55bhagat@gmail.com' ? 'admin' : 'user');
       allow update: if isOwner(userId) && isValidUserProfile(incoming(), false) 
                      && (!('uid' in incoming()) || incoming().uid == existing().uid)
                      && (!('email' in incoming()) || incoming().email == existing().email)
