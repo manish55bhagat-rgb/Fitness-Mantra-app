@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { motion } from "motion/react";
 import Navbar from "./components/layout/Navbar";
@@ -36,9 +36,10 @@ const WorkoutPlayer = lazy(() => import("./pages/WorkoutPlayer"));
 function AppContent() {
   const location = useLocation();
   const hideFooter = location.pathname === "/ai-assistant";
+  const showMobileBusinessCTA = !["/ai-assistant", "/subscription", "/login"].includes(location.pathname);
 
   return (
-    <div className="min-h-screen bg-deep-black text-white selection:bg-neon-green selection:text-black flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-deep-black text-white selection:bg-neon-green selection:text-black flex flex-col relative overflow-x-hidden pb-20 sm:pb-0">
       <FloatingBackground />
       <Navbar />
       <OnboardingModal />
@@ -93,12 +94,37 @@ function AppContent() {
       </main>
       {!hideFooter && <Footer />}
       
+      {/* Mobile Business CTA Bar */}
+      {showMobileBusinessCTA && (
+        <div className="fixed bottom-0 left-0 right-0 z-[125] sm:hidden bg-black/95 backdrop-blur-2xl border-t border-neon-green/20 px-3 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center gap-2">
+            <Link
+              to="/subscription"
+              className="flex-1 bg-neon-green text-black rounded-xl py-3 text-center text-[10px] font-black uppercase tracking-widest shadow-[0_0_18px_rgba(57,255,20,0.25)]"
+            >
+              Start Plan ₹299
+            </Link>
+            <a
+              href="https://wa.me/919765690437?text=Hi%20Manish,%20I%20want%20to%20start%20Fitness%20Mantra%20plan.%20Please%20guide%20me."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-3 rounded-xl bg-white/8 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest"
+            >
+              WhatsApp
+            </a>
+          </div>
+          <p className="mt-2 text-center text-[8px] text-white/35 font-bold uppercase tracking-widest">
+            AI + Human fitness guidance • Indian diet support
+          </p>
+        </div>
+      )}
+      
       {/* Floating WhatsApp Button */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, type: "spring", stiffness: 100 }}
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[120] group"
+        className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-[120] group"
       >
         <div className="absolute right-16 top-1/2 -translate-y-1/2 bg-black/95 text-neon-green font-black uppercase text-[8px] tracking-[0.25em] px-3 py-2 rounded-xl border border-neon-green/20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-2xl backdrop-blur-md hidden sm:block">
           Chat on WhatsApp
