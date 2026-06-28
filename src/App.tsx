@@ -10,6 +10,7 @@ import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import FloatingBackground from "./components/layout/FloatingBackground";
 import Programs from "./pages/Programs";
+import BusinessConversionSections from "./components/business/BusinessConversionSections";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -48,7 +49,7 @@ function AppContent() {
           <div className="w-12 h-12 border-2 border-neon-green border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(57,255,20,0.3)]"></div>
         </div>}>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<><Home /><BusinessConversionSections /></>} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/exercises" element={<Exercises />} />
             <Route path="/exercises/:id" element={
