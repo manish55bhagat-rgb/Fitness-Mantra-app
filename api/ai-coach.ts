@@ -47,6 +47,7 @@ const getErrorType = (error: any) => {
     errStr.includes("quota") ||
     errStr.includes("resource_exhausted") ||
     errStr.includes("rate limit") ||
+    errStr.includes("too many requests") ||
     error?.status === 429 ||
     error?.code === 429
   ) {
@@ -90,12 +91,13 @@ export default async function handler(req: any, res: any) {
     parts.push({ inlineData: { data: base64Data, mimeType } });
   }
 
-  const models = [
+  const models = Array.from(new Set([
     process.env.GEMINI_MODEL,
-    "gemini-2.5-flash",
+    "gemini-2.0-flash-lite",
     "gemini-2.0-flash",
+    "gemini-1.5-flash-8b",
     "gemini-1.5-flash"
-  ].filter(Boolean) as string[];
+  ].filter(Boolean))) as string[];
 
   let lastError: any = null;
 
@@ -121,7 +123,9 @@ export default async function handler(req: any, res: any) {
       lastError = error;
       console.error(`[AI Coach] Model failed: ${model}`, error?.message || error);
       const errorType = getErrorType(error);
-      if (errorType === "api_key" || errorType === "quota") break;
+      if (errorType === "api_key") break;
+      // Quota can be model-specific, so continue trying cheaper fallback models.
+      continue;
     }
   }
 
