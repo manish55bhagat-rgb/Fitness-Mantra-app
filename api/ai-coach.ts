@@ -1,27 +1,63 @@
 import { GoogleGenAI } from "@google/genai";
 
-const getAI = () => {
+const cleanApiKey = () => {
   let apiKey = process.env.GEMINI_API_KEY;
   if (apiKey) {
-    apiKey = apiKey.trim().replace(/^["'](.+)["']$/, '$1');
+    apiKey = apiKey.trim().replace(/^["'](.+)["']$/, "$1");
   }
 
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.length < 10) {
     throw new Error("MISSING_API_KEY");
   }
 
-  return new GoogleGenAI({ 
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
-  });
+  return apiKey;
+};
+
+const createAI = () => new GoogleGenAI({ apiKey: cleanApiKey() });
+
+const cleanReplyText = (text: string) =>
+  text
+    .replace(/^#+\s*(.*?)$/gm, "$1")
+    .replace(/\*\*([\s\S]*?)\*\*/g, "$1")
+    .replace(/__([\s\S]*?)__/g, "$1")
+    .replace(/\*([\s\S]*?)\*/g, "$1")
+    .replace(/_([\s\S]*?)_/g, "$1")
+    .replace(/^\s*[\*\-]\s+/gm, "• ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*[\-\*_]{3,}\s*$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+const getErrorType = (error: any) => {
+  const errStr = String(error?.message || error?.status || error?.code || error).toLowerCase();
+
+  if (
+    errStr.includes("api_key") ||
+    errStr.includes("api key") ||
+    errStr.includes("missing_api_key") ||
+    error?.status === 403 ||
+    error?.code === 403 ||
+    error?.status === 401 ||
+    error?.code === 401
+  ) {
+    return "api_key";
+  }
+
+  if (
+    errStr.includes("quota") ||
+    errStr.includes("resource_exhausted") ||
+    errStr.includes("rate limit") ||
+    error?.status === 429 ||
+    error?.code === 429
+  ) {
+    return "quota";
+  }
+
+  return "unknown";
 };
 
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
@@ -32,104 +68,71 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: "Message or image is required" });
   }
 
-  let ai;
+  let ai: GoogleGenAI;
   try {
-    ai = getAI();
-  } catch (apiKeyErr: any) {
-    console.error("[AI Coach API Config Error] Missing or invalid GEMINI_API_KEY:", apiKeyErr.message || apiKeyErr);
+    ai = createAI();
+  } catch (error) {
     return res.status(403).json({ error: "AI Coach setup is pending. Please contact Fitness Mantra support." });
   }
 
-  const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Reply in the user's language. If user writes Marathi mde, Marathi madhe, or मराठीत, reply in Marathi. Avoid medical diagnosis. For medical issues, advise consulting a doctor. Keep answers clear and easy to follow. Return plain text only.`;
+  const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Reply in the user's language. If the user writes in Marathi or Hindi, reply in that language. Avoid medical diagnosis, prescriptions, treatment claims, and guaranteed results. For medical issues, advise consulting a qualified doctor. Keep answers clear, short, and practical. Return plain text only.`;
 
   const parts: any[] = [];
   if (userMessage) {
-    parts.push({ text: userMessage });
+    parts.push({ text: String(userMessage) });
   }
+
   if (image) {
-    const partsOfImage = image.split(",");
-    const base64Data = partsOfImage[1] || image;
-    const mimeInfo = partsOfImage[0];
+    const imageParts = String(image).split(",");
+    const base64Data = imageParts[1] || imageParts[0];
+    const mimeInfo = imageParts[0] || "";
     const mimeType = mimeInfo.match(/:(.*?);/)?.[1] || "image/jpeg";
-    parts.push({
-      inlineData: {
-        data: base64Data,
-        mimeType: mimeType,
-      },
-    });
+    parts.push({ inlineData: { data: base64Data, mimeType } });
   }
 
-  const handleGenAIError = (err: any) => {
-    const errStr = String(err.message || err.status || err.code || err).toLowerCase();
-    if (errStr.includes("quota") || errStr.includes("resource_exhausted") || errStr.includes("limit") || err.status === 429 || err.code === 429) {
-      return res.status(429).json({ error: "AI Coach is temporarily busy due to high usage. Please try again later." });
-    }
-    if (errStr.includes("api_key") || errStr.includes("api key") || errStr.includes("missing_api_key") || err.status === 403 || err.code === 403 || err.status === 401 || err.code === 401) {
-      return res.status(403).json({ error: "AI Coach setup is pending. Please contact Fitness Mantra support." });
-    }
-    return res.status(500).json({ error: "AI Coach is currently busy. Please try again in a few minutes." });
-  };
+  const models = [
+    process.env.GEMINI_MODEL,
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
+  ].filter(Boolean) as string[];
 
-  let responseText = "";
-  let currentModel = "gemini-1.5-flash";
+  let lastError: any = null;
 
-  try {
-    console.log(`[AI Coach Vercel API] Requesting response using model: ${currentModel}`);
-    const response = await ai.models.generateContent({
-      model: currentModel,
-      contents: parts,
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.8,
-        topP: 0.95,
-      },
-    });
-
-    if (response && response.text) {
-      responseText = response.text;
-    } else {
-      throw new Error("Empty response returned from model");
-    }
-  } catch (error: any) {
-    const errStr = String(error.message || error.status || error.code || error).toLowerCase();
-    // If the error is an API key or quota issue, fail fast or fallback
-    console.warn(`[AI Coach Vercel API] Model ${currentModel} failed, trying fallback model gemini-1.5-flash-8b...`, error);
-    currentModel = "gemini-1.5-flash-8b";
-    
+  for (const model of models) {
     try {
       const response = await ai.models.generateContent({
-        model: currentModel,
-        contents: parts,
+        model,
+        contents: [{ role: "user", parts }],
         config: {
           systemInstruction: systemPrompt,
-          temperature: 0.8,
-          topP: 0.95,
+          temperature: 0.7,
+          topP: 0.9,
         },
       });
 
-      if (response && response.text) {
-        responseText = response.text;
-      } else {
-        throw new Error("Empty response returned from fallback model");
+      const reply = response?.text;
+      if (reply && reply.trim()) {
+        return res.status(200).json({ reply: cleanReplyText(reply) });
       }
-    } catch (fallbackError: any) {
-      console.error(`[AI Coach Vercel API Error] Both models failed:`, fallbackError);
-      return handleGenAIError(fallbackError);
+
+      lastError = new Error(`Empty response from ${model}`);
+    } catch (error: any) {
+      lastError = error;
+      console.error(`[AI Coach] Model failed: ${model}`, error?.message || error);
+      const errorType = getErrorType(error);
+      if (errorType === "api_key" || errorType === "quota") break;
     }
   }
 
-  // Clean up any residual markdown symbols to ensure 100% plain text as requested by user
-  const cleanedReply = responseText
-    .replace(/^#+\s*(.*?)$/gm, "$1") // Remove headers (such as #, ##, ###)
-    .replace(/\*\*([\s\S]*?)\*\*/g, "$1") // Remove bold text notation
-    .replace(/__([\s\S]*?)__/g, "$1")
-    .replace(/\*([\s\S]*?)\*/g, "$1") // Remove italic text notation
-    .replace(/_([\s\S]*?)_/g, "$1")
-    .replace(/^\s*[\*\-]\s+/gm, "• ") // Replace leading asterisks or dashes in lists with a simple bullet
-    .replace(/`([^`]+)`/g, "$1") // Remove backticks
-    .replace(/^\s*[\-\*_]{3,}\s*$/gm, "") // Remove horizontal separation lines
-    .replace(/\n{3,}/g, "\n\n") // Normalize excessive empty lines
-    .trim();
+  const errorType = getErrorType(lastError);
+  if (errorType === "api_key") {
+    return res.status(403).json({ error: "AI Coach setup is pending. Please contact Fitness Mantra support." });
+  }
 
-  return res.status(200).json({ reply: cleanedReply });
+  if (errorType === "quota") {
+    return res.status(429).json({ error: "AI Coach is temporarily busy due to high usage. Please try again later." });
+  }
+
+  return res.status(500).json({ error: "AI Coach is currently busy. Please try again in a few minutes." });
 }
