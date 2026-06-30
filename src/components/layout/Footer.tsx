@@ -49,12 +49,16 @@ export default function Footer() {
           <div>
             <h4 className="font-extrabold text-[11px] uppercase tracking-[0.3em] mb-6 text-white/30">Quick Links</h4>
             <ul className="space-y-3.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
-              <li><Link to="/about" className="hover:text-neon-green transition-colors">About Us</Link></li>
-              <li><Link to="/faq" className="hover:text-neon-green transition-colors">FAQ</Link></li>
-              <li><Link to="/blog" className="hover:text-neon-green transition-colors">Blog</Link></li>
-              <li><Link to="/exercises" className="hover:text-neon-green transition-colors">Workout Library</Link></li>
+              <li><Link to="/" className="hover:text-neon-green transition-colors">Home</Link></li>
+              <li><Link to="/programs" className="hover:text-neon-green transition-colors">Programs</Link></li>
+              <li><Link to="/diet" className="hover:text-neon-green transition-colors">Diet Plans</Link></li>
+              <li><Link to="/exercises" className="hover:text-neon-green transition-colors">Exercises</Link></li>
               <li><Link to="/bmi-calculator" className="hover:text-neon-green transition-colors">BMI Calculator</Link></li>
-              <li><Link to="/calorie-calculator" className="hover:text-neon-green transition-colors">Calorie Calculator</Link></li>
+              <li><Link to="/ai-assistant" className="hover:text-neon-green transition-colors">AI Coach</Link></li>
+              <li><Link to="/privacy-policy" className="hover:text-neon-green transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-and-conditions" className="hover:text-neon-green transition-colors">Terms & Conditions</Link></li>
+              <li><Link to="/refund-policy" className="hover:text-neon-green transition-colors">Refund Policy</Link></li>
+              <li><Link to="/contact" className="hover:text-neon-green transition-colors">Contact</Link></li>
             </ul>
           </div>
 

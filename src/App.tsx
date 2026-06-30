@@ -32,6 +32,9 @@ const PerformancePortal = lazy(() => import("./pages/PerformancePortal"));
 const AuthPage = lazy(() => import("./pages/Auth"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const WorkoutPlayer = lazy(() => import("./pages/WorkoutPlayer"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 
 function AppContent() {
   const location = useLocation();
@@ -83,6 +86,9 @@ function AppContent() {
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />
