@@ -168,6 +168,33 @@ export default function Home() {
       };
 
       await setDoc(doc(db, "leads", leadId), leadData);
+
+      // Generate WhatsApp message automatically
+      const bookingTime = new Date().toLocaleString();
+      const message = `🏋️ NEW FITNESS MANTRA CONSULTATION
+
+👤 Full Name: ${leadData.fullName}
+📧 Email: ${leadData.email}
+📞 Phone: ${leadData.contactPhone}
+💬 WhatsApp: ${leadData.whatsApp}
+🎂 Age: ${leadData.age}
+📏 Height: ${leadData.height} cm
+⚖️ Weight: ${leadData.weight} kg
+👨 Gender: ${leadData.gender}
+🎯 Fitness Goal: ${leadData.fitnessGoal}
+🥗 Food Preference: ${leadData.foodPreference}
+📦 Selected Plan: ${leadData.selectedPlan}
+🩺 Medical Issue: ${leadData.medicalIssue}
+
+🌐 Source:
+Fitness Mantra Website
+
+Booking Time:
+${bookingTime}`;
+
+      // Open WhatsApp automatically in a new tab
+      window.open(`https://wa.me/919765690437?text=${encodeURIComponent(message)}`, "_blank");
+
       setSuccess(true);
       setFormData({
         fullName: "",
