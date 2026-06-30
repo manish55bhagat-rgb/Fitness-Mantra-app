@@ -35,6 +35,7 @@ const WorkoutPlayer = lazy(() => import("./pages/WorkoutPlayer"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
+const CancellationPolicy = lazy(() => import("./pages/CancellationPolicy"));
 
 function AppContent() {
   const location = useLocation();
@@ -89,6 +90,7 @@ function AppContent() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/cancellation-policy" element={<CancellationPolicy />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />
