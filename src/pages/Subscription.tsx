@@ -224,8 +224,8 @@ export default function Subscription() {
           </div>
           <div className="flex flex-col items-center sm:items-end font-mono">
             <span className="text-[10px] font-black tracking-widest text-white/30 uppercase">DIRECT DISPATCH</span>
-            <a href="mailto:manish456bhagat@gmail.com" className="text-neon-green text-xs font-bold hover:underline">
-              manish456bhagat@gmail.com
+            <a href="mailto:manish55bhagat@gmail.com" className="text-neon-green text-xs font-bold hover:underline">
+              manish55bhagat@gmail.com
             </a>
           </div>
         </div>
