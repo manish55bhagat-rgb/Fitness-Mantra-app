@@ -61,14 +61,14 @@ function clean(text: string) {
     .trim();
 }
 
-function backupReply(message?: string) {
+function localCoachReply(message?: string) {
   const text = String(message || "").toLowerCase();
   const isMarathi = /[\u0900-\u097F]/.test(String(message || "")) || text.includes("mde") || text.includes("marathi");
 
   if (isMarathi) {
     return `Fitness Mantra Coach
 
-सध्या AI service busy आहे, पण basic safe guide:
+तुमच्यासाठी safe quick guide:
 
 • रोज 30 ते 45 मिनिटे walk करा
 • प्रत्येक meal मध्ये protein ठेवा
@@ -82,11 +82,28 @@ Personal plan साठी age, height, weight, goal आणि diet preference �
 हे general fitness guidance आहे, medical advice नाही.`;
   }
 
+  if (text.includes("diet") || text.includes("fat") || text.includes("weight") || text.includes("calorie")) {
+    return `Fitness Mantra Coach
+
+Safe quick fat-loss guide:
+
+Morning: Water + oats, poha, upma, eggs, sprouts or dal chilla.
+
+Lunch: Roti/bhakri + dal/usal/paneer/egg/chicken + vegetables + salad.
+
+Evening: Fruit, roasted chana, curd or tea without sugar.
+
+Dinner: Keep it light. Avoid fried food, sweets, bakery items and cold drinks.
+
+Daily target: 30 to 45 minutes walking, 2 to 3 liters water, and 7 to 8 hours sleep.
+
+This is general fitness guidance only.`;
+  }
+
   return `Fitness Mantra Coach
 
-AI service is under high usage right now, but your request is received.
+Safe quick guide:
 
-Basic safe guide:
 • Walk 30 to 45 minutes daily
 • Eat protein in every meal
 • Add vegetables and salad
@@ -181,7 +198,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    return res.status(200).json({ reply: backupReply(userMessage) });
+    return res.status(200).json({ reply: localCoachReply(userMessage) });
   } catch (error: any) {
     console.error("[AI Coach] Terminal error", error?.message || error);
 
@@ -189,6 +206,6 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: "GEMINI_API_KEY is missing in Vercel Environment Variables." });
     }
 
-    return res.status(200).json({ reply: backupReply(userMessage) });
+    return res.status(200).json({ reply: localCoachReply(userMessage) });
   }
 }
