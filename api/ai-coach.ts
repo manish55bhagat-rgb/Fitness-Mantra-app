@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
-const FALLBACK_MODELS = ["gemini-2.0-flash-lite", "gemini-1.5-flash"];
+const FALLBACK_MODELS = ["gemini-2.0-flash-lite"];
 
 function getKey() {
   const key = (process.env.GEMINI_API_KEY || "").trim().replace(/^["'](.+)["']$/, "$1");
@@ -27,7 +27,7 @@ function buildParts(userMessage?: string, image?: string) {
   const parts: any[] = [];
 
   if (userMessage) {
-    parts.push({ text: String(userMessage) });
+    parts.push({ text: String(userMessage).slice(0, 1200) });
   }
 
   if (image) {
@@ -117,30 +117,23 @@ For a personal plan, share age, height, weight, goal and diet preference.
 This is general fitness guidance only.`;
 }
 
+function getErrorText(error: any) {
+  return String(error?.message || error?.status || error?.code || error).toLowerCase();
+}
+
 function isKeyError(error: any) {
-  const text = String(error?.message || error?.status || error?.code || error).toLowerCase();
+  const text = getErrorText(error);
   return text.includes("api_key") || text.includes("api key") || error?.status === 401 || error?.status === 403;
 }
 
-function shouldTryFallback(error: any) {
-  const text = String(error?.message || error?.status || error?.code || error).toLowerCase();
-  return (
-    text.includes("not_found") ||
-    text.includes("not found") ||
-    text.includes("quota") ||
-    text.includes("resource_exhausted") ||
-    text.includes("limit") ||
-    text.includes("503") ||
-    text.includes("service unavailable") ||
-    text.includes("unavailable") ||
-    text.includes("high demand") ||
-    error?.status === 404 ||
-    error?.code === 404 ||
-    error?.status === 429 ||
-    error?.code === 429 ||
-    error?.status === 503 ||
-    error?.code === 503
-  );
+function isQuotaError(error: any) {
+  const text = getErrorText(error);
+  return text.includes("quota") || text.includes("resource_exhausted") || error?.status === 429 || error?.code === 429;
+}
+
+function isModelNotFound(error: any) {
+  const text = getErrorText(error);
+  return text.includes("not_found") || text.includes("not found") || error?.status === 404 || error?.code === 404;
 }
 
 export default async function handler(req: any, res: any) {
@@ -192,7 +185,13 @@ export default async function handler(req: any, res: any) {
           return res.status(401).json({ error: "Invalid Gemini API key on server." });
         }
 
-        if (!shouldTryFallback(error)) {
+        // Important: quota errors should NOT try more fallback models, otherwise one user message makes multiple paid/quota calls.
+        if (isQuotaError(error)) {
+          return res.status(200).json({ reply: localCoachReply(userMessage) });
+        }
+
+        // Try the next model only when current model is not available.
+        if (!isModelNotFound(error)) {
           break;
         }
       }
