@@ -49,16 +49,10 @@ export default function Footer() {
           <div>
             <h4 className="font-extrabold text-[11px] uppercase tracking-[0.3em] mb-6 text-white/30">Quick Links</h4>
             <ul className="space-y-3.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
-              <li><Link to="/" className="hover:text-neon-green transition-colors">Home</Link></li>
-              <li><Link to="/programs" className="hover:text-neon-green transition-colors">Programs</Link></li>
-              <li><Link to="/diet" className="hover:text-neon-green transition-colors">Diet Plans</Link></li>
-              <li><Link to="/exercises" className="hover:text-neon-green transition-colors">Exercises</Link></li>
-              <li><Link to="/bmi-calculator" className="hover:text-neon-green transition-colors">BMI Calculator</Link></li>
-              <li><Link to="/ai-assistant" className="hover:text-neon-green transition-colors">AI Coach</Link></li>
               <li><Link to="/privacy-policy" className="hover:text-neon-green transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms-and-conditions" className="hover:text-neon-green transition-colors">Terms & Conditions</Link></li>
               <li><Link to="/refund-policy" className="hover:text-neon-green transition-colors">Refund Policy</Link></li>
-              <li><Link to="/contact" className="hover:text-neon-green transition-colors">Contact</Link></li>
+              <li><Link to="/contact" className="hover:text-neon-green transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
@@ -70,8 +64,8 @@ export default function Footer() {
                 <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest">Contact Email</span>
                 <div className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-neon-green shrink-0" />
-                  <a href="mailto:manish456bhagat@gmail.com" className="text-[11px] font-bold tracking-tight text-white/70 hover:text-neon-green break-all transition-colors">
-                    manish456bhagat@gmail.com
+                  <a href="mailto:manish55bhagat@gmail.com" className="text-[11px] font-bold tracking-tight text-white/70 hover:text-neon-green break-all transition-colors">
+                    manish55bhagat@gmail.com
                   </a>
                 </div>
               </div>
@@ -86,7 +80,7 @@ export default function Footer() {
               </div>
               <div className="pt-2">
                 <a 
-                  href="mailto:manish456bhagat@gmail.com"
+                  href="mailto:manish55bhagat@gmail.com"
                   className="inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 bg-neon-green text-black font-black text-[10px] uppercase tracking-wider rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-[0_4px_15px_rgba(57,255,20,0.25)]"
                 >
                   <Mail className="w-3.5 h-3.5" /> Write to Us
