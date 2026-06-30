@@ -27,9 +27,6 @@ const About = lazy(() => import("./pages/About"));
 const Blog = lazy(() => import("./pages/Blog"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const TermsConditions = lazy(() => import("./pages/TermsConditions"));
-const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const WorkoutDetail = lazy(() => import("./pages/WorkoutDetail"));
 const PerformancePortal = lazy(() => import("./pages/PerformancePortal"));
 const AuthPage = lazy(() => import("./pages/Auth"));
@@ -86,9 +83,6 @@ function AppContent() {
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-and-conditions" element={<TermsConditions />} />
-            <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />
