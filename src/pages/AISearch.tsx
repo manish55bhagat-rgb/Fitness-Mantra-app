@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Send, Bot, Sparkles, MessageSquare, Activity, ShieldCheck, Zap, Image as ImageIcon, X } from "lucide-react";
+import { Send, Bot, Sparkles, Activity, Image as ImageIcon, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-import { generateContentStream } from "../services/ai";
 import { compressImage } from "../lib/imageCompressor";
 
 interface Message {
@@ -44,14 +43,14 @@ function getFallbackCoachReply(message: string): string {
   const isMarathi = /[\u0900-\u097F]/.test(message) || msg.includes("mde") || msg.includes("marathi");
 
   if (isMarathi) {
-    return "Fitness Mantra Coach\n\nसध्या AI server response मिळायला वेळ लागत आहे, पण basic safe guide:\n\n• रोज 30 ते 45 मिनिटे चालणे\n• प्रत्येक meal मध्ये protein ठेवा\n• गोड, तळलेले आणि cold drinks कमी करा\n• पाणी 2 ते 3 लिटर\n• झोप 7 ते 8 तास\n• Workout हळूहळू सुरू करा\n\nतुमचं age, height, weight, goal आणि diet preference दिलं तर मी specific guide देऊ शकतो.\n\nहे general fitness guidance आहे, medical advice नाही.";
+    return "Fitness Mantra Coach\n\nतुमच्यासाठी safe quick guide:\n\n• रोज 30 ते 45 मिनिटे चालणे\n• प्रत्येक meal मध्ये protein ठेवा\n• गोड, तळलेले आणि cold drinks कमी करा\n• पाणी 2 ते 3 लिटर\n• झोप 7 ते 8 तास\n• Workout हळूहळू सुरू करा\n\nतुमचं age, height, weight, goal आणि diet preference दिलं तर मी specific guide देऊ शकतो.\n\nहे general fitness guidance आहे, medical advice नाही.";
   }
 
   if (msg.includes("diet") || msg.includes("fat") || msg.includes("weight") || msg.includes("calorie")) {
-    return "Fitness Mantra Coach\n\nAI server response is slow right now, but here is a safe basic fat-loss guide:\n\nMorning: Water + oats, poha, upma, eggs, sprouts or dal chilla.\n\nLunch: Roti/bhakri + dal/usal/paneer/egg/chicken + vegetables + salad.\n\nEvening: Fruit, roasted chana, curd or tea without sugar.\n\nDinner: Keep it light. Avoid fried food, sweets, bakery items and cold drinks.\n\nDaily target: 30 to 45 minutes walking, 2 to 3 liters water, and 7 to 8 hours sleep.\n\nThis is general fitness guidance only.";
+    return "Fitness Mantra Coach\n\nSafe basic fat-loss guide:\n\nMorning: Water + oats, poha, upma, eggs, sprouts or dal chilla.\n\nLunch: Roti/bhakri + dal/usal/paneer/egg/chicken + vegetables + salad.\n\nEvening: Fruit, roasted chana, curd or tea without sugar.\n\nDinner: Keep it light. Avoid fried food, sweets, bakery items and cold drinks.\n\nDaily target: 30 to 45 minutes walking, 2 to 3 liters water, and 7 to 8 hours sleep.\n\nThis is general fitness guidance only.";
   }
 
-  return "Fitness Mantra Coach\n\nAI server response is slow right now, but here is a safe basic guide:\n\n• Walk 30 to 45 minutes daily\n• Eat protein in every meal\n• Keep vegetables and salad in lunch/dinner\n• Reduce sugar, fried food and cold drinks\n• Drink 2 to 3 liters water\n• Sleep 7 to 8 hours\n• Train 4 to 5 days per week with light progression\n\nShare your age, height, weight, goal and diet preference for a more specific plan.\n\nThis is general fitness guidance only.";
+  return "Fitness Mantra Coach\n\nSafe basic guide:\n\n• Walk 30 to 45 minutes daily\n• Eat protein in every meal\n• Keep vegetables and salad in lunch/dinner\n• Reduce sugar, fried food and cold drinks\n• Drink 2 to 3 liters water\n• Sleep 7 to 8 hours\n• Train 4 to 5 days per week with light progression\n\nShare your age, height, weight, goal and diet preference for a more specific plan.\n\nThis is general fitness guidance only.";
 }
 
 export default function AISearch() {
@@ -151,7 +150,7 @@ export default function AISearch() {
 
       try {
         const data = await response.json();
-        reply = data?.reply || data?.error || "";
+        reply = data?.reply || "";
       } catch {
         reply = "";
       }
@@ -270,9 +269,9 @@ export default function AISearch() {
           <form onSubmit={handleSearch} className="relative flex items-center gap-3 md:gap-4">
             <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
             <div className="relative flex-1 group/input">
-              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} disabled={loading} placeholder="Ask our AI Coach about exercises, diet, or weight loss..." className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-5 md:px-10 py-4 md:py-6 pr-24 md:pr-32 text-xs md:text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans disabled:opacity-50" />
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} className={`absolute right-14 md:right-20 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${selectedImage ? "text-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-white/30 hover:text-white hover:bg-white/5"} disabled:opacity-30`}><ImageIcon className="w-5 h-5 md:w-6 md:h-6" /></button>
-              <button type="submit" disabled={(!query.trim() && !selectedImage) || loading} className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-neon-green text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 shadow-[0_10px_30px_rgba(57,255,20,0.4)]"><Send className="w-5 h-5 md:w-6 md:h-6" /></button>
+              <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} disabled={loading || isCompressing} placeholder={isCompressing ? "Optimizing image for mobile..." : "Ask our AI Coach about exercises, diet, or weight loss..."} className="w-full bg-os-black/60 border border-white/10 rounded-[30px] px-5 md:px-10 py-4 md:py-6 pr-24 md:pr-32 text-xs md:text-base font-semibold focus:outline-none focus:border-neon-green/40 focus:ring-4 focus:ring-neon-green/5 transition-all placeholder:text-white/20 backdrop-blur-3xl shadow-2xl text-white font-sans disabled:opacity-50" />
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isCompressing} className={`absolute right-14 md:right-20 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all ${selectedImage ? "text-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(57,255,20,0.3)]" : "text-white/30 hover:text-white hover:bg-white/5"} disabled:opacity-30`}><ImageIcon className="w-5 h-5 md:w-6 md:h-6" /></button>
+              <button type="submit" disabled={(!query.trim() && !selectedImage) || loading || isCompressing} className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-neon-green text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 shadow-[0_10px_30px_rgba(57,255,20,0.4)]"><Send className="w-5 h-5 md:w-6 md:h-6" /></button>
             </div>
           </form>
         </div>
