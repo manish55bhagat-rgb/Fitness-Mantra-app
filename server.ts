@@ -1,13 +1,23 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+let __filename = "";
+let __dirname = "";
+try {
+  if (typeof import.meta !== "undefined" && import.meta.url) {
+    __filename = fileURLToPath(import.meta.url);
+    __dirname = path.dirname(__filename);
+  }
+} catch (e) {
+  console.warn("Could not determine __filename and __dirname using ESM import.meta.url", e);
+}
+if (!__dirname) {
+  __dirname = process.cwd();
+}
 
 const app = express();
 const PORT = 3000;
@@ -414,10 +424,25 @@ app.post("/api/ai-coach", async (req, res) => {
   }
 });
 
+// Global 404 handler for API routes
+app.use("/api/*", (req, res) => {
+  res.status(404).json({ error: `API endpoint '${req.originalUrl}' not found` });
+});
+
+// Global error handler for API routes
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("Unhandled API Error:", err);
+  if (req.path.startsWith("/api/")) {
+    return res.status(500).json({ error: err.message || "Internal Server Error" });
+  }
+  next(err);
+});
+
 // Vite and Startup
 const initServer = async () => {
   if (!process.env.VERCEL) {
     if (process.env.NODE_ENV !== "production") {
+      const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",
