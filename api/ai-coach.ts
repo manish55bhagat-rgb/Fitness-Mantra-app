@@ -25,7 +25,16 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { message, query, image } = req.body || {};
+  let body = req.body;
+  if (body && typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      // Ignored
+    }
+  }
+
+  const { message, query, image } = body || {};
   const userMessage = message || query;
 
   if (!userMessage && !image) {
