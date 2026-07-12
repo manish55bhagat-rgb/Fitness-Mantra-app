@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Check, Shield, Zap, Crown, Star, Sparkles, Loader2, ArrowRight, 
   ShieldCheck, HelpCircle, X, Smartphone, QrCode, CreditCard, 
-  ExternalLink, AlertTriangle, ArrowUpRight 
+  ExternalLink, AlertTriangle, ArrowUpRight, Copy 
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth, SubscriptionLog } from "../context/AuthContext";
@@ -88,6 +88,25 @@ export default function PremiumMembership() {
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
   const [activeSubDetails, setActiveSubDetails] = useState<any>(null);
   
+  // Custom states for mobile iframe bypass and UPI convenience
+  const [isIframe, setIsIframe] = useState<boolean>(false);
+  const [copiedUPI, setCopiedUPI] = useState<boolean>(false);
+  const [upiRefId, setUpiRefId] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      setIsIframe(window.self !== window.top);
+    } catch (e) {
+      setIsIframe(true);
+    }
+  }, []);
+
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText("manish55bhagat@okaxis");
+    setCopiedUPI(true);
+    setTimeout(() => setCopiedUPI(false), 2000);
+  };
+  
   // Checkout Modal State
   const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
   const [selectedPlan, setSelectedPlan] = useState<typeof premiumPlans[0] | null>(null);
@@ -164,7 +183,8 @@ export default function PremiumMembership() {
     try {
       // Simulate/Trigger instant verification
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      await executeEliteActivation(selectedPlan, "UPI QR Code", "UPI_" + Math.random().toString(36).substring(2, 8).toUpperCase());
+      const refTxId = upiRefId.trim() ? "UPI_" + upiRefId.trim() : "UPI_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      await executeEliteActivation(selectedPlan, "UPI QR Code", refTxId);
     } catch (err: any) {
       console.error("UPI Confirmation Error:", err);
       setPaymentError(err.message || "Failed to confirm UPI payment.");
@@ -326,6 +346,40 @@ export default function PremiumMembership() {
                   Join Manish Bhagat's fitness collective. Unlock 24/7 AI Coach features, 
                   instant visual analysis, and complete custom biometrics.
                 </p>
+
+                {/* Iframe Detection Alert Block */}
+                {isIframe && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8 max-w-2xl mx-auto p-6 rounded-3xl bg-neon-green/5 border border-neon-green/30 text-center space-y-4 shadow-[0_0_25px_rgba(57,255,20,0.05)] relative overflow-hidden group"
+                  >
+                    <div className="absolute top-0 right-0 p-3 bg-neon-green/10 border-l border-b border-neon-green/20 rounded-bl-2xl">
+                      <Smartphone className="w-4 h-4 text-neon-green animate-pulse" />
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-2 text-neon-green font-mono text-[9px] font-black uppercase tracking-[0.3em]">
+                      <AlertTriangle className="w-4 h-4 text-neon-green animate-pulse" /> 
+                      Mobile Browser Iframe Bypass Mode Detected
+                    </div>
+                    
+                    <p className="text-xs text-white/70 uppercase leading-relaxed font-semibold max-w-lg mx-auto">
+                      Mobile browsers block UPI apps (GPay/PhonePe) and card payment redirects inside embedded preview frames. 
+                      Please open this app in a separate browser tab to guarantee a 100% smooth, secure transaction!
+                    </p>
+                    
+                    <div className="pt-2">
+                      <a
+                        href={window.location.origin + "/premium-membership"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-neon-green text-black font-black uppercase text-[10px] tracking-[0.25em] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(57,255,20,0.3)] cursor-pointer"
+                      >
+                        🚀 Open in Secure New Tab <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </motion.div>
+                )}
 
                 {paymentError && (
                   <div className="mt-8 max-w-2xl mx-auto p-5 bg-red-500/10 border border-red-500/20 rounded-2xl text-center space-y-4">
@@ -520,13 +574,19 @@ export default function PremiumMembership() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => navigate("/premium-dashboard")}
+                  onClick={() => {
+                    navigate("/premium-dashboard");
+                    window.location.href = "/premium-dashboard";
+                  }}
                   className="flex-1 py-4 bg-neon-green hover:bg-neon-green/90 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(57,255,20,0.4)] cursor-pointer"
                 >
                   Enter Premium Hub
                 </button>
                 <button
-                  onClick={() => navigate("/my-subscription")}
+                  onClick={() => {
+                    navigate("/my-subscription");
+                    window.location.href = "/my-subscription";
+                  }}
                   className="flex-1 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl transition-all cursor-pointer"
                 >
                   My Subscription
@@ -622,11 +682,29 @@ export default function PremiumMembership() {
                       <div className="absolute inset-0 bg-transparent flex items-center justify-center pointer-events-none" />
                     </div>
 
-                    <div className="font-mono">
-                      <div className="text-[10px] text-white/30 uppercase mb-1">Verify Payee Address:</div>
-                      <div className="text-xs text-white font-black select-all bg-white/5 py-1.5 px-3 rounded-lg inline-block">
-                        manish55bhagat@okaxis
+                     <div className="font-mono flex flex-col items-center gap-2">
+                      <div className="text-[10px] text-white/30 uppercase">Verify Payee Address:</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-white font-black select-all bg-white/5 py-1.5 px-3 rounded-lg inline-block">
+                          manish55bhagat@okaxis
+                        </div>
+                        <button
+                          onClick={handleCopyUPI}
+                          className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all cursor-pointer flex items-center justify-center"
+                          title="Copy UPI Address"
+                        >
+                          {copiedUPI ? (
+                            <Check className="w-3.5 h-3.5 text-neon-green" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5 opacity-60" />
+                          )}
+                        </button>
                       </div>
+                      {copiedUPI && (
+                        <span className="text-[9px] text-neon-green font-bold uppercase font-mono animate-pulse">
+                          Copied to clipboard!
+                        </span>
+                      )}
                     </div>
 
                     {/* Mobile App Launch Links */}
@@ -643,6 +721,20 @@ export default function PremiumMembership() {
                     </div>
 
                     <div className="h-[1px] bg-white/5 w-full pt-4" />
+
+                    {/* UPI Reference ID Field */}
+                    <div className="text-left space-y-2">
+                      <label className="block text-[9px] font-mono font-black text-white/40 uppercase tracking-wider">
+                        UPI Transaction ID / Ref No. / UTR (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 412345678901"
+                        value={upiRefId}
+                        onChange={(e) => setUpiRefId(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs font-mono text-white placeholder-white/20 focus:outline-none focus:border-neon-green/50 transition-colors"
+                      />
+                    </div>
 
                     {/* Action activation buttons */}
                     <button

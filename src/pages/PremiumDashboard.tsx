@@ -12,9 +12,11 @@ export default function PremiumDashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Protect page: Must be logged in, must have active elite membership
+  // Protect page: Must be logged in, must have active elite/premium membership
   const hasActiveElite = 
-    profile?.subscriptionStatus === "Architect Elite" && 
+    profile?.subscriptionStatus &&
+    profile?.subscriptionStatus !== "Free" &&
+    profile?.subscriptionStatus !== "Free Plan" &&
     profile?.subscriptionExpiry && 
     new Date(profile.subscriptionExpiry) > new Date();
 
