@@ -20,6 +20,26 @@ const loadRazorpayScript = () => {
   });
 };
 
+const safeFetchJSON = async (url: string, init?: RequestInit) => {
+  const res = await fetch(url, init);
+  const contentType = res.headers.get("content-type");
+  let data;
+  if (contentType && contentType.includes("application/json")) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html") || text.toLowerCase().includes("the page could not be found")) {
+      throw new Error(`Server returned HTML instead of JSON (Status ${res.status}). This usually means the API route was not found or is misconfigured on the server.`);
+    }
+    throw new Error(`Invalid response format from server (Status ${res.status}): ${text.substring(0, 100)}`);
+  }
+  
+  if (!res.ok) {
+    throw new Error(data?.error || `Server error (Status ${res.status})`);
+  }
+  return data;
+};
+
 const premiumPlans = [
   {
     id: "premium_1m",
@@ -205,7 +225,7 @@ export default function PremiumMembership() {
       }
 
       // 2. Contact our server to create transaction order
-      const response = await fetch("/api/razorpay/create-order", {
+      const orderData = await safeFetchJSON("/api/razorpay/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,13 +233,7 @@ export default function PremiumMembership() {
         body: JSON.stringify({ planName: `${plan.name} - ${plan.period}` }),
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "Order creation failed. Your UPI fallback option is available.");
-      }
-
-      const orderData = await response.json();
-      if (!orderData.success) {
+      if (!orderData || !orderData.success) {
         throw new Error("Failed to initialize backend Razorpay order.");
       }
 
@@ -248,7 +262,7 @@ export default function PremiumMembership() {
           setLoadingPlanId(plan.id);
           try {
             // 4. Verify signature on server
-            const verifyRes = await fetch("/api/razorpay/verify-payment", {
+            const verification = await safeFetchJSON("/api/razorpay/verify-payment", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -260,13 +274,7 @@ export default function PremiumMembership() {
               }),
             });
 
-            if (!verifyRes.ok) {
-              const verifyErr = await verifyRes.json();
-              throw new Error(verifyErr.error || "Payment verification failed.");
-            }
-
-            const verification = await verifyRes.json();
-            if (verification.success) {
+            if (verification && verification.success) {
               await executeEliteActivation(plan, "Razorpay Gateway", paymentResponse.razorpay_payment_id);
             } else {
               throw new Error("Payment signature verification failed.");
