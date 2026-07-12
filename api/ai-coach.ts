@@ -40,7 +40,7 @@ export default async function handler(req: any, res: any) {
     return res.status(403).json({ error: "AI Coach setup is pending. Please contact Fitness Mantra support." });
   }
 
-  const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Reply in the user's language. If user writes Marathi mde, Marathi madhe, or मराठीत, reply in Marathi. Avoid medical diagnosis. For medical issues, advise consulting a doctor. Keep answers clear and easy to follow. Return plain text only.`;
+  const systemPrompt = `You are Fitness Mantra AI Coach by Manish Bhagat. Give simple, safe, practical fitness, diet, workout, BMI, calorie, and habit guidance. Keep answers extremely short, concise, and direct (max 2-3 sentences or a quick bulleted list of 3 items) so they generate and load instantly. Reply in the user's language. If user writes Marathi mde, Marathi madhe, or मराठीत, reply in Marathi. Avoid medical diagnosis. For medical issues, advise consulting a doctor. Return plain text only.`;
 
   const parts: any[] = [];
   if (userMessage) {
@@ -71,7 +71,7 @@ export default async function handler(req: any, res: any) {
   };
 
   let responseText = "";
-  let currentModel = "gemini-3.5-flash";
+  let currentModel = "gemini-3.1-flash-lite";
 
   try {
     console.log(`[AI Coach Vercel API] Requesting response using model: ${currentModel}`);
@@ -91,8 +91,8 @@ export default async function handler(req: any, res: any) {
       throw new Error("Empty response returned from model");
     }
   } catch (error: any) {
-    console.warn(`[AI Coach Vercel API] Model ${currentModel} failed, trying fallback model gemini-3.1-flash-lite...`, error);
-    currentModel = "gemini-3.1-flash-lite";
+    console.warn(`[AI Coach Vercel API] Model ${currentModel} failed, trying fallback model gemini-3.5-flash...`, error);
+    currentModel = "gemini-3.5-flash";
     
     try {
       const response = await ai.models.generateContent({
