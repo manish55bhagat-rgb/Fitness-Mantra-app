@@ -71,13 +71,13 @@ export default async function handler(req: any, res: any) {
   };
 
   let responseText = "";
-  let currentModel = "gemini-1.5-flash";
+  let currentModel = "gemini-3.5-flash";
 
   try {
     console.log(`[AI Coach Vercel API] Requesting response using model: ${currentModel}`);
     const response = await ai.models.generateContent({
       model: currentModel,
-      contents: parts,
+      contents: { parts },
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.8,
@@ -91,15 +91,13 @@ export default async function handler(req: any, res: any) {
       throw new Error("Empty response returned from model");
     }
   } catch (error: any) {
-    const errStr = String(error.message || error.status || error.code || error).toLowerCase();
-    // If the error is an API key or quota issue, fail fast or fallback
-    console.warn(`[AI Coach Vercel API] Model ${currentModel} failed, trying fallback model gemini-1.5-flash-8b...`, error);
-    currentModel = "gemini-1.5-flash-8b";
+    console.warn(`[AI Coach Vercel API] Model ${currentModel} failed, trying fallback model gemini-3.1-flash-lite...`, error);
+    currentModel = "gemini-3.1-flash-lite";
     
     try {
       const response = await ai.models.generateContent({
         model: currentModel,
-        contents: parts,
+        contents: { parts },
         config: {
           systemInstruction: systemPrompt,
           temperature: 0.8,
