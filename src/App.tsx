@@ -36,6 +36,9 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const CancellationPolicy = lazy(() => import("./pages/CancellationPolicy"));
+const PremiumMembership = lazy(() => import("./pages/PremiumMembership"));
+const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
+const MySubscription = lazy(() => import("./pages/MySubscription"));
 
 function AppContent() {
   const location = useLocation();
@@ -83,6 +86,17 @@ function AppContent() {
               </ProtectedRoute>
             } />
             <Route path="/subscription" element={<Subscription />} />
+            <Route path="/premium-membership" element={<PremiumMembership />} />
+            <Route path="/premium-dashboard" element={
+              <ProtectedRoute>
+                <PremiumDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-subscription" element={
+              <ProtectedRoute>
+                <MySubscription />
+              </ProtectedRoute>
+            } />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />

@@ -178,6 +178,26 @@ export default function Navbar() {
                           Bio Dashboard
                         </Link>
 
+                        <Link 
+                          to="/my-subscription"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/60 hover:text-white transition-all"
+                        >
+                          <Crown className="w-3.5 h-3.5 text-neon-green" />
+                          My Subscription
+                        </Link>
+
+                        {(profile?.subscriptionStatus === "Architect Elite" || profile?.subscriptionStatus === "Premium Plan") && (
+                          <Link 
+                            to="/premium-dashboard"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 py-2 px-3 hover:bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/60 hover:text-white transition-all"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-neon-green" />
+                            Premium Dashboard
+                          </Link>
+                        )}
+
                         {profile?.role === "admin" && (
                           <Link 
                             to="/admin"

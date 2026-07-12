@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
+import Razorpay from "razorpay";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +39,89 @@ const getAI = () => {
 // API Routes
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", owner: "Manish Bhagat", brand: "Fitness Mantra" });
+});
+
+const getRazorpayInstance = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID || "rzp_live_T7l3GCLlwsgoYY";
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || "PvRh02KlKSay4OEn9PAAmSCi";
+  
+  const RazorpayClass = (Razorpay as any).default || Razorpay;
+  return new RazorpayClass({
+    key_id: keyId.trim(),
+    key_secret: keySecret.trim(),
+  });
+};
+
+// Create Order Endpoint
+app.post("/api/razorpay/create-order", async (req, res) => {
+  const { planName } = req.body;
+  if (!planName) {
+    return res.status(400).json({ error: "planName is required" });
+  }
+
+  let amount = 0;
+  const nameLower = planName.toLowerCase();
+  if (nameLower.includes("1 month") || nameLower.includes("starter")) {
+    amount = 299;
+  } else if (nameLower.includes("3 month") || nameLower.includes("transformation")) {
+    amount = 999;
+  } else if (nameLower.includes("6 month") || nameLower.includes("premium")) {
+    amount = 1999;
+  } else {
+    return res.status(400).json({ error: "Invalid plan selection" });
+  }
+
+  try {
+    const razorpay = getRazorpayInstance();
+    const options = {
+      amount: amount * 100, // paise
+      currency: "INR",
+      receipt: `receipt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID || "rzp_live_T7l3GCLlwsgoYY"
+    });
+  } catch (error: any) {
+    console.error("Razorpay Order Creation Error:", error);
+    res.status(500).json({ error: error.message || "Failed to create payment order" });
+  }
+});
+
+// Verify Payment Signature Endpoint
+app.post("/api/razorpay/verify-payment", async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ error: "Missing verification parameters" });
+  }
+
+  try {
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "PvRh02KlKSay4OEn9PAAmSCi";
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", keySecret.trim())
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature === razorpay_signature) {
+      res.json({
+        success: true,
+        message: "Payment signature verified successfully"
+      });
+    } else {
+      console.warn("[Razorpay Verification Failed] Expected:", expectedSignature, "Got:", razorpay_signature);
+      res.status(400).json({ error: "Signature mismatch. Verification failed." });
+    }
+  } catch (error: any) {
+    console.error("Razorpay Signature Verification Error:", error);
+    res.status(500).json({ error: error.message || "Signature verification failed" });
+  }
 });
 
 app.post("/api/ai/tts", async (req, res) => {

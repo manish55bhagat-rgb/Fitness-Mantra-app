@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Check, Shield, Zap, Star, Crown, ArrowRight, MessageSquare, Smartphone, QrCode } from "lucide-react";
+import { Check, Shield, Zap, Star, Crown, ArrowRight, MessageSquare, Smartphone, QrCode, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const plans = [
   {
@@ -110,6 +110,21 @@ export default function Subscription() {
               📢 UPI Payment Instruction:<br />
               “After payment, send screenshot on WhatsApp for activation. Plan activation may take up to 24 hours.”
             </p>
+          </div>
+
+          <div className="mt-4 max-w-2xl mx-auto p-5 bg-neon-green/5 border border-neon-green/20 hover:border-neon-green/40 rounded-2xl text-center shadow-[0_0_20px_rgba(57,255,20,0.05)] transition-all">
+            <p className="text-xs sm:text-sm font-black text-white tracking-wide mb-2 uppercase italic flex items-center justify-center gap-1.5">
+              ⚡ Instant Automated Activation Available!
+            </p>
+            <p className="text-[10px] text-white/50 leading-relaxed uppercase tracking-wider mb-4">
+              Bypass manual 24-hour verification. Upgrade instantly to Elite Status using Razorpay Standard Checkout supporting cards, UPI, QR, net banking, and wallets!
+            </p>
+            <Link
+              to="/premium-membership"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-neon-green hover:bg-neon-green/90 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(57,255,20,0.35)] cursor-pointer"
+            >
+              Start Automated Checkout <ArrowUpRight className="w-4.5 h-4.5" />
+            </Link>
           </div>
         </header>
 
